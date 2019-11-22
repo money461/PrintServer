@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>标签打印模版页面</title>
+<!-- 引入css文件，不限制顺序 -->
+<link rel="stylesheet" type="text/css" href="../easyui/themes/bootstrap/easyui.css" />
+<link rel="stylesheet" type="text/css" href="../easyui/themes/icon.css" />
+<!-- 引入js文件，限制顺序 -->
+<script type="text/javascript" src="../easyui/jquery.min.js"></script>
+<script type="text/javascript" src="../easyui/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="../easyui/locale/easyui-lang-zh_CN.js"></script>
+</head>
+<body id="cc" class="easyui-layout">
+	<div data-options="region:'north'" style="height: 7.3%; background: url('../img/APP_01.png') no-repeat left;">
+		<div style="float: right;">
+			<a href="javascript:void(0)" id="mb" th:text="'当前用户 '+${session.userInfo.psnname}"></a>
+			<div id="mm" style="width: 100px">
+				<div data-options="iconCls:'icon-undo'" href="logout">退出</div>
+				<div data-options="iconCls:'icon-redo'" onclick="layout.openDialog();">切换操作号</div>
+				<div class="menu-sep"></div>
+				<div>Cut</div>
+				<div>Copy</div>
+				<div>Paste</div>
+				<div class="menu-sep"></div>
+				<div data-options="iconCls:'icon-remove'">Delete</div>
+				<div>Select All</div>
+			</div>
+			<div id="dd">
+				<table id="dg"></table>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'south'" style="height: 5%; background: url('../img/APP_07.png') no-repeat left;"></div>
+	<div data-options="region:'west'" style="width: 15%;" href="layout/west"></div>
+	<div data-options="region:'center'" style="background: #eee;" href="layout/conter"></div>
+</body>
+<script type="text/javascript" src="../js/layout.js"></script>
+</html>

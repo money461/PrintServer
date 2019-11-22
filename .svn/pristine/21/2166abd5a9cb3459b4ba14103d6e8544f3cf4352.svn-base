@@ -1,0 +1,57 @@
+cas.url=127.0.0.1:8183
+# Redis\u6570\u636e\u5e93\u7d22\u5f15\uff08\u9ed8\u8ba4\u4e3a0\uff09
+spring.redis.database=0
+# Redis\u670d\u52a1\u5668\u5730\u5740
+spring.redis.host=222.173.105.194
+# Redis\u670d\u52a1\u5668\u8fde\u63a5\u7aef\u53e3
+spring.redis.port=6379
+# Redis\u670d\u52a1\u5668\u8fde\u63a5\u5bc6\u7801\uff08\u9ed8\u8ba4\u4e3a\u7a7a\uff09
+spring.redis.password=b0nd1x@1993
+# \u8fde\u63a5\u6c60\u6700\u5927\u8fde\u63a5\u6570\uff08\u4f7f\u7528\u8d1f\u503c\u8868\u793a\u6ca1\u6709\u9650\u5236\uff09
+spring.redis.pool.max-active=8
+# \u8fde\u63a5\u6c60\u6700\u5927\u963b\u585e\u7b49\u5f85\u65f6\u95f4\uff08\u4f7f\u7528\u8d1f\u503c\u8868\u793a\u6ca1\u6709\u9650\u5236\uff09
+spring.redis.pool.max-wait=-1
+# \u8fde\u63a5\u6c60\u4e2d\u7684\u6700\u5927\u7a7a\u95f2\u8fde\u63a5
+spring.redis.pool.max-idle=8
+# \u8fde\u63a5\u6c60\u4e2d\u7684\u6700\u5c0f\u7a7a\u95f2\u8fde\u63a5
+spring.redis.pool.min-idle=0
+# \u8fde\u63a5\u8d85\u65f6\u65f6\u95f4\uff08\u6beb\u79d2\uff09
+spring.redis.timeout=0
+#\u90ae\u4ef6url\u5730\u5740\u4e2d\u7684ip
+email.url.ip=172.16.0.62
+#######################
+#rabbitmq:
+#    host: mq.bondex.com.cn
+#    port: 5672
+#    username: ZXOSRMQ051
+#    password: astiasti
+#    publisher-returns: true
+#    publisher-confirms: true
+#    virtual-host: /
+#    listener:
+#      simple:
+#        retry:
+#          max-attempts: 2
+#          enabled: true
+#          initial-interval: 5000
+#        default-requeue-rejected: false
+###
+spring.rabbitmq.host=172.16.88.150
+spring.rabbitmq.port=5672
+spring.rabbitmq.username=admin
+spring.rabbitmq.password=123456
+spring.rabbitmq.publisher-returns=true
+spring.rabbitmq.publisher-confirms=true
+spring.rabbitmq.virtual-host=/
+spring.rabbitmq.listener.simple.retry.enabled=true
+spring.rabbitmq.listener.simple.retry.max-attempts=2
+spring.rabbitmq.listener.simple.retry.initial-interval=5000
+spring.rabbitmq.listener.simple.default-requeue-rejected=false
+
+#################MyBatis#######################
+mybatis.type-aliases-package=com.bondex.entity,com.bondex.jdbc.entity,com.bondex.client.entity
+# \u9a7c\u5cf0\u547d\u540d\u89c4\u8303 \u5982\uff1a\u6570\u636e\u5e93\u5b57\u6bb5\u662f  order_id \u90a3\u4e48 \u5b9e\u4f53\u5b57\u6bb5\u5c31\u8981\u5199\u6210 orderId
+mybatis.configuration.map-underscore-to-camel-case=false
+#mybatis.mapper-locations=classpath:/mybatis/*.xml
+##mybatis \u6253\u5370\u65e5\u5fd7SQL
+logging.level.com.bondex.mapper=debug

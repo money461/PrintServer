@@ -1,0 +1,54 @@
+server:
+  context-path: /labelPrint
+  port: 8183
+  session:
+    timeout: -1
+  tomcat:
+    uri-encoding: utf-8
+logging:
+  level:
+    com.bondex: debug
+    org.springframework.jdbc: debug
+filter: 
+   stat: 
+    log-slow-sql: true
+spring:
+  profiles:
+    active:
+     - dev
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+  datasource:
+    url: jdbc:mysql://172.16.0.11:3306/labelprint?autoReconnect=true&useUnicode=true&characterEncoding=utf-8&useSSL=false&zeroDateTimeBehavior=convertToNull
+    username: labelprint
+    password: vgy7VFR4
+    driver-class-name: com.mysql.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 'x'
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 20
+    filters: stat,wall,slf4j
+  thymeleaf:
+    cache: false
+    mode: LEGACYHTML5
+  application:
+    name: printServer
+restTemplate:
+  connectionRequestTimeout: 1000
+  connectTimeout: 10000
+  socketTimeout: 10000
+  maxConnTotal: 10000
+region:
+  chengdu: xidun,jichang,xiqu
+  qingdao: futai

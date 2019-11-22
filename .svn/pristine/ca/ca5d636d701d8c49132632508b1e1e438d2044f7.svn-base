@@ -1,0 +1,2 @@
+#获取opids接口url
+cas.loadMore=http://cas.bondex.com.cn:8080/loadMore.jsp
