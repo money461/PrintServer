@@ -23,6 +23,12 @@ import com.bondex.security.entity.SecurityModel;
 import com.bondex.util.GsonUtil;
 import com.google.gson.reflect.TypeToken;
 
+/**
+ * 
+ * @author Qianli
+ * 
+ * 2019年12月10日 下午4:33:39
+ */
 @Controller
 public class LoginController {
 	@Value("${cas.url}")

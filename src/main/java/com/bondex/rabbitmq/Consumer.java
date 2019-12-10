@@ -8,9 +8,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -18,9 +16,6 @@ import org.springframework.stereotype.Component;
 import com.alibaba.fastjson.JSON;
 import com.bondex.jdbc.entity.JsonRootBean;
 import com.bondex.jdbc.service.LabelInfoService;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 
 /**
  * @version 2018年5月14日 11:30:40
@@ -29,23 +24,21 @@ import com.rabbitmq.client.ConnectionFactory;
  */
 @Component
 public class Consumer {
-	
+
 	/**
 	 * org.slf4j.Logger
 	 */
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	
+
 	@Autowired
 	private LabelInfoService labelInfoService;
 
-	
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
-	
 
 	@RabbitListener(queues = "air_label_queue_paiang")
 	public void flowPaiang(List<Map<String, Object>> msg) throws UnsupportedEncodingException {
-		logger.debug("收到消息：{}",msg);
+		logger.debug("收到消息：{}", msg);
 		for (Map<String, Object> map : msg) {
 			// 获取需要入库的数据
 			String orderNo = map.get("id") != null ? map.get("id").toString() : "";// 委托单号
@@ -57,15 +50,24 @@ public class Consumer {
 			String TakeCargoNo = map.get("TakeCargoNo") != null ? map.get("TakeCargoNo").toString() : "";// 随货同行单号
 			switch (map.get("type").toString()) {
 			case "a":
-				StringBuilder add = new StringBuilder("insert into label(MBLNo," + (EDeparture.equals("") ? "" : "EDeparture,") + "SendAddress,RecCustomerName,RecAddress,TakeCargoNo,business_type,reserve3,reserve1,is_print,airport_departure,order_no) values('" + MBLNo + "'," + (EDeparture.equals("") ? "" : "'" + EDeparture + "',") + " '" + SendAddress + "','" + RecCustomerName + "','" + RecAddress + "','" + TakeCargoNo + "',0,'4','0','0','SIA','" + orderNo + "')");
+				StringBuilder add = new StringBuilder(
+						"insert into label(MBLNo," + (EDeparture.equals("") ? "" : "EDeparture,")
+								+ "SendAddress,RecCustomerName,RecAddress,TakeCargoNo,business_type,reserve3,reserve1,is_print,airport_departure,order_no) values('"
+								+ MBLNo + "'," + (EDeparture.equals("") ? "" : "'" + EDeparture + "',") + " '"
+								+ SendAddress + "','" + RecCustomerName + "','" + RecAddress + "','" + TakeCargoNo
+								+ "',0,'4','0','0','SIA','" + orderNo + "')");
 				jdbcTemplate.update(add.toString());
 				break;
 			case "u":
-				StringBuilder update = new StringBuilder("update label set MBLNo = '" + MBLNo + "', " + (EDeparture.equals("") ? "" : "EDeparture = '" + EDeparture + "',") + " SendAddress = '" + SendAddress + "',RecCustomerName = '" + RecCustomerName + "',RecAddress = '" + RecAddress + "',TakeCargoNo = '" + TakeCargoNo + "' where order_no = '" + orderNo + "' ");
+				StringBuilder update = new StringBuilder("update label set MBLNo = '" + MBLNo + "', "
+						+ (EDeparture.equals("") ? "" : "EDeparture = '" + EDeparture + "',") + " SendAddress = '"
+						+ SendAddress + "',RecCustomerName = '" + RecCustomerName + "',RecAddress = '" + RecAddress
+						+ "',TakeCargoNo = '" + TakeCargoNo + "' where order_no = '" + orderNo + "' ");
 				jdbcTemplate.update(update.toString());
 				break;
 			case "d":
-				StringBuilder delete = new StringBuilder("update label set reserve1 = '1'  where order_no = '" + orderNo + "' ");
+				StringBuilder delete = new StringBuilder(
+						"update label set reserve1 = '1'  where order_no = '" + orderNo + "' ");
 				jdbcTemplate.update(delete.toString());
 				break;
 			default:
@@ -81,15 +83,24 @@ public class Consumer {
 		String message = null;
 		try {
 			message = new String(msg, "utf-8");
-			logger.debug("队列名称：[{}]监听到的消息：[{}]","air_label_queue_o",message);
+			logger.debug("队列名称：[{}]监听到的消息：[{}]", "air_label_queue_o", message);
 			labelInfoService.labelInfoSave(JSON.parseObject(message, JsonRootBean.class));
-			jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES('','',3,'','','" + new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()) + "','" + message.replaceAll("(')", "\\\\'") + "')");
+			jdbcTemplate
+					.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES('','',3,'','','"
+							+ new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()) + "','"
+							+ message.replaceAll("(')", "\\\\'") + "')");
 		} catch (Exception e) {
 			if (message == null) {
 				System.out.println("debug");
 			}
-			jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES('','',3,'','','" + new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()) + "','" + msg + " 异常：" + e + "')");
-			jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES('','',3,'','','" + new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()) + "','" + message.replaceAll("(')", "\\\\'") + " 异常：" + e + "')");
+			jdbcTemplate
+					.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES('','',3,'','','"
+							+ new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()) + "','" + msg + " 异常：" + e
+							+ "')");
+			jdbcTemplate
+					.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES('','',3,'','','"
+							+ new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()) + "','"
+							+ message.replaceAll("(')", "\\\\'") + " 异常：" + e + "')");
 			e.printStackTrace();
 		}
 	}

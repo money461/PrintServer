@@ -8,9 +8,9 @@ import com.rabbitmq.client.ShutdownSignalException;
 
 /**
  * 发送MQ消息接口
+ * @author Qianli
  * 
- * @author bondex_public
- *
+ * 2019年12月10日 下午4:34:19
  */
 public interface SendMqService {
 

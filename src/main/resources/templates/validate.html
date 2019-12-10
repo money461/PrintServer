@@ -10,11 +10,11 @@
 	<script type="text/javascript">
 		$(function() {
 			$("#form-test").bootstrapValidator({
-				live : 'disabled',//ÑéÖ¤Ê±»ú£¬enabledÊÇÄÚÈİÓĞ±ä»¯¾ÍÑéÖ¤£¨Ä¬ÈÏ£©£¬disabledºÍsubmittedÊÇÌá½»ÔÙÑéÖ¤  
-				excluded : [ ':disabled', ':hidden', ':not(:visible)' ],//ÅÅ³ıÎŞĞèÑéÖ¤µÄ¿Ø¼ş£¬±ÈÈç±»½ûÓÃµÄ»òÕß±»Òş²ØµÄ  
-				submitButtons : '#btn-test',//Ö¸¶¨Ìá½»°´Å¥£¬Èç¹ûÑéÖ¤Ê§°ÜÔò±ä³Édisabled£¬µ«ÎÒÃ»ÊÔ³É¹¦£¬·´¶ø¼ÓÁËÕâ¾ä»°·Çsubmit°´Å¥Ò²»áÌá½»µ½actionÖ¸¶¨Ò³Ãæ  
-				message : 'Í¨ÓÃµÄÑéÖ¤Ê§°ÜÏûÏ¢',//ºÃÏñ´ÓÀ´Ã»³öÏÖ¹ı  
-				feedbackIcons : {//¸ù¾İÑéÖ¤½á¹ûÏÔÊ¾µÄ¸÷ÖÖÍ¼±ê  
+				live : 'disabled',//éªŒè¯æ—¶æœºï¼Œenabledæ˜¯å†…å®¹æœ‰å˜åŒ–å°±éªŒè¯ï¼ˆé»˜è®¤ï¼‰ï¼Œdisabledå’Œsubmittedæ˜¯æäº¤å†éªŒè¯  
+				excluded : [ ':disabled', ':hidden', ':not(:visible)' ],//æ’é™¤æ— éœ€éªŒè¯çš„æ§ä»¶ï¼Œæ¯”å¦‚è¢«ç¦ç”¨çš„æˆ–è€…è¢«éšè—çš„  
+				submitButtons : '#btn-test',//æŒ‡å®šæäº¤æŒ‰é’®ï¼Œå¦‚æœéªŒè¯å¤±è´¥åˆ™å˜æˆdisabledï¼Œä½†æˆ‘æ²¡è¯•æˆåŠŸï¼Œåè€ŒåŠ äº†è¿™å¥è¯ésubmitæŒ‰é’®ä¹Ÿä¼šæäº¤åˆ°actionæŒ‡å®šé¡µé¢  
+				message : 'é€šç”¨çš„éªŒè¯å¤±è´¥æ¶ˆæ¯',//å¥½åƒä»æ¥æ²¡å‡ºç°è¿‡  
+				feedbackIcons : {//æ ¹æ®éªŒè¯ç»“æœæ˜¾ç¤ºçš„å„ç§å›¾æ ‡  
 					valid : 'glyphicon glyphicon-ok',
 					invalid : 'glyphicon glyphicon-remove',
 					validating : 'glyphicon glyphicon-refresh'
@@ -22,50 +22,50 @@
 				fields : {
 					text : {
 						validators : {
-							notEmpty : {//¼ì²â·Ç¿Õ,radioÒ²¿ÉÓÃ  
-								message : 'ÎÄ±¾¿ò±ØĞëÊäÈë'
+							notEmpty : {//æ£€æµ‹éç©º,radioä¹Ÿå¯ç”¨  
+								message : 'æ–‡æœ¬æ¡†å¿…é¡»è¾“å…¥'
 							},
-							stringLength : {//¼ì²â³¤¶È  
+							stringLength : {//æ£€æµ‹é•¿åº¦  
 								min : 6,
 								max : 30,
-								message : '³¤¶È±ØĞëÔÚ6-30Ö®¼ä'
+								message : 'é•¿åº¦å¿…é¡»åœ¨6-30ä¹‹é—´'
 							},
-							regexp : {//ÕıÔòÑéÖ¤  
+							regexp : {//æ­£åˆ™éªŒè¯  
 								regexp : /^[a-zA-Z0-9_\.]+$/,
-								message : 'ËùÊäÈëµÄ×Ö·û²»·ûÒªÇó'
+								message : 'æ‰€è¾“å…¥çš„å­—ç¬¦ä¸ç¬¦è¦æ±‚'
 							},
-							remote : {//½«ÄÚÈİ·¢ËÍÖÁÖ¸¶¨Ò³ÃæÑéÖ¤£¬·µ»ØÑéÖ¤½á¹û£¬±ÈÈç²éÑ¯ÓÃ»§ÃûÊÇ·ñ´æÔÚ  
-								url : 'Ö¸¶¨Ò³Ãæ',
+							remote : {//å°†å†…å®¹å‘é€è‡³æŒ‡å®šé¡µé¢éªŒè¯ï¼Œè¿”å›éªŒè¯ç»“æœï¼Œæ¯”å¦‚æŸ¥è¯¢ç”¨æˆ·åæ˜¯å¦å­˜åœ¨  
+								url : 'æŒ‡å®šé¡µé¢',
 								message : 'The username is not available'
 							},
-							different : {//ÓëÖ¸¶¨ÎÄ±¾¿ò±È½ÏÄÚÈİÏàÍ¬  
-								field : 'Ö¸¶¨ÎÄ±¾¿òname',
-								message : '²»ÄÜÓëÖ¸¶¨ÎÄ±¾¿òÄÚÈİÏàÍ¬'
+							different : {//ä¸æŒ‡å®šæ–‡æœ¬æ¡†æ¯”è¾ƒå†…å®¹ç›¸åŒ  
+								field : 'æŒ‡å®šæ–‡æœ¬æ¡†name',
+								message : 'ä¸èƒ½ä¸æŒ‡å®šæ–‡æœ¬æ¡†å†…å®¹ç›¸åŒ'
 							},
-							emailAddress : {//ÑéÖ¤emailµØÖ·  
-								message : '²»ÊÇÕıÈ·µÄemailµØÖ·'
+							emailAddress : {//éªŒè¯emailåœ°å€  
+								message : 'ä¸æ˜¯æ­£ç¡®çš„emailåœ°å€'
 							},
-							identical : {//ÓëÖ¸¶¨¿Ø¼şÄÚÈİ±È½ÏÊÇ·ñÏàÍ¬£¬±ÈÈçÁ½´ÎÃÜÂë²»Ò»ÖÂ  
-								field : 'confirmPassword',//Ö¸¶¨¿Ø¼şname  
-								message : 'ÊäÈëµÄÄÚÈİ²»Ò»ÖÂ'
+							identical : {//ä¸æŒ‡å®šæ§ä»¶å†…å®¹æ¯”è¾ƒæ˜¯å¦ç›¸åŒï¼Œæ¯”å¦‚ä¸¤æ¬¡å¯†ç ä¸ä¸€è‡´  
+								field : 'confirmPassword',//æŒ‡å®šæ§ä»¶name  
+								message : 'è¾“å…¥çš„å†…å®¹ä¸ä¸€è‡´'
 							},
-							date : {//ÑéÖ¤Ö¸¶¨µÄÈÕÆÚ¸ñÊ½  
+							date : {//éªŒè¯æŒ‡å®šçš„æ—¥æœŸæ ¼å¼  
 								format : 'YYYY/MM/DD',
-								message : 'ÈÕÆÚ¸ñÊ½²»ÕıÈ·'
+								message : 'æ—¥æœŸæ ¼å¼ä¸æ­£ç¡®'
 							},
-							choice : {//check¿Ø¼şÑ¡ÔñµÄÊıÁ¿  
+							choice : {//checkæ§ä»¶é€‰æ‹©çš„æ•°é‡  
 								min : 2,
 								max : 4,
-								message : '±ØĞëÑ¡Ôñ2-4¸öÑ¡Ïî'
+								message : 'å¿…é¡»é€‰æ‹©2-4ä¸ªé€‰é¡¹'
 							}
 						}
 					}
 				}
 			});
-			$("#btn-test").click(function() {//·Çsubmit°´Å¥µã»÷ºó½øĞĞÑéÖ¤£¬Èç¹ûÊÇsubmitÔòÎŞĞè´Ë¾äÖ±½ÓÑéÖ¤  
-				$("#form-test").bootstrapValidator('validate');//Ìá½»ÑéÖ¤  
-				if ($("#form-test").data('bootstrapValidator').isValid()) {//»ñÈ¡ÑéÖ¤½á¹û£¬Èç¹û³É¹¦£¬Ö´ĞĞÏÂÃæ´úÂë  
-					alert("yes");//ÑéÖ¤³É¹¦ºóµÄ²Ù×÷£¬Èçajax  
+			$("#btn-test").click(function() {//ésubmitæŒ‰é’®ç‚¹å‡»åè¿›è¡ŒéªŒè¯ï¼Œå¦‚æœæ˜¯submitåˆ™æ— éœ€æ­¤å¥ç›´æ¥éªŒè¯  
+				$("#form-test").bootstrapValidator('validate');//æäº¤éªŒè¯  
+				if ($("#form-test").data('bootstrapValidator').isValid()) {//è·å–éªŒè¯ç»“æœï¼Œå¦‚æœæˆåŠŸï¼Œæ‰§è¡Œä¸‹é¢ä»£ç   
+					alert("yes");//éªŒè¯æˆåŠŸåçš„æ“ä½œï¼Œå¦‚ajax  
 				}
 			});
 		});
