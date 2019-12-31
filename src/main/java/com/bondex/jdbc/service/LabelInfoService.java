@@ -11,7 +11,7 @@ import com.bondex.security.entity.JsonResult;
 public interface LabelInfoService {
 	public boolean labelInfoSave(JsonRootBean jsonRootBean);
 
-	public Datagrid findByPage(String page, String rows, Label label, String start_time, String end_time, String sort, String order, String opid, List<JsonResult> list, String businessType);
+	public Datagrid findByPage(String page, String rows, Label label, String start_time, String end_time, String sort, String order, String opid, List<JsonResult> list, String businessType) throws Exception;
 
 	public void updateLabel(Label label);
 

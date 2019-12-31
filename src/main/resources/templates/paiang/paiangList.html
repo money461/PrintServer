@@ -1,0 +1,81 @@
+<#include "/system/include.html" encoding="UTF-8" parse=true/>
+<#include "/system/common.html" encoding="UTF-8" parse=true/>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<!-- 引入样式css -->
+<@commoncss title='派昂数据展示'/>
+</head>
+<body class="gray-bg">
+	<div class="container-div">
+		<div class="row">
+		  <div class="col-sm-12 search-collapse">
+	       <!--form表单数据搜索条件筛选区域-->
+		   <form id='searchForm' class="form-horizontal center-vertical">
+		    
+			<!--派昂医药 查询条件筛选区域-->
+			<div class="select-list">
+			             <ul>
+							<li>
+								主单号：<textarea  type="textarea" rows="1" class="easyui-textbox" data-options="multiline:true" name="mawb" id="mawb" >${mawb!}</textarea>
+							</li>
+							<li>
+								运单号：<textarea  type="textarea" rows="1" class="easyui-textbox" data-options="multiline:true" name="MBLNo" id="MBLNo"></textarea>
+							</li>
+							<li>
+								交货凭证号：<textarea  type="textarea" rows="1" class="easyui-textbox" data-options="multiline:true" name="TakeCargoNo" id="TakeCargoNo"></textarea>
+							</li>
+							<li>
+								是否打印：<select  type="select" id="status" name="status" class="easyui-combobox" style="width: 141px;">
+							                	<option value=""></option>
+												<option value="0" selected="selected">未打印</option>
+												<option value="1">已打印</option>
+					                   </select>
+							</li>
+							<li class="select-time">
+								<label>发货时间： </label>
+								<input type="text" id="start_time"  placeholder="开始时间"   name="start_time"/>
+								<span>-</span>
+								<input type="text" id="end_time"  placeholder="结束时间" name="end_time"/>
+							</li>
+							<li>
+								录入人：<input type="text" id="opid_name" name="opidName" maxlength="15" />
+							</li>
+							<!-- <li>
+								<button type="button"  class="btn btn-primary btn-rounded btn-sm" onclick="paiang.search();"><i class="fa fa-search"></i>&nbsp;搜索</button>
+							    <button type="button"  class="btn btn-warning btn-rounded btn-sm" onclick="paiang.securityReload();"><i class="fa fa-refresh"></i>&nbsp;重置</button>
+							</li> -->
+							 <@shiro.hasPermission  name="auth"><li><input type="text" style="display: none"/></li></@shiro.hasPermission>
+						</ul>
+				</div>
+			
+		</form>
+	 </div>
+	 
+	<!-- 数据展示 -->
+	<div class="col-sm-12 select-table table-striped">
+		<table id="paiang_tab"></table>
+	</div>
+	
+  </div>
+<!--引用公共按钮操作模块-->
+<!--datagrid引入操作按钮区域 -->
+<@paiangtoolbar/> 
+
+<!-- 引入修改办公室弹框 -->
+<@selectRegion/>
+ 
+</div>
+</body>
+	<!--引入include.js-->
+	<@commonjs/>
+	<script  type="text/javascript"> // 需要添加 th:inline 才能访问 model 中的属性
+			
+	        window.onload = function () {
+	        // 获取ModelAndView中的paiangmawb对象}
+	            console.log("---派昂页面加载完成----");
+	        
+	         } 
+	</script>
+	<script type="text/javascript" src="${request.contextPath}/js/paiang/paiangList.js"></script>
+</html>

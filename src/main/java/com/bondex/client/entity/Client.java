@@ -9,18 +9,24 @@ package com.bondex.client.entity;
  * @author bejson.com (i@bejson.com)
  * @website http://www.bejson.com/java2pojo/
  */
+/**
+ * 打印客户端封装类
+ * @author Qianli
+ * 
+ * 2019年12月27日 上午9:08:54
+ */
 public class Client {
 
 	private String Version = "2.0";
-	private String ReportID;
-	private String ReportTplName;
-	private String SenderName;
+	private String ReportID; //模板id
+	private String ReportTplName; //标签名称
+	private String SenderName; //发送人
 	private String SendOPID;// 操作id
-	private String NoToShow;
-	private String OtherToShow;
-	private String ReportWidth;
-	private String ReportHeight;
-	private String data;
+	private String NoToShow; //业务单号
+	private String OtherToShow; //
+	private String ReportWidth; //标签宽度 毫米
+	private String ReportHeight; //标签高度  毫米
+	private String data; //json数据
 	private String Copies;// 打印份数
 
 	public String getCopies() {

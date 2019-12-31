@@ -1,195 +1,165 @@
 package com.bondex.filter;
 
-import java.lang.reflect.Type;
-import java.rmi.RemoteException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.session.Session;
 import org.jasig.cas.client.authentication.AttributePrincipal;
-import org.jasig.cas.client.authentication.TokenResult;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.support.WebApplicationContextUtils;
+import org.jasig.cas.client.util.AbstractCasFilter;
+import org.jasig.cas.client.validation.Assertion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
-import org.tempuri1.IPermissionService;
-import org.tempuri1.IPermissionServiceProxy;
 
-import com.bondex.cas.entity.CasConfigs;
+import com.bondex.cas.SpringCasAutoconfig;
+import com.bondex.common.Common;
 import com.bondex.entity.Datagrid;
-import com.bondex.security.entity.JsonResult;
-import com.bondex.security.entity.OperatorIdData;
-import com.bondex.security.entity.OperatorIdResult;
 import com.bondex.security.entity.Opid;
-import com.bondex.security.entity.SecurityHead;
-import com.bondex.security.entity.SecurityModel;
+import com.bondex.security.entity.TokenResult;
+import com.bondex.security.entity.UserInfo;
+import com.bondex.shiro.security.ShiroUtils;
+import com.bondex.util.GsonUtil;
 import com.bondex.util.HttpClient;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 /**
  * preHandler -> Controller -> postHandler -> model渲染-> afterCompletion
  * 
  * @author bondex_public
  *
+ * 
  */
-@Component
 public class LoginInterceptor implements HandlerInterceptor {
-	private CasConfigs casConfigs;
-	private String applicationId = "827";
-	Gson gson = new Gson();
+	
+	private  final Logger log = LoggerFactory.getLogger(this.getClass());
+	
+	private SpringCasAutoconfig springCasAutoconfig;
+	
+	public LoginInterceptor(SpringCasAutoconfig springCasAutoconfig) {
+		super();
+		this.springCasAutoconfig = springCasAutoconfig;
+	}
 	
 
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-		// 获取Configs对象
-		if (casConfigs == null) {
-			BeanFactory factory = WebApplicationContextUtils.getRequiredWebApplicationContext(request.getServletContext());
-			casConfigs = (CasConfigs) factory.getBean("casConfigs");
-		}
-
-		String url = request.getRequestURI();
-		if (url.equals(casConfigs.getContextpath()+"/login")) {
+		//已认证
+		if(!ShiroUtils.getSubject().isAuthenticated()){
+			System.out.println("-------------------用户未认证！---------------------");
+			//未认证
+			long start = System.currentTimeMillis();
+			//进入realm认证
 			HttpSession session = request.getSession();
-			if (null == session.getAttribute("userSecurity")) {// 如果已经获取到用户权限，则直接从缓存中取出
-
-				SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				System.out.println("获取用户权限开始：" + dateFormat.format(new Date()));
-
-				// 登陆操作后，获取用户信息、权限信息
-				Map info = getUserInfo(request);
-				List<Opid> opids = getOpids(info, session);
-				Map<String, Object> userSecurity = getSecurity(session, opids); // 返回权限数据，并将数据存放session
-
-				System.out.println("获取用户权限结束：" + dateFormat.format(new Date()));
-			}
+			Assertion assertion =(Assertion)session.getAttribute(AbstractCasFilter.CONST_CAS_ASSERTION);
+			String loginName =assertion.getPrincipal().getName();
+			System.out.println("获取到CAS登陆用户信息："+loginName);
+			TokenResult result = GsonUtil.GsonToBean(loginName, TokenResult.class);
+			UsernamePasswordToken token = new UsernamePasswordToken(loginName,result.getMessage().get(0).getTgt(),true);
+			ShiroUtils.getSubject().login(token); //shiro realm认证
+			long end = System.currentTimeMillis();
+			log.debug("认证耗时：{}ms",(end-start));
 		}
 		return true;
+		
 	}
-
+	
+	
+	
+	
 	/**
 	 * 获取登陆用户信息
 	 * 
 	 * @param request
 	 * @return
 	 */
-	public Map getUserInfo(HttpServletRequest request) {
+	public UserInfo getUserInfo(HttpServletRequest request) {
+		
+		/**
+		 * 获取用户信息
+		 */
+		/*HttpSession session = request.getSession();
+		Assertion assertion =(Assertion)session.getAttribute(AbstractCasFilter.CONST_CAS_ASSERTION);
+		String loginName =assertion.getPrincipal().getName();
+		
+		System.out.println(loginName);*/
+		HttpSession session = request.getSession();
 		AttributePrincipal principal = (AttributePrincipal) request.getUserPrincipal();
 		String userName = principal.getName();
-		TokenResult result = (new Gson()).fromJson(userName, TokenResult.class);
-		List userInfo = result.getMessage();
-		Map info = (Map) userInfo.get(0);
-		request.getSession().setAttribute("userInfo", info);// 用户信息存session
-		return info;
+		TokenResult result = GsonUtil.GsonToBean(userName, TokenResult.class);
+		List<UserInfo> userInfoList = result.getMessage();
+		UserInfo userInfo = userInfoList.get(0);
+		// 获取用户opids 并展示在页面
+		userInfo = getAllOpids(userInfo.getToken());
+		
+		//初始页面 的时候弹出 opids 提供用户选择
+		Datagrid<Opid> datagrid = new Datagrid<Opid>();
+		datagrid.setTotal(new Integer(userInfoList.size()).toString());
+		datagrid.setRows(userInfo.getAllOpid());
+		
+		session.setAttribute(Common.Session_opids, datagrid);
+		// 将用户信息存入session中
+		session.setAttribute(Common.Session_UserInfo, userInfo);
+		
+		// 绑定用户默认的opid
+//		BindingOpid(userInfo.getOpid(), userInfo.getToken());
+		
+		return userInfo;
 	}
 
 	@Override
 	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+		
 	}
 
 	@Override
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+		System.out.println("-------------------用户已认证！---------------------");
 	}
 
-	/**
-	 * 获取用户权限，并存放session
-	 * 
-	 * @param session
-	 * @param opids
-	 * 
-	 * @throws RemoteException
-	 */
-	private Map<String, Object> getSecurity(HttpSession session, List<Opid> opids) throws RemoteException {
-		System.out.println("用户权限初始化1：" + session + opids);
-
-		Map<String, Object> map = new HashMap<String, Object>();
-
-		System.out.println("用户权限初始化：" + new IPermissionServiceProxy());
-		IPermissionService permissionService = new IPermissionServiceProxy();
-		org.tempuri.IPermissionService printPermissionService = new org.tempuri.IPermissionServiceProxy();
-
-		for (Opid opid : opids) {
-			// 获取用户功能模块权限
-			String rt = permissionService.getHasPermissionModuleList(applicationId, opid.getOpid());
-			System.err.println("用户功能模块权限：" + rt);
-
-			Type objectType = new TypeToken<SecurityHead<SecurityModel>>() {}.getType();
-			SecurityHead<SecurityModel> securityHead = gson.fromJson(rt, objectType);
-			List<SecurityModel> securityModels = securityHead.getJsonResult();
-			List<List<String>> securityModel1 = new ArrayList<>();
-			List<List<JsonResult>> jsonResults = new ArrayList<>();
-			// 获取用户功能模块按钮权限
-			for (SecurityModel securityModel : securityModels) {
-				if (!securityModel.getPageCode().equals("AirExpHAWBList") && !securityModel.getPageCode().equals("AirExpMAWBList") && !securityModel.getPageCode().equals("AirExpOrder")) {
-					String button = permissionService.getHasPermissionPageButton(applicationId, securityModel.getPageCode(), null, opid.getOpid());
-					System.err.println("用户功能模块按钮权限：" + button);
-					// 转json对象
-					Type objectTypebutton = new TypeToken<SecurityHead<String>>() {
-					}.getType();
-					SecurityHead<String> securityHead1 = gson.fromJson(button, objectTypebutton);
-					securityModel1.add(securityHead1.getJsonResult());
-					List<String> list = securityHead1.getJsonResult();
-					for (String string : list) {
-						String rtPrint = printPermissionService.getUserReport(opid.getOpid(), applicationId, securityModel.getPageCode(), string);
-						// 转json对象
-						Type printButton = new TypeToken<SecurityHead<JsonResult>>() {
-						}.getType();
-						SecurityHead<JsonResult> printButtons = gson.fromJson(rtPrint, printButton);
-						if (printButtons.getJsonResult().size() > 0) {
-							jsonResults.add(printButtons.getJsonResult());
-						}
-						System.out.println("用户打印权限：" + rtPrint);
-					}
-				}
-
-				map.put(opid.getOpid() + "printButton", jsonResults);// 用户打印权限
-				map.put(opid.getOpid() + "model", securityModels);// 用户功能模块权限
-				map.put(opid.getOpid() + "button", securityModel1);// 用户功能模块按钮权限
-			}
-		}
-		// 用户权限存放session
-		session.setAttribute("userSecurity", map);
-		return map;
-	}
 
 	/**
-	 * 调用cas接口，获取带opids的用户信息,存放session中，并返回opids
+	 * CAS 登陆成功后 调用cas接口，获取带opids的用户信息
 	 * 
 	 * @param map
 	 * @param session
 	 * @return
 	 */
-	private List<Opid> getOpids(Map<String, String> map, HttpSession session) {
-		Datagrid<Opid> datagrid = new Datagrid<Opid>();
-		String rt = HttpClient.sendPost(casConfigs.getLoadMore(), "token=" + map.get("token"));
-		OperatorIdResult idResult = gson.fromJson(rt, OperatorIdResult.class);
-		OperatorIdData[] data = idResult.getMessage();
-		// 用户信息存放session
+	private UserInfo getAllOpids(String token) {
+		Session session = ShiroUtils.getSession();
+		Object attribute = session.getAttribute(Common.Session_opids);
+	
+		String rt = HttpClient.sendPost(springCasAutoconfig.getLoadMore(), "token=" + token);
+		// log.debug(rt);
+	
+		TokenResult idResult = GsonUtil.GsonToBean(rt, TokenResult.class);
+		List<UserInfo> userInfoList = idResult.getMessage();
+		UserInfo userInfo = userInfoList.get(0);
+	
 		List<Opid> opids = new ArrayList<Opid>();
-		for (int i = 0; i < data.length; i++) {
-			Map<String, String> opid = data[i].getOpids();
-			Set<Entry<String, String>> entrySet = opid.entrySet();
-			for (Iterator<Entry<String, String>> iterator = entrySet.iterator(); iterator.hasNext();) {
-				Entry<String, String> entry = iterator.next();
-				Opid opid2 = new Opid(entry.getKey(), entry.getValue());
-				opids.add(opid2);
-			}
+	
+		Map<String, String> opidsMap = userInfo.getOpids();
+	
+		for (String opid : opidsMap.keySet()) {
+			Opid opid2 = new Opid(opid, opidsMap.get(opid));
+			opids.add(opid2);
 		}
-		datagrid.setTotal(new Integer(data.length).toString());
-		datagrid.setRows(opids);
-		session.setAttribute("opids", new Gson().toJson(datagrid));
-		return opids;
+		
+		// 将opids 返回当前用户对应的一至多个操作ID
+		userInfo.setAllOpid(opids);
+		if (null == userInfo.getOpid()) {
+			userInfo.setOpid(opids.get(0).getOpid()); //多个号设置默认的绑定的opid
+		}
+		userInfo.setToken(token);
+		return userInfo;
 	}
+
+	
+	
 
 }

@@ -21,6 +21,12 @@ public class Producer {
 	@Autowired
 	private CachingConnectionFactory cachconnectionFactory;
 
+	/**
+	 * 发送消息  通过区域 划分到指定的路由端 至消息队列中
+	 * @param message
+	 * @param region
+	 * @throws Exception
+	 */
 	public void print(String message, String region) throws Exception {
 //		String uuid = UUID.randomUUID().toString().toString().replace("-", "");    //产生一个 关联ID correlationID
 //		CorrelationData correlationId = new CorrelationData(uuid);
@@ -48,4 +54,7 @@ public class Producer {
 		connection.close();// 关闭连接
 		
 	}
+	
+	
+	
 }

@@ -1,0 +1,150 @@
+<!-公共操作模块-->
+<#macro airLabeltoolbar>
+	<!--datagrid操作按钮区域 -->
+	<div id="toolbar" style="width: 100%"  class="btn-group-sm"  role="group">
+	
+		<div class="btn-group" style="float: right; background-color: #F5F5F5; width: 100%;">
+		
+			<button type="button" class="btn btn-default" onclick="label.search();">
+				<span class="glyphicon glyphicon-search"></span> 查询(ctrl+1)
+			</button>
+			<button type="button" class="btn btn-default" onclick="label.print1()">
+				<span class="glyphicon glyphicon-print"></span> 打印
+			</button>
+			<button type="button" class="btn btn-default" onclick="label.export1()">
+				<span class="glyphicon glyphicon-share"></span> 导出标签
+			</button>
+			<button type="button" class="btn btn-default" onclick="label.delete1();">
+				<span class="glyphicon glyphicon-remove"></span> 删除
+			</button>
+			<button type="button" class="btn btn-default" onclick="label.refresh(true)">
+				<span class="glyphicon glyphicon-refresh"></span> 刷新表单
+			</button>
+			<button type="button" class="btn btn-default" onclick="subscribe.initWindow()">
+				<span class="glyphicon glyphicon-envelope"></span> 订阅
+			</button>
+			<button type="button" class="btn btn-default" onclick="alert('')">
+				<span class="glyphicon glyphicon-bell"></span> 帮助
+			</button>
+			<button type="button" class="btn btn-default" onclick="label.alertprint()">
+				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: green; font-size: 14" id="quyu">更改打印区域</b>
+			</button>
+		</div>
+	 </div>
+	
+</div>
+</#macro>
+
+<#macro paiangtoolbar>
+	<!--datagrid操作按钮区域 -->
+	<div id="toolbar" style="width: 100%"  class="btn-group-sm"  role="group">
+	
+		<div class="btn-group" style="float: right; background-color: #F5F5F5; width: 100%;">
+		
+			<button type="button" class="btn btn-default" onclick="paiang.search();">
+				<span class="glyphicon glyphicon-search"></span> 查询(ctrl+1)
+			</button>
+			<button type="button" class="btn btn-default" onclick="paiang.tableprint()">
+				<span class="glyphicon glyphicon-print"></span> 打印
+			</button>
+			<button type="button" class="btn btn-default" onclick="paiang.export()">
+				<span class="glyphicon glyphicon-share"></span> 导出标签
+			</button>
+			<button type="button" class="btn btn-default" onclick="paiang.delete();">
+				<span class="glyphicon glyphicon-remove"></span> 删除
+			</button>
+			<button type="button" class="btn btn-default" onclick="paiang.securityReload();">
+				<span class="glyphicon glyphicon-refresh"></span> 刷新表单
+			</button>
+			<button type="button" class="btn btn-default" onclick="subscribe.initWindow()">
+				<span class="glyphicon glyphicon-envelope"></span> 订阅
+			</button>
+			<button type="button" class="btn btn-default" onclick="alert('')">
+				<span class="glyphicon glyphicon-bell"></span> 帮助
+			</button>
+			<button type="button" class="btn btn-default" onclick="paiang.alertprint()">
+				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: green; font-size: 14" id="quyu">更改打印区域</b>
+			</button>
+		</div>
+	 </div>
+	
+</div>
+
+</#macro>
+
+<#macro modal>
+
+	<!-- opids模态框（Modal） -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-body">
+					<table id="opid_table">
+						<caption class="text-center">双击选择操作号</caption>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 搜索框（Modal） -->
+	<div class="modal fade" id="searchModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h4 class="modal-title" id="myModalLabel">模态框（Modal）标题</h4>
+				</div>
+				<div class="modal-body">在这里添加一些文本</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+					<button type="button" class="btn btn-primary">提交更改</button>
+				</div>
+			</div>
+			<!-- /.modal-content -->
+		</div>
+		<!-- /.modal -->
+	</div>
+	
+	
+</#macro>
+
+
+<#macro selectRegion>
+	
+	<!--修改办公区域弹窗页面-->
+	<div id="region" style="display: none; margin-top: 20px;">
+		<blockquote class="text-success" style="display: none;" id="bqys">
+			选择标签样式 <select id="selectbq" class="form-control" style="height: 50px;">
+			</select>
+		</blockquote>
+		<blockquote class="text-success" style="display: none; width: 100%;" id="xzdy">
+		          <h5>设置打印办公室</h5>
+			<p style="display: none;" id="bgs">
+				<input type="radio" value="mr" name="bgs">默认办公室
+				<input type="radio" value="ls" name="bgs">临时办公室
+			</p>
+			<!--下拉菜单-->
+			<input id="cc" style="width: 100%; height: 50px;"> <input type="text" style="display: none;" id="code">
+		</blockquote>
+		
+		<!-- 	
+		<blockquote class="text-success" style="display: none; width: 100%" id="ssdy">
+		搜索打印办公室<input id="cc1" name="dept" style="width: 100%; height: 50px;" />
+	   </blockquote> 
+	   -->
+	
+	
+		<div class="form-group col-md-12 col-sm-10" style="display: none;" id="dyan">
+			<button type="button" class="btn btn-info btn-lg btn-block" onclick="label.print()">打印</button>
+		</div>
+		<div class="form-group col-md-12 col-sm-10" style="display: none;" id="dcan">
+			<button type="button" class="btn btn-info btn-lg btn-block" onclick="label.export()">导出</button>
+		</div>
+		<div class="form-group col-md-12 col-sm-10" style="display: none;" id="xgmr">
+			<button type="button" class="btn btn-info btn-lg btn-block" onclick="updateRegion()">更改</button>
+		</div>
+	</div>
+		
+
+</#macro>

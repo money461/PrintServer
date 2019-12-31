@@ -38,12 +38,16 @@ import com.bondex.client.entity.VwOrderAll;
 import com.bondex.client.entity.yml.RegionJDBC;
 import com.bondex.client.entity.yml.TreeBean;
 import com.bondex.client.service.ClientService;
+import com.bondex.common.enums.ResEnum;
+import com.bondex.config.exception.BusinessException;
 import com.bondex.entity.Datagrid;
 import com.bondex.jdbc.entity.Label;
-import com.bondex.jdbc.entity.Opid;
 import com.bondex.jdbc.entity.Template;
 import com.bondex.rabbitmq.Producer;
+import com.bondex.security.entity.Opid;
+import com.bondex.security.entity.UserInfo;
 import com.bondex.util.GsonUtil;
+import com.bondex.util.StringUtils;
 
 @Component
 @Transactional
@@ -60,26 +64,22 @@ public class ClientServiceImpl implements ClientService {
 	public final static String SPLITSTRTAG = "\\(/\\)";
 
 	@Override
-	public List<InputStream> getPDF(List<Label> list, Map info, String report, String thisUsername, String opid)
-			throws IOException {
+	public List<InputStream> getPDF(List<Label> list, String report,UserInfo userInfo)	throws IOException {
 		List<InputStream> inputStreams = new ArrayList<InputStream>();
 		for (Label label2 : list) {
-			Client client = getClient(label2, report, thisUsername, opid, info);
+			Client client = getClient(label2, report, userInfo);
 			HttpHeaders headers = new HttpHeaders();
 			InputStream inputStream = null;
 			List list1 = new LinkedList<>();
 			list1.add(MediaType.valueOf("application/pdf"));
 			headers.setAccept(list1);
 			MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
-			params.add("token", info.get("token"));
+			params.add("token", userInfo.getToken());
 			params.add("reportMsg", GsonUtil.GsonString(client));
-			HttpEntity<MultiValueMap<String, Object>> httpEntity = new HttpEntity<MultiValueMap<String, Object>>(params,
-					headers);
-			ResponseEntity<byte[]> response = restTemplate.postForEntity(
-					"http://api.bondex.com.cn:12360/excelwebapi/api/GetPDFByReport", httpEntity, byte[].class);
+			HttpEntity<MultiValueMap<String, Object>> httpEntity = new HttpEntity<MultiValueMap<String, Object>>(params,headers);
+			ResponseEntity<byte[]> response = restTemplate.postForEntity("http://api.bondex.com.cn:12360/excelwebapi/api/GetPDFByReport", httpEntity, byte[].class);
 			while (response.getStatusCodeValue() == 204) {
-				response = restTemplate.postForEntity("http://api.bondex.com.cn:12360/excelwebapi/api/GetPDFByReport",
-						httpEntity, byte[].class);
+				response = restTemplate.postForEntity("http://api.bondex.com.cn:12360/excelwebapi/api/GetPDFByReport",	httpEntity, byte[].class);
 			}
 			byte[] result = response.getBody();
 			if (response.getStatusCodeValue() == 200) {
@@ -101,7 +101,7 @@ public class ClientServiceImpl implements ClientService {
 	 * @param label
 	 * @return
 	 */
-	private Client getClient(Label label2, String report, String thisUsername, String opid, Map info) {
+	private Client getClient(Label label2, String report,UserInfo userInfo) {
 		String[] rt = report.split(",");
 		Client client = new Client();// 打印数据
 		ClientData clientData = new ClientData();
@@ -127,8 +127,8 @@ public class ClientServiceImpl implements ClientService {
 		client.setReportID(template.get(0).getTemplate_id());// 报表id
 		client.setReportTplName(template.get(0).getTemplate_name());// 标签名称
 
-		client.setSenderName(thisUsername + "/" + info.get("psnname"));
-		client.setSendOPID(opid);// 操作号
+		client.setSenderName(userInfo.getOpname() + "/" + userInfo.getPsnname()); //此处改动 不清楚
+		client.setSendOPID(userInfo.getOpid());// 操作号
 		client.setNoToShow(label2.getMawb() + "_" + label2.getHawb());// 要显示的单号
 		client.setOtherToShow("");
 		client.setReportWidth("100");// 标签宽度，单位毫米（目前定死）
@@ -147,6 +147,9 @@ public class ClientServiceImpl implements ClientService {
 		return client;
 	}
 
+	/**
+	 * 获取办公室区域
+	 */
 	@Override
 	public String getRegion(String opid) {
 		List<RegionJDBC> regionJDBCs = clientDao.getAll(opid);
@@ -180,21 +183,29 @@ public class ClientServiceImpl implements ClientService {
 		return GsonUtil.GsonString(prent);
 	}
 
+	/**
+	 *发送打印消息
+	 */
 	@Override
-	public String sendLabel(String labels, String region, String thisUsername, String opid, Map info, String report,
-			String businessType) {
-		List<Label> labels2 =GsonUtil.GsonToList(labels, Label.class);
-
-		List<Label> lables = new ArrayList<>();
-		// 更新数据状态为"已打印“
-		for (Label label : labels2) {
+	public void sendLabel(List<Label> labels, String region, UserInfo userInfo, String report,String businessType) {
+		List<Label> lables3 = new ArrayList<>();
+		// 发送消息 并且 更新数据状态为"已打印“
+		for (Label label : labels) {
+			
+			//当前时间
+//			LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HHmmss"))
 			String nowTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-			clientDao.update("update label set is_print = '1',reserve2='" + nowTime + "',print_user = '" + thisUsername
-					+ "'  where label_id = '" + label.getLabel_id() + "'");
-
+			//修改状态
+			clientDao.update("update label set is_print = '1',reserve2='" + nowTime + "',print_user = '" + userInfo.getOpname()	+ "'  where label_id = '" + label.getLabel_id() + "'");
+			
+			//派昂
 			if (businessType.equals("medicine")) {
+				
+				//调用封装数据方法
+				
+				
 				// 切割字符串，判断多行
-				if (label.getRecCustomerName() != null && label.getTakeCargoNo() != null) {
+				/*if (label.getRecCustomerName() != null && label.getTakeCargoNo() != null) {
 					String[] RecCustomerNames = label.getRecCustomerName().split(SPLITSTRTAG);
 					String[] TakeCargoNos = label.getTakeCargoNo().split(SPLITSTRTAG);
 					String[] RecAddress = label.getRecAddress().split(SPLITSTRTAG);
@@ -203,11 +214,9 @@ public class ClientServiceImpl implements ClientService {
 						e.setRecCustomerName(RecCustomerNames[i]);
 						e.setTakeCargoNo(TakeCargoNos[i]);
 						e.setMBLNo(label.getMBLNo());
-						SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+//						SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 						try {
-							String data = label.getEDeparture().toString();
-							Date date = new Date(data);
-							e.setEDeparture(dateFormat.format(date));
+							e.setEDeparture(label.getEDeparture());
 						} catch (Exception e1) {
 							e1.printStackTrace();
 						}
@@ -215,51 +224,53 @@ public class ClientServiceImpl implements ClientService {
 						e.setRecAddress(RecAddress[i]);
 						e.setReserve3(label.getReserve3());
 						e.setTotal(label.getTotal());
-						lables.add(e);
+						lables3.add(e);
 					}
-				}
+				}*/
 			}
 		}
-		if (!lables.isEmpty()) {
-			labels2 = lables;
+		
+		if (!lables3.isEmpty()) {
+			labels = lables3;
 		}
 
+		//第二次 获取打印区域 从数据库中获取
 		if (report.equals("")) {
 			if (!region.contains("/")) {
 				// 获取打印区域
 				Region defaultRegion = clientDao.getRegion(region);
 				region = defaultRegion.getParent_code() + "/" + defaultRegion.getRegion_code();
 			}
+			
 		} else {
 			// 入库，用户第二次打印则不会在页面弹出选择区域的界面
 			String[] rt = region.split("/");
 			String rid = clientDao.getRegionId(rt[1]);
-			clientDao.addDR(opid, rid);
+			clientDao.addDR(userInfo.getOpid(), rid);
 		}
 		List<Client> clients = new ArrayList<>();
-		for (Label label : labels2) {
+		for (Label label : labels) {
 			if (businessType.equals("medicine")) {
-				clients = getClients(labels2, thisUsername, opid, info, report, businessType);
+				clients = getClients(labels, userInfo, businessType);
 			} else {
 				String t[] = label.getTotal().split("\\.");
 				label.setTotal(t[0]);
-				clients = getClients(labels2, thisUsername, opid, info, report, businessType);
+				clients = getClients(labels, userInfo, businessType);
 			}
 		}
 		for (Client client : clients) {
 			// 发送MQ 执行打印
 			try {
-				producer.print(GsonUtil.GsonString(client), region);
+				producer.print(GsonUtil.GsonString(client), region); //封装打印信息 携带打印区域
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 
-		return null;
 	}
 
-	private List<Client> getClients(List<Label> labels2, String thisUsername, String opid, Map info, String report,
-			String businessType) {
+	//封装打印数据
+	private List<Client> getClients(List<Label> labels2, UserInfo userInfo, String businessType) {
 		List<Client> clients = new ArrayList<>();
 		Client client;
 		ClientData clientData;
@@ -273,15 +284,16 @@ public class ClientServiceImpl implements ClientService {
 			vwOrderAlls = new ArrayList<VwOrderAll>();
 			vwOrderAll = new VwOrderAll();
 			array = new JSONArray();
-
-			List<Template> template = jdbcTemplate.query("select * from template where id = ? or template_name=?",
-					new Object[] { label.getReserve3(), label.getReserve3() },
-					new BeanPropertyRowMapper<Template>(Template.class));
-			client.setReportID(template.get(0).getTemplate_id());// 报表id
+			
+			List<Template> template = jdbcTemplate.query("select * from template where id = ? or template_name=?",	new Object[] { label.getReserve3(), label.getReserve3() },	new BeanPropertyRowMapper<Template>(Template.class));
+			if(null==template || template.size()==0){
+				throw new BusinessException(ResEnum.FAIL.CODE, "请指定打印模板！");
+			}
+			client.setReportID(template.get(0).getTemplate_id());// 模板id
 			client.setReportTplName(template.get(0).getTemplate_name());// 标签名称
 
-			client.setSenderName(thisUsername + "/" + info.get("psnname"));
-			client.setSendOPID(opid);// 操作号
+			client.setSenderName(userInfo.getOpname() + "/" + userInfo.getPsnname()); //此处改动不是很清楚
+			client.setSendOPID(userInfo.getOpid());// 操作号
 			client.setOtherToShow("");
 			client.setCopies(label.getTotal());// 标签打印份数
 			// ClientData
@@ -379,14 +391,14 @@ public class ClientServiceImpl implements ClientService {
 		return GsonUtil.GsonString(region);
 	}
 
+	/**
+	 * 获取操作 opids
+	 */
 	@Override
-	public String getOpidName(String string) {
-		List<Opid> labels = jdbcTemplate.query("select distinct opid_name,opid from label where opid_name like '%"
-				+ string + "%' or opid like '%" + string + "%'", new Object[] {},
-				new BeanPropertyRowMapper<Opid>(Opid.class));
-		Datagrid<Opid> datagrid = new Datagrid<>();
-		datagrid.setRows(labels);
-		return GsonUtil.GsonString(datagrid);
+	public List<Opid> getOpidName(String string) {
+		List<Opid> opids = jdbcTemplate.query("select distinct opid_name,opid from label where opid_name like '%"
+				+ string + "%' or opid like '%" + string + "%'", new Object[] {},new BeanPropertyRowMapper<Opid>(Opid.class));
+		return opids;
 	}
 
 }

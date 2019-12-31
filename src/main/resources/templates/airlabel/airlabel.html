@@ -1,0 +1,315 @@
+<#include "/system/include.html" encoding="UTF-8" parse=true/>
+<#include "/system/common.html" encoding="UTF-8" parse=true/>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<!-- 引入样式css -->
+<@commoncss title='空运标签'/>
+</head>
+<!-- body -->
+<body class="gray-bg">
+ <div class="container-div">
+	   <div class="row">
+		  <div class="col-sm-12 search-collapse">
+			<!--form表单数据搜索条件筛选区域-->
+			<form id='searchForm' class="form-horizontal center-vertical" role="form">
+				<!--空运标签 查询条件筛选区域-->
+				<table id="air" style="width: 100%;">
+					<tr>
+						<td style="text-align: right;">录入时间:</td>
+						<td><input type="text" id="start_time" name="start_time">-<input type="text" id="end_time" name="end_time"></td>
+						<td style="text-align: right;">航班日期:</td>
+						<td><input id="flight_date" type="text" name="flight_date"></input></td>
+						<td style="text-align: right;">MAWB:</td>
+						<td><textarea rows="1" class="easyui-textbox" data-options="multiline:true" name="mawb" id="mawb"></textarea></td>
+						<td style="text-align: right;">HAWB:</td>
+						<td><input type="text" id="hawb" class="easyui-textbox" name="hawb" maxlength="13"></td>
+						<td style="text-align: right;">件数:</td>
+						<td><input type="number" class="easyui-numberbox" id="total" name="total"></td>
+					</tr>
+					<tr>
+						<td style="text-align: right;">起始地:</td>
+						<td><input type="text" id="airport_departure" name="airport_departure" /></td>
+						<td style="text-align: right;">目的地:</td>
+						<td><input type="text" id="destination" name="destination" /></td>
+						<td style="text-align: right;">是否打印:</td>
+						<td><select id="status" name="status" class="easyui-combobox" style="width: 141px;">
+								<option value=""></option>
+								<option value="0" selected="selected">未打印</option>
+								<option value="1">已打印</option>
+						</select></td>
+						<td style="text-align: right;">录入人:</td>
+						<td><input type="text" id="opid_name" name="opid_name" maxlength="15" /></td>
+					</tr>
+				</table>
+				
+			</form>
+    </div>
+     
+		<!--表格数据展示区域-->
+		<div class="col-sm-12 select-table table-striped">
+			<table id="dg1"></table>
+		</div>
+		
+	<!-- rows 结束 -->
+  </div>
+  
+  <!-- container结束 -->
+</div>
+ 
+ 
+ <!-- 订阅窗口 隐藏 -->
+	<div id="subscribeDialog" style="display: none;">
+		<div id="sr">
+			<div class="easyui-panel" title="新增主单号订阅" style="width: 100%">
+				<form id="srForm" method="post" class="form-horizontal center-vertical" action="../../subscribe/add">
+					<div class="col-md-3 col-xs-6" style="padding: 5px 0">
+						<label for="srMawb" class="col-md-3 control-label" title="MAWB">MAWB:</label>
+						<div class="col-md-9">
+							<textarea rows="1" class="form-control easyui-validatebox" data-options="required:true" name="srMawb" id="srMawb" style="height: 34px;"></textarea>
+						</div>
+					</div>
+					<div class="col-md-3 col-xs-6" style="padding: 5px 0">
+						<label for="srHawb" class="col-md-3 control-label" title="MAWB">HAWB:</label>
+						<div class="col-md-9">
+							<textarea rows="1" class="form-control" name="srHawb" id="srHawb" style="height: 34px;"></textarea>
+						</div>
+					</div>
+					<div class="col-md-3 col-xs-6" style="padding: 5px 0">
+						<label for="srEmail" class="col-md-3 control-label" title="Email">Email:</label>
+						<div class="col-md-9">
+							<input class="form-control" name="srEmail" id="srEmail" value=${Session["userInfo"].email!'XX@bondex.com.cn'} disabled="disabled"/>
+						</div>
+					</div>
+					<div class="col-md-3 col-xs-6" style="padding: 5px 0">
+						<label for="srUser" class="col-md-3 control-label" title="MAWB">订阅人:</label>
+						<div class="col-md-9">
+							<input class="form-control" name="srUser" id="srUser" value=${Session["userInfo"].psnname!'admin'} disabled="disabled"/>
+							<input type="text" id="srOpid" value= ${userInfo.opid!'0000'} style="display: none;"/>
+						</div>
+					</div>
+				</form>
+				<div style="text-align: center; padding: 5px 0">
+					<button class="btn btn-primary" onclick="subscribe.submitForm()" style="width: 80px; background-color: #ec971f; color: #fff;">订阅</button>
+					<button class="btn btn-primary" onclick="subscribe.clearForm()" style="width: 80px; background-color: #5bc0de; color: #fff;">重置表单</button>
+				</div>
+			</div>
+		</div>
+		<div style="height: 100%; width: 100%;">
+			<table id="srDg"></table>
+		</div>
+	</div>
+	
+<!--引用公共按钮操作模块-->
+<!--datagrid引入操作按钮区域 -->
+<@airLabeltoolbar/>
+
+<!-- 引入修改办公室弹框 -->
+<@selectRegion/>
+
+	
+<!--更新数据页面-->
+<div id="dd4" style="display: none; padding: 15px;">
+	<form class="form-horizontal" role="form" style="margin-top: 20px;" id="updateform" action="/labelPrint/label/update">
+		<input type="text" hidden="true" id="label_id" name="label_id">
+		<div class="form-group  has-success col-sm-6">
+			<label class="col-sm-2 control-label">MAWB:</label>
+			<div class="col-sm-10">
+				<input class="form-control" id="MAWB1" name="mawb" disabled="disabled" type="text">
+			</div>
+		</div>
+		<div class="form-group has-success col-sm-6">
+			<label for="inputPassword" class="col-sm-2 control-label"> HAWB: </label>
+			<div class="col-sm-10">
+				<input class="form-control" id="HAWB1" name="hawb" type="text" maxlength="13">
+			</div>
+		</div>
+		<div class="form-group has-success col-sm-6">
+			<label for="disabledTextInput" class="col-sm-2 control-label">件数: </label>
+			<div class="col-sm-10">
+				<input class="form-control" id="total1" type="text" name="total" disabled="disabled">
+			</div>
+		</div>
+		<div class="form-group has-success col-sm-6">
+			<label for="disabledSelect" class="col-sm-2 control-label">起始地: </label>
+			<div class="col-sm-10">
+				<input class="form-control" id="airport_departure1" type="text" name="airport_departure" disabled="disabled">
+			</div>
+		</div>
+		<div class="form-group has-success col-sm-6">
+			<label class="col-sm-2 control-label" for="inputSuccess">目的地:</label>
+			<div class="col-sm-10">
+				<input type="text" class="form-control" id="destination1" name="destination" disabled="disabled">
+			</div>
+		</div>
+		<div class="form-group has-success col-sm-6">
+			<label class="col-sm-2 control-label" for="inputWarning">状态:</label>
+			<div class="col-sm-10">
+				<input type="text" class="form-control" id="is_print1" name="is_print" disabled="disabled">
+			</div>
+		</div>
+		<div class="form-group has-success col-sm-6">
+			<label class="col-sm-2 control-label" for="inputWarning">入库时间:</label>
+			<div class="col-sm-10">
+				<input type="text" class="form-control" id="create_time" name="create_time" disabled="disabled">
+			</div>
+		</div>
+		<div class="form-group has-success col-sm-6">
+			<label class="col-sm-2 control-label" for="inputWarning">打印时间 :</label>
+			<div class="col-sm-10">
+				<input type="text" class="form-control" id="reserve2" name="reserve2" disabled="disabled">
+			</div>
+		</div>
+		<div class="form-group has-success col-sm-6">
+			<label class="col-sm-2 control-label" for="inputWarning">航班日期 :</label>
+			<div class="col-sm-10">
+				<!-- <input type="text" class="form-control" id="flight_date" name="flight_date" disabled="disabled"> -->
+				<input type="text" class="form-control" name="flight_date" disabled="disabled">
+			</div>
+		</div>
+		<div class="form-group has-success col-sm-6">
+			<label class="col-sm-2 control-label" for="inputWarning">打印人 :</label>
+			<div class="col-sm-10">
+				<input type="text" class="form-control" id="print_user" name="print_user" disabled="disabled">
+			</div>
+		</div>
+		<div class="form-group has-success col-sm-6">
+			<label class="col-sm-2 control-label" for="inputWarning">当前模版:</label>
+			<div class="col-sm-10">
+				<input id="reserve3" name="reserve3" style="width: 100%;">
+			</div>
+		</div>
+		<div class="form-group col-md-12 col-sm-10">
+			<button type="button" class="btn btn-info btn-lg btn-block" onclick="label.update()">保存</button>
+		</div>
+	</form>
+</div>
+
+</body>
+
+	<!-- airlabel js -->
+		<!-- 引入通用js -->
+	<@commonjs/>
+	<!-- 空运标签js -->
+	<script src="${request.contextPath}/js/airlabel/airlabel.js"></script>
+	<!-- 订阅js -->
+	<script src="${request.contextPath}/js/airlabel/subscribe.js"></script>
+	
+	<script  type="text/javascript">
+	
+	$(function () {
+		var thisOpid =  ${userInfo.opid};
+	    var buttons = $.extend([], $.fn.datetimebox.defaults.buttons);
+	    buttons.splice(2, 0, {
+	    	text: '清空',
+	    	handler: function(target){
+	    		$(target).datebox('setValue','');
+	    	}
+	    });
+	    var buttons1 = $.extend([], $.fn.datebox.defaults.buttons);
+	    buttons1.splice(1, 0, {
+	    	text: '清空',
+	    	handler: function(target){
+	    		$(target).datebox('setValue','');
+	    	}
+	    });
+	
+		$(document).ready(function(){
+			  $("body").keydown(function(){
+				  if (event.keyCode == 49&&event.ctrlKey) {  
+					  label.search();
+		          } 
+			  });
+		});
+		$("form :input[type='text']").change(function(){
+			if ($(this).val()!="") {
+				$(this).css('background-color','#FFFFBB');
+			}else {
+				$(this).css('background-color','white');
+			}
+		});
+		$("form :input[type='text']").focus(function(){
+			if ($(this).val()!="") {
+				$(this).select();
+			}
+		})
+	
+		$('#flight_date').datebox({
+			editable:false,
+			buttons:buttons1
+		});	
+		$('#start_time').datetimebox({  
+			width:72,
+		    required : false,  
+		    editable:false,
+		    buttons:buttons,
+		    onShowPanel:function(){  
+		        $(this).datetimebox("spinner").timespinner("setValue","00:00:00");  
+		    },
+		    onChange: function(newValue, oldValue){
+		    	label.search();
+		    }  
+		});
+		$('#end_time').datetimebox({
+			width:72,
+		    required : false,  
+		    editable:false,
+		    buttons:buttons,
+		    onShowPanel:function(){
+		        $(this).datetimebox("spinner").timespinner("setValue","23:59:59");  
+		    },
+		    onChange: function(newValue, oldValue){
+		    	label.search();
+		    }   
+		});
+		$("#ssdy").on("mouseover",function(){
+			if($("#cc").val()!="选择办公区域"){
+				$("#ssdy").fadeOut(1000);
+			}
+		})
+		//初始化页面 获取打印区域 opid 当前操作号 code  办公司id
+		$.ajax({
+			url : "/labelPrint/client/getThisRegion?opid="+thisOpid+"&code="+localStorage.getItem('ls'),
+			type : 'POST',
+			async:false,
+			success : function(result) {
+				var	rt = eval("("+result+")");
+				$("#quyu").text(rt.parent_name+'/'+rt.region_name); //修改区域标签
+			}
+		});
+	
+		
+	});
+
+
+	//修改办公室
+function setName(){
+		$.ajax({
+			url : "/labelPrint/client/getThisRegion?opid="+thisOpid+"&code="+localStorage.getItem('ls'),
+			type : 'POST',
+			success : function(result) {
+				var	rt = eval("("+result+")");
+				$("#quyu").text(rt.parent_name+'/'+rt.region_name);
+			}
+		});
+	}
+	/*
+	* 关闭遮罩层
+	*/
+	function closemask() { 
+		$("#Loading").fadeOut("normal", function () { 
+			$(this).remove(); 
+		}); 
+	} 
+	var pc; 
+	$.parser.onComplete = function () { 
+	if (pc){
+		clearTimeout(pc);
+	} 
+		pc = setTimeout(closemask, 10); 
+	}
+	</script>
+	
+	
+
+ </html>

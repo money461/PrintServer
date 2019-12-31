@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bondex.controller.SubscribeController;
@@ -23,7 +24,7 @@ import com.bondex.security.entity.JsonResult;
 import com.bondex.util.GsonUtil;
 import com.google.gson.reflect.TypeToken;
 
-@Component
+@Service(value="labelInfoServiceImpl")
 @Transactional(rollbackFor = Exception.class)
 public class LabelInfoServiceImpl implements LabelInfoService {
 	@Autowired
@@ -49,8 +50,10 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		page = null == page ? "1" : page;
 		rows = null == rows ? "20" : rows;
 
+		//拼接SQL语句
 		StringBuffer sql = new StringBuffer();
 		sql.append("select * from label LEFT JOIN template t  on t.id = label.reserve3 where t.template_id in (" + rt + ") ");
+		//派昂模式
 		if (businessType.equals("medicine")) {
 			sql.append(" and business_type = 0 ");
 			if (label.getMBLNo() != null && !label.getMBLNo().equals("undefined") && !label.getMBLNo().equals("")) {
@@ -64,6 +67,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 			} else if (label.getIs_print().equals("undefined")) {
 				sql.append("and is_print = '0' ");
 			}
+			
 		} else {
 			sql.append(" and business_type <> 0 ");
 		}
@@ -82,6 +86,8 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 				sql.append("and create_time <= '" + end_time + "' ");
 			}
 		}
+		
+		//订阅信息
 		List<Subscribe> listSubscribe;
 		if ((listSubscribe = SubscribeController.subscribeMap.get(opid)) != null) {
 			rows = "100";// 改为100，防止出现第二页
@@ -139,7 +145,10 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 			sql.append("ORDER BY is_print,CREATE_time desc ");
 		}
 		sql.append("limit " + (Integer.valueOf(page) - 1) * Integer.valueOf(rows) + "," + rows + "");
+		//查询模板及其数据
 		List<LabelAndTemplate> keywords = labelInfoDao.findByPage(sql.toString());
+		
+		//获取总的数据量
 		StringBuffer totalsql = new StringBuffer();
 		totalsql.append("select count(1) from label LEFT JOIN template t  on t.id = label.reserve3 where t.template_id in (" + rt + ") ");
 		totalsql.append("and reserve1 = '0' ");
@@ -177,6 +186,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 				totalsql.append("and create_time <= '" + end_time + "' ");
 			}
 		}
+		
 		if (listSubscribe != null) {
 			StringBuilder builder = new StringBuilder();
 			for (Subscribe subscribe : listSubscribe) {
@@ -224,6 +234,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		Datagrid datagrid = new Datagrid();
 		datagrid.setRows(keywords);
 		datagrid.setTotal(labelInfoDao.getTotel(totalsql.toString()));
+		System.out.println(GsonUtil.GsonString(datagrid));
 		return datagrid;
 	}
 

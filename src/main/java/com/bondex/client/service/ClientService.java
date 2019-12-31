@@ -3,13 +3,22 @@ package com.bondex.client.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
 
 import com.bondex.jdbc.entity.Label;
+import com.bondex.security.entity.Opid;
+import com.bondex.security.entity.UserInfo;
 
 public interface ClientService {
 
-	List<InputStream> getPDF(List<Label> list, Map info, String report, String thisUsername, String opid) throws IOException;
+	/**
+	 * 导出标签 PDF
+	 * @param list
+	 * @param report
+	 * @param userInfo
+	 * @return
+	 * @throws IOException
+	 */
+	List<InputStream> getPDF(List<Label> list, String report, UserInfo userInfo) throws IOException;
 
 	/**
 	 * 获取所有办公区域
@@ -31,7 +40,7 @@ public interface ClientService {
 	 * 
 	 * @return
 	 */
-	String sendLabel(String labels, String region, String thisUsername, String opid, Map info, String report, String businessType);
+	void sendLabel(List<Label> labelList, String region, UserInfo userInfo, String report, String businessType);
 
 	String searchRegion(String q);
 
@@ -47,6 +56,6 @@ public interface ClientService {
 
 	String getThisRegion(String code, String opid);
 
-	String getOpidName(String string);
+	List<Opid> getOpidName(String string);
 
 }

@@ -101,8 +101,10 @@ public class HttpClient {
 			for (Iterator iter = params.keySet().iterator(); iter.hasNext();) {
 				String name = (String) iter.next();
 				String value = String.valueOf(params.get(name));
+				if(StringUtils.isBlank(value) || "null"==value){
+					continue;
+				}
 				nvps.add(new BasicNameValuePair(name, value));
-
 				// System.out.println(name +"-"+value);
 			}
 			request.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));

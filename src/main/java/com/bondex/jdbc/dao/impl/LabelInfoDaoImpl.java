@@ -45,6 +45,7 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 	private TemplateDataMapper templateDataMapper;
 	
 	private Map<String, Integer> subscribeTotal = new HashMap<String, Integer>();
+	//订阅邮箱地址
 	@Value("${email.url.ip}")
 	private String urlIp;
 
@@ -250,7 +251,7 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 		List<Template> template = jdbcTemplate.query("select * from template where id = ? and template_id in(" + rt + ") or template_name =?", new Object[] { id, id }, new BeanPropertyRowMapper<Template>(Template.class));
 		if (template.isEmpty()) {
 			Template template2 = new Template();
-			template2.setTemplate_name("无权限的异常数据");
+			template2.setTemplate_name("未配置打印模板");
 			return template2;
 		} else {
 			return template.get(0);

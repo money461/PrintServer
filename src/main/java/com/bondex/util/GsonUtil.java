@@ -41,6 +41,21 @@ public class GsonUtil {
         }
         return gsonString;
     }
+    
+    /**
+     * 将对象转成json格式
+     * 
+     * @param object
+     * @return String
+     */
+    public static <T> List<T> GsonDateformateString(String jsonString, Class<T> cls) {
+    	Gson gson= new GsonBuilder()
+         		.setDateFormat("MMM d, yyyy K:m:s a") //Dec 30, 2019 12:00:00 AM 转换
+         		.setPrettyPrinting() //格式化打印输出
+         		.create();
+    	 List<T> list =gson.fromJson(jsonString, new TypeToken<List<T>>() {}.getType());
+        return list;
+    }
 
     /**
      * 将json转成特定的cls的对象

@@ -5,6 +5,7 @@ server:
     timeout: -1
   tomcat:
     uri-encoding: utf-8
+  applicationId: 827 
 logging:
   level:
     com.bondex: debug
@@ -15,15 +16,12 @@ filter:
 spring:
   profiles:
     active:
-     - dev
+    - test
   http:
     encoding:
       charset: UTF-8
       enabled: true
   datasource:
-    url: jdbc:mysql://172.16.0.11:3306/labelprint?autoReconnect=true&useUnicode=true&characterEncoding=utf-8&useSSL=false&zeroDateTimeBehavior=convertToNull
-    username: labelprint
-    password: vgy7VFR4
     driver-class-name: com.mysql.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     initialSize: 5
@@ -39,11 +37,54 @@ spring:
     poolPreparedStatements: true
     maxPoolPreparedStatementPerConnectionSize: 20
     filters: stat,wall,slf4j
-  thymeleaf:
+  freemarker:
+    content-type: text/html; charset=utf-8
     cache: false
-    mode: LEGACYHTML5
+    template-loader-path:
+      - classpath:/templates/
+    expose-request-attributes: true
+    expose-session-attributes: true
+    expose-spring-macro-helpers: false
+    #########设置request，在页面获取request.getContextPath()############
+    request-context-attribute: request
+    allow-request-override: false
+    allow-session-override: false
+    prefer-file-system-access: true
+    prefix: 
+    suffix: .html
+    charset: UTF-8
+    enabled: true
+    check-template-location: true
+    order: 1
   application:
     name: printServer
+  activemq:
+    close-timeout: 
+  messages:
+    fallback-to-system-locale: 
+  jackson:
+    #日期格式化
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+10
+    locale: zh_CN
+    ##前端JSON序列化null属性值不参与序列化
+    default-property-inclusion: non-null 
+    serialization:
+       #格式化输出 
+      indent_output: true
+      #忽略无法转换的对象
+      fail_on_empty_beans: false
+    #设置空如何序列化
+    defaultPropertyInclusion: NON_EMPTY
+    deserialization:
+      #允许对象忽略json中不存在的属性
+      fail_on_unknown_properties: false
+    parser:
+      #允许出现特殊字符和转义符
+      allow_unquoted_control_chars: true
+      #允许出现单引号
+      allow_single_quotes: true
+   
 restTemplate:
   connectionRequestTimeout: 1000
   connectTimeout: 10000

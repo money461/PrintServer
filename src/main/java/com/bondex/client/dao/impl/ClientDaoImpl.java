@@ -49,8 +49,10 @@ public class ClientDaoImpl implements ClientDao {
 	public String isFrist(String opid) {
 		List<DefaultRegion> defaultRegions = jdbcTemplate.query("select * from default_region where opid = ? and type = 0", new Object[] { opid }, new BeanPropertyRowMapper<DefaultRegion>(DefaultRegion.class));
 		if (defaultRegions.isEmpty()) {
+			//当第一次使用的时候，需要配置模板。
 			return "false";
 		} else {
+			//返回模板信息
 			return GsonUtil.GsonString(defaultRegions);
 		}
 	}

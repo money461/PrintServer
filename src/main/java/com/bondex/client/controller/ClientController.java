@@ -13,19 +13,36 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.bondex.client.service.ClientService;
+import com.bondex.common.Common;
+import com.bondex.entity.Datagrid;
 import com.bondex.jdbc.entity.Label;
+import com.bondex.res.AjaxResult;
+import com.bondex.res.MsgResult;
 import com.bondex.security.entity.JsonResult;
+import com.bondex.security.entity.Opid;
+import com.bondex.security.entity.UserInfo;
+import com.bondex.shiro.security.ShiroUtils;
+import com.bondex.util.GsonUtil;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 @Controller
 @RequestMapping("client")
 public class ClientController {
+	
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	
 	@Autowired
 	private ClientService clientService;
 
@@ -36,6 +53,7 @@ public class ClientController {
 		return regions;
 	}
 
+	//校验是否是第一次打印(获取打印办公司)
 	@RequestMapping("isFrist")
 	@ResponseBody
 	public String isFrist(String opid) {
@@ -50,6 +68,11 @@ public class ClientController {
 		return regions;
 	}
 
+	/**
+	 * 树形菜单展示区域
+	 * @param opid
+	 * @return
+	 */
 	@RequestMapping("printLabel")
 	@ResponseBody
 	public String printLabel(String opid) {
@@ -59,8 +82,9 @@ public class ClientController {
 
 	@RequestMapping("updateRn")
 	@ResponseBody
-	public String updateRn(String region, HttpSession session) {
-		String opid = (String) session.getAttribute("thisOpid");
+	public String updateRn(String region,HttpServletRequest request) {
+		HttpSession session = request.getSession();
+		String opid = (String) session.getAttribute(Common.Session_thisOpid);
 		try {
 			clientService.updateRn(region, opid);
 			return "true";
@@ -71,26 +95,28 @@ public class ClientController {
 	}
 
 	/**
-	 * 发送打印消息
-	 * @param labels
-	 * @param regions
-	 * @param session
-	 * @param report
-	 * @param businessType
+	 * 发送打印消息 多个标签
+	 * @param labels 多个标签
+	 * @param regions 区域
+	 * @param report 打印人 标识 第一次 有值，第二次 没有值
+	 * @param businessType air
 	 * @return
 	 */
 	@RequestMapping("printLabelSendClient")
 	@ResponseBody
-	public String printLabelSendClient(String labels, String regions, HttpSession session, String report, String businessType) {
-		Map info = (Map) session.getAttribute("userInfo");
-		String opid = (String) session.getAttribute("thisOpid");
-		String thisUsername = (String) session.getAttribute("thisUsername");
-		String rt = clientService.sendLabel(labels, regions, thisUsername, opid, info, report, businessType);
-		return rt;
+	public AjaxResult printLabelSendClient(String labels, String regions, String report, String businessType,HttpServletRequest request) {
+		HttpSession session = request.getSession();
+		UserInfo userInfo = (UserInfo)session.getAttribute(Common.Session_UserInfo);
+		List<Label> labelList = GsonUtil.getGson().fromJson(labels, new TypeToken<List<Label>>() {}.getType());
+		String gsonString = GsonUtil.GsonString(labelList);
+		logger.debug("提交准备打印的数据：{}",gsonString);
+		clientService.sendLabel(labelList, regions,userInfo, report, businessType);
+		return AjaxResult.success();
 	}
 
 	@RequestMapping("exportLabel")
-	public void exportLabel(String labels, HttpServletRequest request, HttpSession session, HttpServletResponse response, String report) throws IOException {
+	public void exportLabel(String labels, HttpServletRequest request, HttpServletResponse response, String report) throws IOException {
+		HttpSession session = request.getSession();
 		OutputStream out = null;
 		try {
 			out = response.getOutputStream();
@@ -100,12 +126,10 @@ public class ClientController {
 			response.setHeader("Content-Disposition", headStr);
 			ZipOutputStream zipOutputStream = new ZipOutputStream(out);
 
-			Map info = (Map) session.getAttribute("userInfo");
-			String opid = (String) session.getAttribute("thisOpid");
-			String thisUsername = (String) session.getAttribute("thisUsername");
+			UserInfo userInfo = (UserInfo) session.getAttribute(Common.Session_UserInfo);
 
 			List<Label> labels2 = clientService.getLabel(labels);
-			List<InputStream> pdf = clientService.getPDF(labels2, info, report, thisUsername, opid);
+			List<InputStream> pdf = clientService.getPDF(labels2, report, userInfo);
 			if (pdf == null) {
 				response.setStatus(444);
 				return;
@@ -148,33 +172,60 @@ public class ClientController {
 		}
 	}
 
+	/**
+	 * 获取打印按钮权限权限
+	 * @param request
+	 * @param session
+	 * @return
+	 */
 	@RequestMapping("getPrint")
 	@ResponseBody
-	public String getPrint(HttpServletRequest request, HttpSession session) {
-		String opid = (String) session.getAttribute("thisOpid");
-		Map<String, Object> map = (Map<String, Object>) session.getAttribute("userSecurity");
-		List<JsonResult> list = (List<JsonResult>) map.get(opid + "printButton");
-		return new Gson().toJson(list);
+	public String getPrint(HttpServletRequest request) {
+		HttpSession session = request.getSession();
+		UserInfo userInfo = ShiroUtils.getUserInfo();
+		Map<String, Object> map = (Map<String, Object>) session.getAttribute(Common.Session_UserSecurity);
+		List<JsonResult> list = (List<JsonResult>) map.get(userInfo.getOpid() + Common.UserSecurity_PrintButton);
+		return GsonUtil.GsonString(list);
 	}
 
 	@RequestMapping("getRegion")
 	@ResponseBody
-	public String getRegion(HttpServletRequest request, HttpSession session, String q) {
+	public String getRegion(HttpServletRequest request, String q) {
+		HttpSession session = request.getSession();
 		return clientService.postRegion(q == null ? "a" : q);
 	}
 
+	/**
+	 * 数据库获取录入人操作信息
+	 * @param request
+	 * @param response
+	 * @param q
+	 * @return
+	 */
 	@RequestMapping("getOpidName")
 	@ResponseBody
-	public String getOpidName(HttpServletRequest request, HttpSession session, String q) {
-		return clientService.getOpidName(q == null ? "" : q);
+	public String getOpidName(HttpServletRequest request, HttpServletResponse response, String q) {
+		List<Opid> opids= clientService.getOpidName(q == null ? "" : q);
+		Datagrid<Opid> datagrid = new Datagrid<>();
+		datagrid.setRows(opids);
+		return GsonUtil.GsonString(datagrid);
 	}
 
-	@RequestMapping("getThisRegion")
+	/**
+	 * 获取区域
+	 * @param request
+	 * @param session
+	 * @param code 办公司id
+	 * @param opid
+	 * @return
+	 */
+	@RequestMapping(value="getThisRegion",method=RequestMethod.POST)
 	@ResponseBody
-	public String getThisRegion(HttpServletRequest request, HttpSession session, String code, String opid) {
-		if (opid.equals("null")) {
-			opid = (String) session.getAttribute("thisOpid");
+	public String getThisRegion(HttpServletRequest request, String code, String opid) {
+		if (StringUtils.isBlank(opid) ){
+			opid =ShiroUtils.getUserInfo().getOpid();
 		}
+		
 		return clientService.getThisRegion(code, opid);
 	}
 

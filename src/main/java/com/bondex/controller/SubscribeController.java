@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.bondex.common.Common;
 import com.bondex.entity.Datagrid;
 import com.bondex.entity.Subscribe;
 import com.bondex.util.GsonUtil;
@@ -42,7 +44,8 @@ public class SubscribeController {
 	public static Map<String, List<Subscribe>> subscribeMap = new HashMap<>();
 
 	@RequestMapping("add")
-	public String add(Subscribe subscribe, HttpSession session) throws Exception {
+	public String add(Subscribe subscribe, HttpServletRequest request) throws Exception {
+		HttpSession session = request.getSession();
 		if (subscribe.getSrMawb() == null || subscribe.getSrMawb().trim().equals("")) {
 			return "<b style='color:red;'>主单号为必填项！</b>";
 		}
@@ -50,7 +53,7 @@ public class SubscribeController {
 			return "<b style='color:red;'>主单号长度不足11位！</b>";
 		}
 		String uuid = RandomUtil.UUID32();
-		String opid = (String) session.getAttribute("thisOpid");
+		String opid = (String) session.getAttribute(Common.Session_thisOpid);
 		String mawbs[] = subscribe.getSrMawb().split("\n");
 		StringBuffer buffer = null;
 		for (String mawb : mawbs) {
@@ -87,7 +90,8 @@ public class SubscribeController {
 	}
 
 	@RequestMapping("all")
-	public String all(String page, String rows, HttpSession session) {
+	public String all(String page, String rows, HttpServletRequest request) {
+		HttpSession session = request.getSession();
 		List<Subscribe> subscribes = jdbcTemplate.query("select * from subscribe where sr_opid = ?   limit " + (Integer.valueOf(page) - 1) * Integer.valueOf(rows) + "," + rows + "", new Object[] { session.getAttribute("thisOpid") }, new BeanPropertyRowMapper<Subscribe>(Subscribe.class));
 		String total = jdbcTemplate.queryForObject("select count(1) from subscribe where sr_opid = ? ", new Object[] { session.getAttribute("thisOpid") }, String.class);
 		Datagrid<Subscribe> datagrid = new Datagrid<>();

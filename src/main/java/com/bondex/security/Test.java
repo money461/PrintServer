@@ -14,8 +14,6 @@ import javax.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.tempuri1.IPermissionService;
-import org.tempuri1.IPermissionServiceProxy;
 
 import com.bondex.security.entity.OperatorIdData;
 import com.bondex.security.entity.OperatorIdResult;
@@ -28,7 +26,8 @@ public class Test {
 	Gson gson = new Gson();
 
 	@RequestMapping("qxtest")
-	public void test(HttpServletRequest request, HttpSession session) throws RemoteException {
+	public void test(HttpServletRequest request) throws RemoteException {
+		HttpSession session = request.getSession();
 		Object object = session.getAttribute("userInfo");
 		System.out.println(object);
 		Map<String, String> map = (Map<String, String>) object;
@@ -41,13 +40,13 @@ public class Test {
 		Map<String, String> map2 = data2.getOpids();
 		// 设置操作id
 
-		IPermissionService permissionService = new IPermissionServiceProxy();
+//		IPermissionService permissionService = new IPermissionServiceProxy();
 		// 用户功能模块权限
-		String rt = permissionService.getHasPermissionModuleList(applicationId, operatorId);
-		System.err.println(rt);
+//		String rt = permissionService.getHasPermissionModuleList(applicationId, operatorId);
+//		System.err.println(rt);
 		// 用户功能模块按钮权限
-		String button = permissionService.getHasPermissionPageButton(applicationId, "AirPrintLabel", null, operatorId);
-		System.err.println(button);
+//		String button = permissionService.getHasPermissionPageButton(applicationId, "AirPrintLabel", null, operatorId);
+//		System.err.println(button);
 
 	}
 
