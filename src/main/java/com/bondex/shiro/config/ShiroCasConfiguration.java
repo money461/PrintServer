@@ -378,7 +378,7 @@ public class ShiroCasConfiguration {
     	//是否开启扫描
     	sessionManager.setSessionValidationSchedulerEnabled(true);
     	//去掉URL中的JSESSIONID
-    	sessionManager.setSessionIdUrlRewritingEnabled(false);
+    	sessionManager.setSessionIdCookieEnabled(false);
     	//在会话过期时是否想删除过期的会话 默认是开启的
     	sessionManager.setDeleteInvalidSessions(true);
     	//设置属于该系统的SessionID名称 

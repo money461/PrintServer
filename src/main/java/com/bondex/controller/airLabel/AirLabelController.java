@@ -1,6 +1,5 @@
 package com.bondex.controller.airLabel;
 
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.URLDecoder;
 import java.util.List;
@@ -37,6 +36,7 @@ import com.google.gson.reflect.TypeToken;
 public class AirLabelController {
 	@Resource(name="labelInfoServiceImpl")
 	private LabelInfoService labelInfoService;
+	
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
