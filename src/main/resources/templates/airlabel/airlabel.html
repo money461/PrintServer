@@ -198,7 +198,7 @@
 	<script  type="text/javascript">
 	
 	$(function () {
-		var thisOpid =  ${userInfo.opid};
+		//var thisOpid =  ${userInfo.opid};
 	    var buttons = $.extend([], $.fn.datetimebox.defaults.buttons);
 	    buttons.splice(2, 0, {
 	    	text: '清空',
@@ -267,32 +267,12 @@
 				$("#ssdy").fadeOut(1000);
 			}
 		})
-		//初始化页面 获取打印区域 opid 当前操作号 code  办公司id
-		$.ajax({
-			url : "/labelPrint/client/getThisRegion?opid="+thisOpid+"&code="+localStorage.getItem('ls'),
-			type : 'POST',
-			async:false,
-			success : function(result) {
-				var	rt = eval("("+result+")");
-				$("#quyu").text(rt.parent_name+'/'+rt.region_name); //修改区域标签
-			}
-		});
-	
+		
 		
 	});
 
 
-	//修改办公室
-function setName(){
-		$.ajax({
-			url : "/labelPrint/client/getThisRegion?opid="+thisOpid+"&code="+localStorage.getItem('ls'),
-			type : 'POST',
-			success : function(result) {
-				var	rt = eval("("+result+")");
-				$("#quyu").text(rt.parent_name+'/'+rt.region_name);
-			}
-		});
-	}
+
 	/*
 	* 关闭遮罩层
 	*/

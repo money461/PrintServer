@@ -19,7 +19,7 @@ function label() {
 	
 	//js初始化调用的接口
 	//获取操作opid
-	$(function(){
+$(function(){
 		$.ajax({
 			url : "/labelPrint/getThisOpids",
 			type : 'POST',
@@ -96,11 +96,38 @@ function label() {
 			onSelect:function(rowIndex, rowData){
 				destination =rowData.code; 
 		    }
-		});  
+		}); 
+		
+		
+		//初始化页面 获取打印区域 opid 当前操作号 code  办公司id
+		$.ajax({
+			url : "/labelPrint/client/getThisRegion?opid="+opid1+"&code="+localStorage.getItem('ls'),
+			type : 'POST',
+			async:false,
+			success : function(result) {
+				var	rt = eval("("+result+")");
+				$("#quyu").text(rt.parent_name+'/'+rt.region_name); //修改区域标签
+			}
+		});
 		
 	}); 
 
-	function formatDate(time){
+//初始化结束
+
+//修改办公室
+function setName(){
+		$.ajax({
+			url : "/labelPrint/client/getThisRegion?opid="+opid1+"&code="+localStorage.getItem('ls'),
+			type : 'POST',
+			success : function(result) {
+				var	rt = eval("("+result+")");
+				$("#quyu").text(rt.parent_name+'/'+rt.region_name);
+			}
+		});
+}
+
+
+function formatDate(time){
 		if (time!=undefined&&undefined!="undefined") {
 		    var date = new Date(time);
 		    var year = date.getFullYear(),
