@@ -86,7 +86,7 @@ paiang.prototype.initDataGridTable=function(){
 		    },
 		    //当用户双击一个单元格时触发。
 		    onClickCell:function(rowIndex, field, value){
-				if (field=="RecCustomerName"||field=="template_name"||field=="packages") {
+				if (field=="RecCustomerName"||field=="template_name"||field=="TotalAccount") {
 			        var rows = $('#paiang_tab').datagrid('getRows');// 返回当前页的行。
 			        var row = rows[rowIndex];// 根据index获得其中一行。
 					
@@ -856,23 +856,16 @@ var paiangcolumns={
 			    checkbox: true,
 			    visible: true
 			},{
-				field: 'label_id',
+				field: 'MBLNo',
 			    sortable:true,
 			    order:'asc',
-			    title: '序号',
-			    width:3
+			    title: '运单号',
+			    width:6
 			},
-			{
-			    field: 'mawb',
-			    sortable:true,
-			    order:'asc',
-			    title: '主单',
-			    width:10
-			
-			}, {
+			 {
 			    field: 'hawb',
 			    title: '分单',
-			    width:10
+			    width:6
 			
 			},{
 				field:'template_name',
@@ -916,18 +909,18 @@ var paiangcolumns={
 			            }
 			        }
 			},{
-				field:'deliveryCustomer',
+				field:'SendAddress',
 				title:'发货人',
 				width:10
 			       
 			},{
-				field:'packages',
+				field:'TotalAccount',
 				title:'总件数',
 				width:10,
 			    editor:{
 			            type:'text',
 			            options:{
-			                valueField:'packages',
+			                valueField:'TotalAccount',
 			                required:true
 			            }
 			        }

@@ -46,6 +46,7 @@ import com.bondex.jdbc.entity.Template;
 import com.bondex.rabbitmq.Producer;
 import com.bondex.security.entity.Opid;
 import com.bondex.security.entity.UserInfo;
+import com.bondex.util.CloneUtils;
 import com.bondex.util.GsonUtil;
 import com.bondex.util.StringUtils;
 
@@ -295,15 +296,26 @@ public class ClientServiceImpl implements ClientService {
 			client.setSenderName(userInfo.getOpname() + "/" + userInfo.getPsnname()); //此处改动不是很清楚
 			client.setSendOPID(userInfo.getOpid());// 操作号
 			client.setOtherToShow("");
-			client.setCopies(label.getTotal());// 标签打印份数
 			// ClientData
 			if (businessType.equals("medicine")) {
+				client.setCopies("1");// 标签打印份数
 				client.setReportWidth("100");// 标签宽度，单位毫米（目前定死）
 				client.setReportHeight("100");// 标签高度，单位毫米（目前定死）
-				array.add(label);
+				//克隆数据
+				String totalAccount = label.getTotalAccount();
+				for (int i = 1; i <=Integer.valueOf(totalAccount); i++) {
+					Label clone = CloneUtils.clone(label);
+					clone.setSerizalNo(i+"-"+totalAccount);
+					array.add(clone);
+				}
+				
 				jsonObject.put("vwOrderAll", array);
 				client.setData(jsonObject.toJSONString());
+				
+				clients.add(client);
+				
 			} else {
+				client.setCopies(label.getTotal());// 标签打印份数
 				client.setNoToShow(label.getMawb() + "_" + label.getHawb());// 要显示的单号
 				client.setReportWidth("100");// 标签宽度，单位毫米（目前定死）
 				client.setReportHeight("70");// 标签高度，单位毫米（目前定死）
@@ -317,8 +329,10 @@ public class ClientServiceImpl implements ClientService {
 				vwOrderAlls.add(vwOrderAll);
 				clientData.setVwOrderAll(vwOrderAlls);
 				client.setData(GsonUtil.GsonString(clientData));
+				clients.add(client);
 			}
-			clients.add(client);
+			
+			
 		}
 		return clients;
 	}

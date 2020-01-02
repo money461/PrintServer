@@ -1,11 +1,14 @@
 package com.bondex.jdbc.service.impl;
 
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +26,7 @@ import com.bondex.jdbc.service.LabelInfoService;
 import com.bondex.security.entity.JsonResult;
 import com.bondex.util.GsonUtil;
 import com.bondex.util.HttpClient;
+import com.bondex.util.StringUtils;
 import com.google.gson.reflect.TypeToken;
 @Service(value="paiangServiceImple")
 public class PaiangServiceImple implements LabelInfoService {
@@ -41,6 +45,7 @@ public class PaiangServiceImple implements LabelInfoService {
 	}
 
 	//派昂调用接口获取数据
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Datagrid findByPage(String page, String rows, Label label, String start_time, String end_time, String sort,	String order, String opid, List<JsonResult> list, String businessType) throws Exception {
 		if (businessType.equals("medicine")) {
@@ -73,15 +78,36 @@ public class PaiangServiceImple implements LabelInfoService {
 			 //反序列化
 			 List<LabelAndTemplate> datalist = JSONObject.parseArray(datarows.toJSONString(), LabelAndTemplate.class);
 			 
-//			 TreeMap<String, List<LabelAndTemplate>> treeMap = new TreeMap<String, List<LabelAndTemplate>>();
+			 TreeMap<String, List<LabelAndTemplate>> treeMap = new TreeMap<String, List<LabelAndTemplate>>();
 			 
 			 //封装打印模板并且对数据做出分类
 			 for (LabelAndTemplate labelAndTemplate : datalist) {
-				 labelAndTemplate.setDeliveryCustomer("陕西派昂医药有限责任公司");
+				 
+				 labelAndTemplate.setSendAddress("陕西派昂医药有限责任公司"); //发货人 固定
 				 labelAndTemplate.setId(template.getId());
 				 labelAndTemplate.setTemplate_id(template.getTemplate_id());
 				 labelAndTemplate.setTemplate_name(template.getTemplate_name());
+				 labelAndTemplate.setMBLNo(labelAndTemplate.getMawb()); //主单号即运单号
+				 String hawb = labelAndTemplate.getHawb();
+				 if(StringUtils.isNotBlank(hawb)){
+					 List<LabelAndTemplate> hawblist = treeMap.get(hawb);
+					 
+					 if(StringUtils.isNull(hawblist)){
+						 hawblist = new ArrayList<LabelAndTemplate>();
+						 treeMap.put(hawb, hawblist);
+					 }
+					 hawblist.add(labelAndTemplate);
+				 }
 			 }
+			 
+			 Iterator<Entry<String, List<LabelAndTemplate>>> iterator = treeMap.entrySet().iterator();
+			 while (iterator.hasNext()) {
+			             Entry<String, List<LabelAndTemplate>> entry = iterator.next();
+			             String key = entry.getKey();
+			             List<LabelAndTemplate> value = entry.getValue();
+			             BigDecimal reduce = value.stream().map(LabelAndTemplate :: getPackages).reduce(BigDecimal.ZERO,this :: getSum);
+			             value.forEach(x->x.setTotalAccount(reduce.toString()));
+			}
 			 
 			 Datagrid<LabelAndTemplate> datagrid = new Datagrid<LabelAndTemplate>(String.valueOf(total), datalist);
 			 System.out.println(GsonUtil.GsonString(datagrid));
@@ -111,6 +137,17 @@ public class PaiangServiceImple implements LabelInfoService {
 		Template template = labelInfoDao.getTemplate(rt, id);
 		return template;
 	}
+
+	
+	 //求和
+    private  BigDecimal getSum(BigDecimal ...num){
+        BigDecimal result = BigDecimal.ZERO;
+        for (int i = 0; i < num.length; i++){
+        	BigDecimal nm = num[i]!=null? num[i] :  BigDecimal.ZERO;
+        		result = result.add(nm);
+        }
+        return result;
+    }
 
 	
 	
