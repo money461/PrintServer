@@ -19,6 +19,7 @@ spring:
     - test
   http:
     encoding:
+      force: true
       charset: UTF-8
       enabled: true
   datasource:

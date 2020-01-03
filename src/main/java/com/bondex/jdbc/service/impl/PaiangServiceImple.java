@@ -8,6 +8,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javax.validation.constraints.Null;
+
 import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,9 +55,10 @@ public class PaiangServiceImple implements LabelInfoService {
 			
 			//标签权限
 			Type objectType = new TypeToken<List<List<JsonResult>>>() {}.getType();
-			List<List<JsonResult>> jsonResults = GsonUtil.getGson().fromJson(GsonUtil.GsonString(list), objectType);
+			List<List<JsonResult>> jsonResultsList = GsonUtil.getGson().fromJson(GsonUtil.GsonString(list), objectType);
+			List<JsonResult> jsonResults = null==jsonResultsList?null:jsonResultsList.get(0);
 			//查询指定的模板及其数据
-			Template template = getTemplate(jsonResults.get(0), "4");
+			Template template = getTemplate(jsonResults, "4");
 			
 			//调用接口获取数据
 			 JSONObject jsonStu = (JSONObject)JSONObject.toJSON(label);
@@ -130,7 +134,9 @@ public class PaiangServiceImple implements LabelInfoService {
 	@Override
 	public Template getTemplate(List<JsonResult> jsonResults, String id) {
 		String rt = "";
-		for (JsonResult jsonResult : jsonResults) {
+		Iterator<JsonResult> iterator = jsonResults.iterator();
+		while(iterator.hasNext()){
+			JsonResult jsonResult = iterator.next();
 			rt += "'" + jsonResult.getReportid() + "',";
 		}
 		rt = rt.substring(0, rt.length() - 1);

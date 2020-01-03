@@ -38,7 +38,7 @@ public class GlobalExceptionHandler
     @ExceptionHandler(AuthorizationException.class)
     public Object handleAuthorizationException(HttpServletRequest request, AuthorizationException e)
     {
-        log.error(e.getMessage(), e);
+    	log.error("[捕捉全局异常请求URL:][{}],原因：{}",request.getRequestURL(),e);
         if (ServletUtils.isAjaxRequest(request))
         {
             return AjaxResult.result(ResEnum.FORBIDDEN);

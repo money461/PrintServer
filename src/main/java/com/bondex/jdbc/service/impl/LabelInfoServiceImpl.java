@@ -3,6 +3,7 @@ package com.bondex.jdbc.service.impl;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -40,12 +41,20 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 	public Datagrid findByPage(String page, String rows, Label label, String start_time, String end_time, String sort, String order, String opid, List<JsonResult> listop, String businessType) {
 		// 获取用户拥有的标签模版，权限
 		Type objectType = new TypeToken<List<List<JsonResult>>>() {}.getType();
-		List<List<JsonResult>> jsonResults = GsonUtil.getGson().fromJson(GsonUtil.GsonString(listop), objectType);
+		List<List<JsonResult>> jsonResultsList = GsonUtil.getGson().fromJson(GsonUtil.GsonString(listop), objectType);
+		
+		List<JsonResult> jsonResults = null==jsonResultsList?null:jsonResultsList.get(0);
+		
 		String rt = ""; //'a357f19f-6a1f-4171-ab8e-1f1a2b77377a','988b4162-00af-4924-a6fe-6b310d161900','2b7eddea-d953-4186-bc3b-a642940d57ea','4e2b8f59-9858-4297-962f-6ee4862085aa'
-		for (JsonResult jsonResult : jsonResults.get(0)) {
-			rt += "'" + jsonResult.getReportid() + "',";
+		
+		if(null!=jsonResults){
+			Iterator<JsonResult> iterator = jsonResults.iterator();
+			while(iterator.hasNext()){
+				JsonResult jsonResult = iterator.next();
+				rt += "'" + jsonResult.getReportid() + "',";
+			}
+			rt = rt.substring(0, rt.length() - 1);
 		}
-		rt = rt.substring(0, rt.length() - 1);
 
 		page = null == page ? "1" : page;
 		rows = null == rows ? "20" : rows;
@@ -251,7 +260,9 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 	@Override
 	public Template getTemplate(List<JsonResult> jsonResults, String id) {
 		String rt = "";
-		for (JsonResult jsonResult : jsonResults) {
+		Iterator<JsonResult> iterator = jsonResults.iterator();
+		while(iterator.hasNext()){
+			JsonResult jsonResult = iterator.next();
 			rt += "'" + jsonResult.getReportid() + "',";
 		}
 		rt = rt.substring(0, rt.length() - 1);

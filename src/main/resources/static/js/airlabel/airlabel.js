@@ -731,6 +731,14 @@ function updateRegion() {
 					return 'background-color:#5cb85c';
 				}
 			},
+			loadFilter:function(data){
+				if(data.status=="200"){
+					return data.data;
+				}else{
+					layer.msg(data.message,{icon:2,time:5000});
+					return null;
+				}
+			},
 			onUnselect:function(rowIndex, rowData){
 				$("#dg1").datagrid('endEdit', rowIndex); //未选择该行的时候，结束编辑
 			},
@@ -740,6 +748,7 @@ function updateRegion() {
 			},
 			//当用户单击一个单元格时触发。
 			onClickCell:function(rowIndex, field, value){
+				
 				if (field=="hawb"||field=="template_name"||field=="destination"||(field=="total"&&type=="medicine")) {
 			        var rows = $('#dg1').datagrid('getRows');// 获得所有行
 			        var row = rows[rowIndex];// 根据index获得其中一行。

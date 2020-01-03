@@ -299,6 +299,17 @@
 	 <!-- 应与application.properties(或application.yml)中context-path保持一致 -->
       <finalName>labelPrint</finalName>
 		<plugins>
+		<!-- 打包成可执行jar,防止中文乱码，必须要下面这一个插件  -->
+            <plugin> 
+                <groupId>org.apache.maven.plugins</groupId> 
+                <artifactId>maven-compiler-plugin</artifactId> 
+                <configuration> 
+                <source>1.8</source> 
+                <target>1.8</target> 
+                <encoding>utf-8</encoding> 
+                </configuration> 
+            </plugin> 
+			
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -308,12 +319,20 @@
 		                <source>${java.version}</source>
 		                <target>${java.version}</target>
 		                <encoding>${project.build.sourceEncoding}</encoding>
+		                <jvmArguments>-Dfile.encoding=UTF-8</jvmArguments>
 					     <!-- 过滤后缀不需要转码的文件后缀名.crt/.p8.pDF -->
 				        <nonFilteredFileExtensions>
 				        	<nonFilteredFileExtension>PDF</nonFilteredFileExtension>
 				        </nonFilteredFileExtensions>
 	        
 				    </configuration>
+					 <executions> 
+					  <execution> 
+						<goals> 
+						  <goal>repackage</goal> 
+						</goals> 
+					  </execution> 
+                </executions> 
 			</plugin>
 		</plugins>
 		<resources>

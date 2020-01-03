@@ -17,9 +17,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.bondex.common.Common;
+import com.bondex.common.enums.ResEnum;
+import com.bondex.config.exception.BusinessException;
 import com.bondex.entity.Datagrid;
 import com.bondex.jdbc.entity.Label;
 import com.bondex.jdbc.service.LabelInfoService;
+import com.bondex.res.MsgResult;
 import com.bondex.security.entity.JsonResult;
 import com.bondex.security.entity.UserInfo;
 import com.bondex.shiro.security.ShiroUtils;
@@ -64,8 +67,8 @@ public class PaiangController {
 	public Object search(String page, String rows,Label label,String start_time, String end_time, String sort, String order, String opid,HttpServletRequest request) throws Exception{
 		HttpSession session = request.getSession();
 		Map<String, Object> map = (Map<String, Object>) session.getAttribute(Common.Session_UserSecurity);
-		if(StringUtils.isNull(map)){
-			throw new AuthorizationException();
+		if(StringUtils.isNull(map)||map.size()==0){
+			throw new BusinessException(ResEnum.FORBIDDEN.CODE,"你没有相关的打印权限,无法查看数据");
 		}
 		UserInfo userInfo = ShiroUtils.getUserInfo();
 		opid = userInfo.getOpid();
@@ -74,7 +77,7 @@ public class PaiangController {
 		Datagrid datagrid = labelInfoService.findByPage(page, rows, label, start_time, end_time, sort, order, opid, list, "medicine");
 //			 String datajson  = ReadTxtFile.readTxtFile("F:\\workspace\\Bondex\\printServer\\src\\main\\resources\\static\\js\\paiangdata.json");
 //			 return MsgResult.result(ResEnum.SUCCESS.CODE, "数据加载成功！", datajson);
-		 return datagrid;
+		 return MsgResult.result(ResEnum.SUCCESS.CODE,ResEnum.SUCCESS.MESSAGE,datagrid);
 	}
 	
 }

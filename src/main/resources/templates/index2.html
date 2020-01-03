@@ -60,9 +60,10 @@
                     <ul class="nav nav-second-level collapse" aria-expanded="false" style="height: 0px;">
 						<li>
 							<a class="menuItem" href="layout/west/airlabel"><i class="fa fa-print" style="width: 20px;"></i>空运标签</a>
+						</li>
+						<li>
 							<a class="menuItem" href="paiang/viewdata"><i class="fa fa-print" style="width: 20px;"></i>派昂标签</a>
 						</li>
-						
 					</ul>
                 </li>
                 
@@ -75,8 +76,17 @@
                     <ul class="nav nav-second-level collapse" aria-expanded="false" style="height: 0px;">
 						<li>
 							<a class="menuItem" href="swagger-ui.html"><i class="fa fa-book" style="width: 20px;"></i>API文档</a>
+						</li>
+						
+						<li>
 							<a class="menuItem" href="druid"><i class="fa fa-database" style="width: 20px;"></i>数据库日志</a>
+						</li>
+						
+						<li>
 							<a class="menuItem" href="layout/west/system"><i class="fa fa-gear" style="width: 20px;"></i>系统管理</a>
+						</li>
+						
+						<li>
 							 <@shiro.hasPermission  name="auth"> 
 							<a class="menuItem" href="layout/west/system"><i class="fa fa-gear" style="width: 20px;"></i>权限管理</a>
 							 </@shiro.hasPermission>

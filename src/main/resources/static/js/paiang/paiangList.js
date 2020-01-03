@@ -76,6 +76,14 @@ paiang.prototype.initDataGridTable=function(){
 			loadMsg: "正在加载数据...",
 			//toolbar : toolbar.tools,
 			columns: paiangcolumns.columns,
+			loadFilter:function(data){
+				if(data.status=="200"){
+					return data.data;
+				}else{
+					layer.msg(data.message,{icon:2,time:5000});
+					return null;
+				}
+			},
 			//当用户双击一行时触发
 			onDblClickRow : function(rowIndex,rowData) { //在用户双击一行的时候触发，参数包括：index：点击的行的索引值，该索引值从0开始。row：对应于点击行的记录。
 				

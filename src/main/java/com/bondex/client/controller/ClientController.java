@@ -173,7 +173,7 @@ public class ClientController {
 	}
 
 	/**
-	 * 获取打印按钮权限权限
+	 * 获取打印标签模板权限
 	 * @param request
 	 * @param session
 	 * @return

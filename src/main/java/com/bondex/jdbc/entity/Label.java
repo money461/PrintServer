@@ -11,21 +11,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString(callSuper = true)
-@Getter
-@Setter
+
 public class Label implements Serializable {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 4781030285292455283L;
 	private String label_id; //标签主键
+	@JSONField(name="SerizalNo")
 	private String SerizalNo; //序号
 //	@NotNull(message="主单号不能为空！")
 	private String mawb; //主单
@@ -34,6 +30,7 @@ public class Label implements Serializable {
 	@JSONField(alternateNames={"destinationCity"})
 	private String destination;// 目的地
 	private String total;// 件数 打印份数 总件数
+	@JSONField(name="TotalAccount")
 	private String TotalAccount; //收货总件数
 	private String airport_departure;// 起始地 出发机场
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
@@ -59,7 +56,9 @@ public class Label implements Serializable {
 	@SerializedName(value="opid_name",alternate="opIdName") //使用Gson 序列化名称 反序列化备选名称opIdName)
 	@JSONField(alternateNames={"opIdName"})
 	private String opid_name; //录入人
-	@SerializedName(value="Mblno")
+	
+	@SerializedName(value="Mblno",alternate={"MBLNo"})
+	@JSONField(name="Mblno")
 	private String MBLNo; //运单号
 	
 //	@DateTimeFormat(pattern = "yyyy-MM-dd")
@@ -67,6 +66,7 @@ public class Label implements Serializable {
 	private String EDeparture; //发货日期
 	
 	@SerializedName(value="SendAddress")
+	@JSONField(name="SendAddress")
 	private String SendAddress; //发货人信息
 	@SerializedName(value="TakeCargoNo",alternate="takeCargoNo")
 	@JSONField(alternateNames={"takeCargoNo"})
@@ -74,9 +74,11 @@ public class Label implements Serializable {
 	
 	private Integer business_type; //类型
 	
+	@JSONField(name="RecAddress")
 	private String RecAddress; //收货地址
 	private BigDecimal packages; //总件数
 	@SerializedName(value="RecCustomerName",alternate="receivingCustomer")
+	@JSONField(name="RecCustomerName")
 	private String RecCustomerName;//收货人
 	
 	@JsonProperty(value="MBLNo")
@@ -84,7 +86,7 @@ public class Label implements Serializable {
 		return MBLNo;
 	}
 
-	@JSONField(name="MBLNo",alternateNames={"mawb"})
+	@JSONField(name="MBLNo")
 	public void setMBLNo(String mBLNo) {
 		MBLNo = mBLNo;
 	}
@@ -148,6 +150,166 @@ public class Label implements Serializable {
 
 	public void setTotalAccount(String totalAccount) {
 		TotalAccount = totalAccount;
+	}
+
+	public String getLabel_id() {
+		return label_id;
+	}
+
+	public void setLabel_id(String label_id) {
+		this.label_id = label_id;
+	}
+
+	public String getSerizalNo() {
+		return SerizalNo;
+	}
+
+	public void setSerizalNo(String serizalNo) {
+		SerizalNo = serizalNo;
+	}
+
+	public String getMawb() {
+		return mawb;
+	}
+
+	public void setMawb(String mawb) {
+		this.mawb = mawb;
+	}
+
+	public String getHawb() {
+		return hawb;
+	}
+
+	public void setHawb(String hawb) {
+		this.hawb = hawb;
+	}
+
+	public String getDestination() {
+		return destination;
+	}
+
+	public void setDestination(String destination) {
+		this.destination = destination;
+	}
+
+	public String getTotal() {
+		return total;
+	}
+
+	public void setTotal(String total) {
+		this.total = total;
+	}
+
+	public String getAirport_departure() {
+		return airport_departure;
+	}
+
+	public void setAirport_departure(String airport_departure) {
+		this.airport_departure = airport_departure;
+	}
+
+	public Date getCreate_time() {
+		return create_time;
+	}
+
+	public void setCreate_time(Date create_time) {
+		this.create_time = create_time;
+	}
+
+	public Date getUpdate_time() {
+		return update_time;
+	}
+
+	public void setUpdate_time(Date update_time) {
+		this.update_time = update_time;
+	}
+
+	public String getIs_print() {
+		return is_print;
+	}
+
+	public void setIs_print(String is_print) {
+		this.is_print = is_print;
+	}
+
+	public String getReserve1() {
+		return reserve1;
+	}
+
+	public void setReserve1(String reserve1) {
+		this.reserve1 = reserve1;
+	}
+
+	public String getReserve2() {
+		return reserve2;
+	}
+
+	public void setReserve2(String reserve2) {
+		this.reserve2 = reserve2;
+	}
+
+	public String getReserve3() {
+		return reserve3;
+	}
+
+	public void setReserve3(String reserve3) {
+		this.reserve3 = reserve3;
+	}
+
+	public Date getFlight_date() {
+		return flight_date;
+	}
+
+	public void setFlight_date(Date flight_date) {
+		this.flight_date = flight_date;
+	}
+
+	public String getPrint_user() {
+		return print_user;
+	}
+
+	public void setPrint_user(String print_user) {
+		this.print_user = print_user;
+	}
+
+	public String getList_id() {
+		return list_id;
+	}
+
+	public void setList_id(String list_id) {
+		this.list_id = list_id;
+	}
+
+	public String getOpid() {
+		return opid;
+	}
+
+	public void setOpid(String opid) {
+		this.opid = opid;
+	}
+
+	public String getOpid_name() {
+		return opid_name;
+	}
+
+	public void setOpid_name(String opid_name) {
+		this.opid_name = opid_name;
+	}
+
+	public Integer getBusiness_type() {
+		return business_type;
+	}
+
+	public void setBusiness_type(Integer business_type) {
+		this.business_type = business_type;
+	}
+
+	public BigDecimal getPackages() {
+		return packages;
+	}
+
+	public void setPackages(BigDecimal packages) {
+		this.packages = packages;
 	}
 	
 	

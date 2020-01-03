@@ -279,6 +279,7 @@ public class ClientServiceImpl implements ClientService {
 		List<VwOrderAll> vwOrderAlls;
 		JSONArray array;
 		JSONObject jsonObject = new JSONObject();
+		
 		for (Label label : labels2) {
 			client = new Client();// 打印数据
 			clientData = new ClientData();
@@ -296,6 +297,7 @@ public class ClientServiceImpl implements ClientService {
 			client.setSenderName(userInfo.getOpname() + "/" + userInfo.getPsnname()); //此处改动不是很清楚
 			client.setSendOPID(userInfo.getOpid());// 操作号
 			client.setOtherToShow("");
+			
 			// ClientData
 			if (businessType.equals("medicine")) {
 				client.setCopies("1");// 标签打印份数
@@ -308,7 +310,6 @@ public class ClientServiceImpl implements ClientService {
 					clone.setSerizalNo(i+"-"+totalAccount);
 					array.add(clone);
 				}
-				
 				jsonObject.put("vwOrderAll", array);
 				client.setData(jsonObject.toJSONString());
 				

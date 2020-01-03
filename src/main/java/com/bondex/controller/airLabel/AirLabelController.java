@@ -15,15 +15,19 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.alibaba.fastjson.JSON;
 import com.bondex.common.Common;
+import com.bondex.common.enums.ResEnum;
+import com.bondex.config.exception.BusinessException;
 import com.bondex.entity.Datagrid;
 import com.bondex.jdbc.entity.Label;
 import com.bondex.jdbc.entity.LabelAndTemplate;
 import com.bondex.jdbc.entity.Template;
 import com.bondex.jdbc.service.LabelInfoService;
+import com.bondex.res.MsgResult;
 import com.bondex.security.entity.JsonResult;
 import com.bondex.security.entity.UserInfo;
 import com.bondex.shiro.security.ShiroUtils;
@@ -61,18 +65,31 @@ public class AirLabelController {
 		return GsonUtil.GsonString(labelInfoService.getTemplate(jsonResults.get(0), id));
 	}
 
+	/**
+	 * 获取用户拥有的模板
+	 * @param opid
+	 * @return
+	 */
 	@RequestMapping("getUsertemplate")
 	@ResponseBody
-	public String getUsertemplate(String opid) {
+	public String getUsertemplate(@RequestParam(value="opid") String printAuth) {
 		Type objectType = new TypeToken<List<List<JsonResult>>>() {}.getType();
-		List<List<JsonResult>> jsonResults = GsonUtil.getGson().fromJson(opid, objectType);
+		List<List<JsonResult>> jsonResults = GsonUtil.getGson().fromJson(printAuth, objectType);
 		String rt = "";
 		for (JsonResult jsonResult : jsonResults.get(0)) {
 			rt += "'" + jsonResult.getReportid() + "',";
 		}
 		rt = rt.substring(0, rt.length() - 1);
-
-		List<Template> template = jdbcTemplate.query("select * from template where template_id in(" + rt + ")", new Object[] {}, new BeanPropertyRowMapper<Template>(Template.class));
+		UserInfo userInfo = ShiroUtils.getUserInfo();
+		String opid = userInfo.getOpid();
+		String Sql=null;
+		if("280602".equals(opid) || "28080".equals(opid)){
+			Sql="select * from template";
+			
+		}else{
+			Sql="select * from template where template_id in(" + rt + ")";
+		}
+		List<Template> template = jdbcTemplate.query(Sql, new Object[] {}, new BeanPropertyRowMapper<Template>(Template.class));
 		if (template.isEmpty()) {
 			Template template2 = new Template();
 			template2.setTemplate_name("未配置打印模板");
@@ -102,16 +119,16 @@ public class AirLabelController {
 	public Object findByPage(String page, String rows, Label label, String start_time, String end_time, String sort, String order, String opid, String businessType, HttpServletRequest request) throws Exception {
 		HttpSession session = request.getSession();
 		Map<String, Object> map = (Map<String, Object>) session.getAttribute(Common.Session_UserSecurity);
-		if(StringUtils.isNull(map)){
-			throw new AuthorizationException();
+		if(StringUtils.isNull(map)||map.size()==0){
+			throw new BusinessException(ResEnum.FORBIDDEN.CODE,"你没有相关的打印模板权限,无法查看数据");
 		}
 		UserInfo userInfo = ShiroUtils.getUserInfo();
 		opid = userInfo.getOpid();
 		//获取打印模板权限
 		List<JsonResult> list = (List<JsonResult>)map.get(opid + Common.UserSecurity_PrintButton);
 		Datagrid<?> datagrid = labelInfoService.findByPage(page, rows, JSON.parseObject(URLDecoder.decode(JSON.toJSONString(label), "utf-8"), Label.class), start_time, end_time, sort, order, opid, list, businessType);
-//		return MsgResult.result(ResEnum.SUCCESS.CODE, ResEnum.SUCCESS.MESSAGE, datagrid);
-		return datagrid;
+		return MsgResult.result(ResEnum.SUCCESS.CODE, ResEnum.SUCCESS.MESSAGE, datagrid);
+//		return datagrid;
 	}
 	
 	//更新打印模板
