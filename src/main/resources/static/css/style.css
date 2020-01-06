@@ -763,9 +763,9 @@ body.canvas-menu.mini-navbar nav.navbar-static-side {
 }
 
 .btn-default {
-    background-color: #c2c2c2;
+    background-color: #f5f5f5;
     border-color: #c2c2c2;
-    color: #FFFFFF;
+    color: #337ab7;
 }
 
 .btn-default:hover, .btn-default:focus, .btn-default:active,  .btn-default.active, .open .dropdown-toggle.btn-default {
@@ -1383,6 +1383,9 @@ button.dim:active:before {
     margin-right: 5px;
 }
 
+.panel-body {
+	padding: 1px;
+}
 .chat-panel .panel-body {
     height: 350px;
     overflow-y: scroll;

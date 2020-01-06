@@ -14,6 +14,12 @@
 			<button type="button" class="btn btn-default" onclick="label.export1()">
 				<span class="glyphicon glyphicon-share"></span> 导出标签
 			</button>
+			<button type="button" class="btn btn-default" onclick="label.save();">
+				<span class="glyphicon glyphicon-floppy-disk"></span> 保存
+			</button>
+			<button type="button" class="btn btn-default" onclick="label.rejectChange();">
+				<span class="glyphicon glyphicon-share-alt"></span> 撤销
+			</button>
 			<button type="button" class="btn btn-default" onclick="label.delete1();">
 				<span class="glyphicon glyphicon-remove"></span> 删除
 			</button>
@@ -27,7 +33,7 @@
 				<span class="glyphicon glyphicon-bell"></span> 帮助
 			</button>
 			<button type="button" class="btn btn-default" onclick="label.alertprint()">
-				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: green; font-size: 14" id="quyu">更改打印区域</b>
+				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: red; font-size: 14" id="quyu">更改打印区域</b>
 			</button>
 		</div>
 	 </div>
@@ -50,6 +56,12 @@
 			<button type="button" class="btn btn-default" onclick="paiang.export()">
 				<span class="glyphicon glyphicon-share"></span> 导出标签
 			</button>
+			<button type="button" class="btn btn-default" onclick="paiang.save();">
+				<span class="glyphicon glyphicon-floppy-disk"></span> 保存
+			</button>
+			<button type="button" class="btn btn-default" onclick="paiang.rejectChange();">
+				<span class="glyphicon glyphicon-share-alt"></span> 撤销
+			</button>
 			<button type="button" class="btn btn-default" onclick="paiang.delete();">
 				<span class="glyphicon glyphicon-remove"></span> 删除
 			</button>
@@ -63,7 +75,7 @@
 				<span class="glyphicon glyphicon-bell"></span> 帮助
 			</button>
 			<button type="button" class="btn btn-default" onclick="paiang.alertprint()">
-				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: green; font-size: 14" id="quyu">更改打印区域</b>
+				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: red; font-size: 14" id="quyu">更改打印区域</b>
 			</button>
 		</div>
 	 </div>
@@ -78,9 +90,13 @@
 	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-keyboard="false" data-backdrop="static">
 		<div class="modal-dialog">
 			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h4 class="modal-title" id="myModalLabel">账户切换</h4>
+				</div>
 				<div class="modal-body">
 					<table id="opid_table">
-						<caption class="text-center">双击选择操作号</caption>
+						<caption class="text-center" style="color: red">双击选择操作号</caption>
 					</table>
 				</div>
 			</div>

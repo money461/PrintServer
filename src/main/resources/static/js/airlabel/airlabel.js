@@ -1,6 +1,7 @@
 function label() {
 	
 }
+	var editRow = undefined;
 	var type ="air"; //空运标签模式
 	var mawb="";
 	var hawb="";
@@ -160,6 +161,8 @@ function formatDate(time){
 		// $('#dd4').dialog("close");
 		// $('#dg1').datagrid("reload");
 	}
+	
+	//删除一行或者多行
 	label.prototype.delete1 = function() {
 		var rows = $('#dg1').datagrid('getSelections');
 		if (rows.length > 0) {
@@ -183,6 +186,45 @@ function formatDate(time){
 		}
 		
 	}
+	
+	//保存被修改的行
+	label.prototype.save = function(){
+		$("#dg1").datagrid('endEdit', editRow);
+		
+		//使用JSON序列化datarow对象，发送到后台。
+        var rows = $("#dg1").datagrid('getChanges');
+
+        var rowstr = JSON.stringify(rows);
+        
+      //保存数据库
+		$.ajax({
+			url : "/labelPrint/label/update",
+			type : 'POST',
+			dataType:"json",      
+            contentType:"application/json",
+			data:rowstr,
+			success : function(result) {
+				// 更新完成后，刷新当前行
+				//$("#dg1").datagrid('refreshRow', rowIndex);
+				if("200"==result.status){
+					layer.msg(result.message,{icon:1,time:1000});
+				}else{
+					layer.msg(result.message,{icon:2,time:1000});
+				}
+				
+			}
+		});
+		
+	}
+	//撤销被修改的行
+	label.prototype.rejectChange = function(){
+		editRow = undefined;
+        $("#dg1").datagrid('rejectChanges');
+        $("#dg1").datagrid('unselectAll');
+	}
+	
+	
+	
 	//刷新表单 重新加载数据
 	label.prototype.refresh = function(isRefresh) {
 		$("#searchForm").form("clear");
@@ -731,29 +773,44 @@ function updateRegion() {
 					return 'background-color:#5cb85c';
 				}
 			},
-			loadFilter:function(data){
-				if(data.status=="200"){
-					return data.data;
+			loadFilter:function(data){ //数据过滤
+				if("total" in data){
+					return data;
 				}else{
-					layer.msg(data.message,{icon:2,time:5000});
-					return null;
+					
+					if(data.status=="200"){
+						return data.data;
+					}else{
+						layer.msg(data.message,{icon:2,time:5000});
+						return null;
+					}
+					
 				}
 			},
-			onUnselect:function(rowIndex, rowData){
-				$("#dg1").datagrid('endEdit', rowIndex); //未选择该行的时候，结束编辑
-			},
+			/*onUnselect:function(rowIndex, rowData){
+				$("#dg1").datagrid('endEdit', editRow); //未选择该行的时候，结束编辑
+			},*/
 			//当用户双击一个单元格时触发。
-			onDblClickCell:function(index,field,value){
-				
+			onClickCell:function(index,field,value){
+				 if (editRow != undefined) {
+					 $(this).datagrid('endEdit', editRow);
+		 
+		            }
 			},
-			//当用户单击一个单元格时触发。
-			onClickCell:function(rowIndex, field, value){
+			//当用户双击击一个单元格时触发。
+			onDblClickCell:function(rowIndex, field, value){
+				 if (editRow != undefined) {
+					 $(this).datagrid('beginEdit', editRow);
+				 }
 				
+			if (editRow == undefined) {
+					 
 				if (field=="hawb"||field=="template_name"||field=="destination"||(field=="total"&&type=="medicine")) {
 			        var rows = $('#dg1').datagrid('getRows');// 获得所有行
 			        var row = rows[rowIndex];// 根据index获得其中一行。
 					
 					$(this).datagrid('beginEdit', rowIndex);
+					editRow = rowIndex; //记录当前编辑行索引
 			        if (type=="air") {
 						var ed = $(this).datagrid('getEditor', {index:rowIndex,field:'template_name'});
 						$(ed.target[0]).combobox({    
@@ -802,46 +859,34 @@ function updateRegion() {
 					$(ed.target[0]).focus();// 获取焦点
 					// 失去焦点事件,结束编辑
 					$(ed.target[0]).blur(function(){
-						// $("#dg1").datagrid('endEdit', rowIndex);
+						 $("#dg1").datagrid('endEdit', editRow);
 					});*/
 				}
+			 }
 			},
 			// 结束编辑事件 当用户完成编辑一行时触发，参数包括：
 			onAfterEdit:function(rowIndex, rowData, changes){
-				$.ajax({
-					url : "/labelPrint/label/update",
-					type : 'POST',
-					data:{
-						hawb:rowData.hawb,
-						template_name:rowData.template_name,
-						destination:rowData.destination,
-						label_id:rowData.label_id,
-						total:rowData.total
-					},
-					success : function(result) {
-						// 更新完成后，刷新当前行
-						$("#dg1").datagrid('refreshRow', rowIndex);
-					}
-				});
+				$("#dg1").datagrid('refreshRow', rowIndex);
+				editRow = undefined;
 			},
 			// 取消编辑事件
 			onCancelEdit:function(rowIndex, rowData){
 				
 			},
 			onLoadSuccess: function (data) {
-		           if (data.total == 0) {
-						$('#dg1').datagrid('appendRow',{
-							mawb: '无数据！请更改查询条件，或<a href="#"  onclick="subscribe.initWindow()" style="color:green;"><b>订阅</b></a>主单号...',
-						}).datagrid('mergeCells',{
-							index: 0,
-							field: 'mawb',
-							colspan: 12
-						}).datagrid('hideColumn','label_id');
-						
-					}else{
-						layer.msg('数据加载成功!',{	icon:1});
-		        	   
-		           }
+				   if (data.total == 0) {
+					   $('#dg1').datagrid('appendRow',{
+						   mawb: '无数据！请更改查询条件，或<a href="#"  onclick="subscribe.initWindow()" style="color:green;"><b>订阅</b></a>主单号...',
+					   }).datagrid('mergeCells',{
+						   index: 0,
+						   field: 'mawb',
+						   colspan: 12
+					   }).datagrid('hideColumn','label_id');
+					   
+				   }else{
+					   layer.msg('数据已刷新!',{icon:1});
+				   }
+					   
 			},
 	        onLoadError: function () {
 	        	layer.msg('警告!数据加载失败!',{	icon:2});

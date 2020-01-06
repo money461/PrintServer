@@ -74,6 +74,18 @@ public class LoginController {
 	}
 
 
+	/**
+	 * 获取用户信息
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value="getUserInfo",method=RequestMethod.GET)
+	@ResponseBody
+	public MsgResult getUserInfo(HttpServletRequest request) {
+		UserInfo userInfo = ShiroUtils.getUserInfo();
+		return  MsgResult.result(ResEnum.SUCCESS.CODE, ResEnum.SUCCESS.MESSAGE, userInfo);
+	}
+	
 	
 	/**
 	 * 获取用户opids
@@ -181,8 +193,8 @@ public class LoginController {
 	 */
 	@RequestMapping(value = { "/accountSwitch" }, method = RequestMethod.POST, produces = { "application/json; charset=UTF-8" })
 	@ResponseBody
-	public MsgResult accountSwitch(String opid, String username, HttpServletRequest request, HttpServletResponse reponse) throws Exception {
-		log.debug("操作账户:{} 切换。。。。。。。。。。。。。。。。。。。。。。。。。。",opid,username);
+	public MsgResult accountSwitch(String opid, String opid_name, HttpServletRequest request, HttpServletResponse reponse) throws Exception {
+		log.debug("切换操作账户:{}-{} 。。。。。。。。。。。。。。。。。。。。。。。。。。",opid,opid_name);
 		UserInfo userInfo = (UserInfo)ShiroUtils.getSubject().getPrincipal();
 		//重新绑定opid与token
 		Boolean flag = SecurityService.BindingOpid(opid,userInfo.getToken());

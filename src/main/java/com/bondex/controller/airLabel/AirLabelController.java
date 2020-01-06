@@ -9,12 +9,13 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import org.apache.shiro.authz.AuthorizationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -132,16 +133,20 @@ public class AirLabelController {
 	}
 	
 	//更新打印模板
-	@RequestMapping("update")
-	public String update(LabelAndTemplate label) {
+	@RequestMapping(value="update",method = {RequestMethod.POST },consumes={"application/json; charset=UTF-8"},produces = "application/json; charset=UTF-8")
+	@ResponseBody
+	public Object update(@RequestBody List<LabelAndTemplate> labels) {
 		// String reserve3 = label.getReserve3();
 		// List<Template> template = jdbcTemplate.query("select * from template where
 		// template_id = ? or id = ? or template_name = ?", new Object[] { reserve3,
 		// reserve3, reserve3 }, new BeanPropertyRowMapper<Template>(Template.class));
-		List<Template> template = jdbcTemplate.query("select * from template where template_name = ?", new Object[] { label.getTemplate_name() }, new BeanPropertyRowMapper<Template>(Template.class));
-		label.setReserve3(String.valueOf(template.get(0).getId()));
-		labelInfoService.updateLabel(label);
-		return "airlabel/airlabel";
+		for (LabelAndTemplate label : labels) {
+			//查询修改的模板名称
+			List<Template> template = jdbcTemplate.query("select * from template where template_name = ?", new Object[] { label.getTemplate_name() }, new BeanPropertyRowMapper<Template>(Template.class));
+			label.setReserve3(String.valueOf(template.get(0).getId()));
+			labelInfoService.updateLabel(label);
+		}
+		return MsgResult.nodata(ResEnum.SUCCESS.CODE, ResEnum.SUCCESS.MESSAGE);
 	}
 
 	//刪除標簽

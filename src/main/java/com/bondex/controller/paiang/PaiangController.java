@@ -75,8 +75,6 @@ public class PaiangController {
 		//获取打印模板权限
 		List<JsonResult> list = (List<JsonResult>)map.get(opid + Common.UserSecurity_PrintButton);
 		Datagrid datagrid = labelInfoService.findByPage(page, rows, label, start_time, end_time, sort, order, opid, list, "medicine");
-//			 String datajson  = ReadTxtFile.readTxtFile("F:\\workspace\\Bondex\\printServer\\src\\main\\resources\\static\\js\\paiangdata.json");
-//			 return MsgResult.result(ResEnum.SUCCESS.CODE, "数据加载成功！", datajson);
 		 return MsgResult.result(ResEnum.SUCCESS.CODE,ResEnum.SUCCESS.MESSAGE,datagrid);
 	}
 	

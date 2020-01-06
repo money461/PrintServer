@@ -3,9 +3,9 @@ function paiang(){
 }
 
 //定义全局 表格对象
+var editRow = undefined;
 var paiang_tab;
 var baseName='paiang'; //数据库名称
-var editFlag = undefined;
 var type ="medicine"; //派昂标签类型
 var mawb="";
 var hawb="";
@@ -76,12 +76,18 @@ paiang.prototype.initDataGridTable=function(){
 			loadMsg: "正在加载数据...",
 			//toolbar : toolbar.tools,
 			columns: paiangcolumns.columns,
-			loadFilter:function(data){
-				if(data.status=="200"){
-					return data.data;
+			loadFilter:function(data){ //数据过滤
+				if("total" in data){
+					return data;
 				}else{
-					layer.msg(data.message,{icon:2,time:5000});
-					return null;
+					
+					if(data.status=="200"){
+						return data.data;
+					}else{
+						layer.msg(data.message,{icon:2,time:5000});
+						return null;
+					}
+					
 				}
 			},
 			//当用户双击一行时触发
@@ -89,16 +95,26 @@ paiang.prototype.initDataGridTable=function(){
 				
 		    },
 		  //当用户单击一个单元格时触发。
-		    onDblClickCell:function(index,field,value){
-		    	
+		    onClickCell:function(index,field,value){
+		    	 if (editRow != undefined) {
+					 $(this).datagrid('endEdit', editRow);
+		 
+		            }
 		    },
 		    //当用户双击一个单元格时触发。
-		    onClickCell:function(rowIndex, field, value){
+		    onDblClickCell:function(rowIndex, field, value){
+		    	if (editRow != undefined) {
+					 $(this).datagrid('beginEdit', editRow);
+				 }
+				
+			if (editRow == undefined) {
+		    	
 				if (field=="RecCustomerName"||field=="template_name"||field=="TotalAccount") {
 			        var rows = $('#paiang_tab').datagrid('getRows');// 返回当前页的行。
 			        var row = rows[rowIndex];// 根据index获得其中一行。
 					
 					$(this).datagrid('beginEdit', rowIndex); //开启编辑
+					editRow = rowIndex; //记录当前编辑行索引
 					
 					var ed = $(this).datagrid('getEditor', {index:rowIndex,field:'template_name'}); //获取指定的编辑器， options 参数包含两个属性：index：行的索引。field：字段名。
 					//使用编辑器对该字段添加多选框
@@ -154,6 +170,7 @@ paiang.prototype.initDataGridTable=function(){
 						 $("#beginEdit").datagrid('endEdit', rowIndex);
 					});*/
 				}
+			  }
 			},
 	        onLoadSuccess: function (data) {
         	  if (data.total == 0) {
@@ -166,7 +183,7 @@ paiang.prototype.initDataGridTable=function(){
 					}).datagrid('hideColumn','label_id');
 					
 				}else{
-					layer.msg('数据加载成功!',{	icon:1});
+					layer.msg('数据已刷新!',{icon:1});
 	        	   
 	           }
 	        	
@@ -181,9 +198,9 @@ paiang.prototype.initDataGridTable=function(){
 	        onBeforeEdit:function(index,row){
 				updateActions(index);
 			},
-			onUnselect:function(rowIndex, rowData){
+			/*onUnselect:function(rowIndex, rowData){
 				$("#paiang_tab").datagrid('endEdit', rowIndex); //未选择该行的时候，结束编辑
-			},
+			},*/
 			// 结束编辑事件
 			onAfterEdit:function(rowIndex, rowData, changes){
 				/*$.ajax({
@@ -203,10 +220,10 @@ paiang.prototype.initDataGridTable=function(){
 				});*/
 				
 				//更新完成后，刷新当前行
-				
 				rowData.template_id=''; //设置模板id 此时标签的id是未被修改的，只能制空
 				rowData.reserve3=rowData.template_name;
 				$("#paiang_tab").datagrid('refreshRow', rowIndex);
+				editRow = undefined;
 			},
 			onCancelEdit:function(index,row){
 				updateActions(index);
@@ -458,27 +475,41 @@ $("#btn_delete_ids").click(function (){
 }); 
 		
 		
+//保存被修改的行
+paiang.prototype.save = function(){
+	$("#paiang_tab").datagrid('endEdit', editRow);
+	
+	//使用JSON序列化datarow对象，发送到后台。
+    var rows = $("#paiang_tab").datagrid('getChanges');
 
-
-//更新或者添加保存
-function saveData(param) {
-        	param.baseName=baseName; //添加属性
-        	console.log(param),
-            $.ajax({
-                type: "post",
-                url: '/data/addOrUpdateData',
-                data: param,
-                success: function (json) {
-                	//提示成功
-                   // $.tool.ajaxSuccess(json);
-                	layer.msg(json.message,{icon:1,time:1000});
-                	
-                },
-                error: function() {
-                	layer.msg("操作失败",{icon:2,time:1000});
-                } //提示失败
-            });
-      };
+    var rowstr = JSON.stringify(rows);
+    
+   //保存数据库
+	$.ajax({
+		url : "/labelPrint/label/update",
+		type : 'POST',
+		dataType:"json",      
+        contentType:"application/json",
+		data:rowstr,
+		success : function(result) {
+			// 更新完成后，刷新当前行
+			//$("#dg1").datagrid('refreshRow', rowIndex);
+			if("200"==result.status){
+				layer.msg(result.message,{icon:1,time:1000});
+			}else{
+				layer.msg(result.message,{icon:2,time:1000});
+			}
+			
+		}
+	});
+	
+}
+//撤销被修改的行
+paiang.prototype.rejectChange = function(){
+	editRow = undefined;
+    $("#paiang_tab").datagrid('rejectChanges');
+    $("#paiang_tab").datagrid('unselectAll');
+}
 
       
  //打印按钮事件 打印权限判断 获取办公室区域信息

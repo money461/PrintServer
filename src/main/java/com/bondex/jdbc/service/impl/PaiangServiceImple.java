@@ -8,9 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import javax.validation.constraints.Null;
-
 import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +72,7 @@ public class PaiangServiceImple implements LabelInfoService {
 			       data.put(entry.getKey(), value);
 			 }
 			 String datajson = HttpClient.doPost(paiangaddress, data);
+//			 String datajson  = ReadTxtFile.readTxtFile("F:\\workspace\\Bondex\\printServer\\src\\main\\resources\\static\\js\\paiangdata.json");
 			 JSONObject parseObject = JSONObject.parseObject(datajson);
 			 JSONArray datarows = parseObject.getJSONArray("rows");
 			 Integer total = parseObject.getInteger("total");

@@ -76,7 +76,7 @@ public class SecurityService {
 					
 					// 绑定用户默认的opid
 					String getBindingOpid = GetBindingOpid(userInfo.getToken());
-					if(StringUtils.isBlank(getBindingOpid)){
+					if(userInfo.getAllOpid().size()==1){ //只有一个号时，绑定默认的 
 						getBindingOpid = userInfo.getAllOpid().get(0).getOpid();//默认第一个号作为登陆
 						BindingOpid(getBindingOpid, userInfo.getToken()); //绑定一个默认的opid
 					}
