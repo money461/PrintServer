@@ -21,8 +21,8 @@ public class Label implements Serializable {
 	 */
 	private static final long serialVersionUID = 4781030285292455283L;
 	private String label_id; //标签主键
-	@JSONField(name="SerizalNo")
-	private String SerizalNo; //序号
+	@JSONField(name="SerialNo")
+	private String SerialNo; //序号
 //	@NotNull(message="主单号不能为空！")
 	private String mawb; //主单
 	private String hawb; //分单
@@ -30,8 +30,8 @@ public class Label implements Serializable {
 	@JSONField(alternateNames={"destinationCity"})
 	private String destination;// 目的地
 	private String total;// 件数 打印份数 总件数
-	@JSONField(name="TotalAccount")
-	private String TotalAccount; //收货总件数
+	@JSONField(name="TotalAcount")
+	private String TotalAcount; //收货总件数
 	private String airport_departure;// 起始地 出发机场
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	@SerializedName(value="create_time",alternate="createTime")
@@ -76,7 +76,7 @@ public class Label implements Serializable {
 	
 	@JSONField(name="RecAddress")
 	private String RecAddress; //收货地址
-	private BigDecimal packages; //总件数
+	private BigDecimal packages; //分单件数
 	@SerializedName(value="RecCustomerName",alternate="receivingCustomer")
 	@JSONField(name="RecCustomerName")
 	private String RecCustomerName;//收货人
@@ -143,29 +143,31 @@ public class Label implements Serializable {
 		RecCustomerName = recCustomerName;
 	}
 
-	@JsonProperty(value="TotalAccount")
-	public String getTotalAccount() {
-		return TotalAccount;
-	}
-
-	public void setTotalAccount(String totalAccount) {
-		TotalAccount = totalAccount;
-	}
-
 	public String getLabel_id() {
 		return label_id;
+	}
+
+	@JsonProperty(value="TotalAcount")
+	public String getTotalAcount() {
+		return TotalAcount;
+	}
+
+	public void setTotalAcount(String totalAcount) {
+		TotalAcount = totalAcount;
 	}
 
 	public void setLabel_id(String label_id) {
 		this.label_id = label_id;
 	}
 
-	public String getSerizalNo() {
-		return SerizalNo;
+
+	@JsonProperty(value="SerialNo")
+	public String getSerialNo() {
+		return SerialNo;
 	}
 
-	public void setSerizalNo(String serizalNo) {
-		SerizalNo = serizalNo;
+	public void setSerialNo(String serialNo) {
+		SerialNo = serialNo;
 	}
 
 	public String getMawb() {
@@ -304,6 +306,7 @@ public class Label implements Serializable {
 		this.business_type = business_type;
 	}
 
+	@JsonProperty(value="packages")
 	public BigDecimal getPackages() {
 		return packages;
 	}

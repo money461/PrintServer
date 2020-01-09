@@ -304,12 +304,15 @@ public class ClientServiceImpl implements ClientService {
 				client.setReportWidth("100");// 标签宽度，单位毫米（目前定死）
 				client.setReportHeight("100");// 标签高度，单位毫米（目前定死）
 				//克隆数据
-				String totalAccount = label.getTotalAccount();
-				for (int i = 1; i <=Integer.valueOf(totalAccount); i++) {
+				String serialNo = label.getSerialNo();
+				String[] str = serialNo.split(";");
+				
+				for (String no : str) {
 					Label clone = CloneUtils.clone(label);
-					clone.setSerizalNo(i+"-"+totalAccount);
+					clone.setSerialNo(no);
 					array.add(clone);
 				}
+				
 				jsonObject.put("vwOrderAll", array);
 				client.setData(jsonObject.toJSONString());
 				

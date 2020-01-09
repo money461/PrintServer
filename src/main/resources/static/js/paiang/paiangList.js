@@ -109,7 +109,7 @@ paiang.prototype.initDataGridTable=function(){
 				
 			if (editRow == undefined) {
 		    	
-				if (field=="RecCustomerName"||field=="template_name"||field=="TotalAccount") {
+				if (field=="RecCustomerName"||field=="template_name"||field=="packages") {
 			        var rows = $('#paiang_tab').datagrid('getRows');// 返回当前页的行。
 			        var row = rows[rowIndex];// 根据index获得其中一行。
 					
@@ -480,13 +480,14 @@ paiang.prototype.save = function(){
 	$("#paiang_tab").datagrid('endEdit', editRow);
 	
 	//使用JSON序列化datarow对象，发送到后台。
-    var rows = $("#paiang_tab").datagrid('getChanges');
+//    var rows = $("#paiang_tab").datagrid('getChanges');
+	var data=$('#paiang_tab').datagrid("getData").rows; // 获取所有数据
 
-    var rowstr = JSON.stringify(rows);
+    var rowstr = JSON.stringify(data);
     
    //保存数据库
 	$.ajax({
-		url : "/labelPrint/label/update",
+		url : "/labelPrint/paiang/update",
 		type : 'POST',
 		dataType:"json",      
         contentType:"application/json",
@@ -495,7 +496,10 @@ paiang.prototype.save = function(){
 			// 更新完成后，刷新当前行
 			//$("#dg1").datagrid('refreshRow', rowIndex);
 			if("200"==result.status){
-				layer.msg(result.message,{icon:1,time:1000});
+				//重新加载数据
+				$("#paiang_tab").datagrid('loadData',result.data);
+				
+				//layer.msg(result.message,{icon:1,time:1000});
 			}else{
 				layer.msg(result.message,{icon:2,time:1000});
 			}
@@ -584,7 +588,7 @@ paiang.prototype.tableprint = function() {
      	layer.msg('请选择有且仅有一行数据操作！',{icon:2,time:1000});
      	return;
      }
-	 $.messager.confirm("操作提示", "您确定要执行打印操作吗？", function (flag) {
+	 $.messager.confirm("操作提示", "您确定要执行打印办公室:[ "+$("#quyu").text()+" ]打印操作吗？", function (flag) {
          if (flag) {
         	 var url = "/labelPrint/client/printLabelSendClient"; //发送打印客户端
        		 $.ajax({
@@ -621,7 +625,7 @@ paiang.prototype.tableprint = function() {
        		});
          }
          else {
-             alert("取消");
+             alert("取消打印");
          }
      });
   		
@@ -953,16 +957,24 @@ var paiangcolumns={
 				width:10
 			       
 			},{
-				field:'TotalAccount',
+				field:'TotalAcount',
 				title:'总件数',
-				width:10,
-			    editor:{
-			            type:'text',
-			            options:{
-			                valueField:'TotalAccount',
-			                required:true
-			            }
-			        }
+				width:4
+			},{
+				field:'packages',
+				title:'件数',
+				width:3,
+				editor:{
+		            type:'text',
+		            options:{
+		                valueField:'packages',
+		                required:true
+		            }
+		        }
+			},{
+				field:'SerialNo',
+				title:'打印序号',
+				width:12
 			}
 			]]
 	};

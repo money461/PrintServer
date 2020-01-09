@@ -512,7 +512,10 @@ function updateRegion() {
 	}
 	
 	//发送打印客户端 打印人 /区域
-	label.prototype.printLabelSendClient = function(bq, t) {
+label.prototype.printLabelSendClient = function(bq, t) {
+		
+  $.messager.confirm("操作提示", "您确定要执行打印办公室:[ "+$("#quyu").text()+" ]打印操作吗？", function (flag) {
+	  if (flag) {
 		var url = "/labelPrint/client/printLabelSendClient";
 		var rows = $('#dg1').datagrid('getSelections');
 		$.ajax({
@@ -545,7 +548,11 @@ function updateRegion() {
 				$('#dg1').datagrid('reload');
 			}
 		});
-	}
+	  }else{
+		  alert("取消打印");
+	  }
+  });
+}
 	
 	
 	label.prototype.export = function() {

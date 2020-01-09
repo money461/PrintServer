@@ -24,6 +24,8 @@ import com.bondex.util.ServletUtils;
  * 
  * @author ruoyi
  */
+//局部异常处理 @Controller + @ExceptionHandler 如果@ExceptionHandler所在的类是@Controller，则此方法只作用在此类
+//全局异常处理 @ControllerAdvice + @ExceptionHandler 如果@ExceptionHandler所在的类带有@ControllerAdvice注解，则此方法会作用在全局。
 //@ControllerAdvice //使用加强Controller做全局异常处理：@ControllerAdvice 
 //@RestControllerAdvice //@ControllerAdvice 和 @ResponseBody
 //@ResponseBody //需要加上 @ResponseBody ********** ajax success获取异常结果   不加上 ajax error获得执行

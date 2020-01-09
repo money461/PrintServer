@@ -21,7 +21,7 @@ import com.bondex.util.IpUtil;
 @PropertySource(value="classpath:config/casconfig.properties",ignoreResourceNotFound=true,encoding="utf-8")
 public class SpringCasAutoconfig {
 
-/*	@Value("${spring.profiles.active}")
+	/*@Value("${spring.profiles.active}")
 	private String active;*/
 	
 	@Value("${server.port}")
@@ -144,7 +144,7 @@ public class SpringCasAutoconfig {
 		return localServerName;
 	}
 
-	public void setServerName(String localServerName) {
+	public void setLocalServerName(String localServerName) {
 		this.localServerName = localServerName;
 	}
 	

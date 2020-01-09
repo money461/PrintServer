@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.bondex.config.exception.BusinessException;
 import com.bondex.entity.Datagrid;
 import com.bondex.jdbc.dao.LabelInfoDao;
 import com.bondex.jdbc.entity.JsonRootBean;
@@ -63,23 +64,35 @@ public class PaiangServiceImple implements LabelInfoService {
 			 jsonStu.put("rows", rows);
 			 
 			//map对象
-			Map<String, Object> data =new LinkedHashMap<>();
+			StringBuilder sb = new StringBuilder();
 			//循环转换
 			 Iterator it =jsonStu.entrySet().iterator();
 			 while (it.hasNext()) {
 			       Map.Entry<String, Object> entry = (Entry<String, Object>) it.next();
-			       Object value = entry.getValue();
-			       data.put(entry.getKey(), value);
+			       String value = String.valueOf(entry.getValue());
+			       if(StringUtils.isNotBlank(value) && "null"!=value){
+			    	   if(sb.length()==0){
+			    		   sb.append(entry.getKey()).append("=").append(value);
+			    	   }else{
+			    		   
+			    		   sb.append("&").append(entry.getKey()).append("=").append(value);
+			    	   }
+			       }
 			 }
-			 String datajson = HttpClient.doPost(paiangaddress, data);
+			 String datajson = HttpClient.sendPost(paiangaddress, sb.toString());
 //			 String datajson  = ReadTxtFile.readTxtFile("F:\\workspace\\Bondex\\printServer\\src\\main\\resources\\static\\js\\paiangdata.json");
-			 JSONObject parseObject = JSONObject.parseObject(datajson);
+			 JSONObject parseObject = JSONObject.parseObject(datajson); //{"msg":"未查询到订单","total":0,"code":500}
+			 String msg = parseObject.getString("msg");
+			 if(StringUtils.isNotBlank(msg)){
+				 throw new BusinessException(msg);
+			 }
 			 JSONArray datarows = parseObject.getJSONArray("rows");
 			 Integer total = parseObject.getInteger("total");
 			 
 			 //反序列化
 			 List<LabelAndTemplate> datalist = JSONObject.parseArray(datarows.toJSONString(), LabelAndTemplate.class);
 			 
+			 //分单号=key
 			 TreeMap<String, List<LabelAndTemplate>> treeMap = new TreeMap<String, List<LabelAndTemplate>>();
 			 
 			 //封装打印模板并且对数据做出分类
@@ -107,17 +120,46 @@ public class PaiangServiceImple implements LabelInfoService {
 			             Entry<String, List<LabelAndTemplate>> entry = iterator.next();
 			             String key = entry.getKey();
 			             List<LabelAndTemplate> value = entry.getValue();
-			             BigDecimal reduce = value.stream().map(LabelAndTemplate :: getPackages).reduce(BigDecimal.ZERO,this :: getSum);
-			             value.forEach(x->x.setTotalAccount(reduce.toString()));
+			             //相同分单下的总件数
+			             BigDecimal totalacount = value.stream().map(LabelAndTemplate :: getPackages).reduce(BigDecimal.ZERO,this :: getSum);
+			             value.forEach(x->x.setTotalAcount(totalacount.toString()));
+			             int acount = totalacount.intValue();
+			             
+			             int k=1;
+		            	 for (LabelAndTemplate labelAndTemplate : value) {
+		            		 
+		            		 StringBuffer sbb = new StringBuffer();
+		            		 Integer packages=  labelAndTemplate.getPackages().intValue();
+		            		 
+		            		 for (int i = k; i <=acount; i++) {
+		            			 if(packages==0){
+		            				 k=i;
+		            				 break; //跳出循环
+		            			 }
+		            			 sbb.append(i).append("-").append(acount).append(";");
+		            			 packages--;
+		            		 }
+		            		 
+		            		 labelAndTemplate.setSerialNo(sbb.toString());
+		            		 
+						}
+							
+			             
 			}
+			 
+			 
 			 
 			 Datagrid<LabelAndTemplate> datagrid = new Datagrid<LabelAndTemplate>(String.valueOf(total), datalist);
 			 System.out.println(GsonUtil.GsonString(datagrid));
+			 
+			 
 			 return datagrid;
 		}
 		
 		return null;
 	}
+
+
 
 	@Override
 	public void updateLabel(Label label) {

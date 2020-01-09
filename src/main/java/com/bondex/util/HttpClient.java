@@ -27,6 +27,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
@@ -86,16 +87,18 @@ public class HttpClient {
 	 * @param params
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public static String doPost(String url, Map params) {
 
 		BufferedReader in = null;
 		try {
 			// 定义HttpClient
 			DefaultHttpClient client = new DefaultHttpClient();
+//			DefaultHttpClient client = new SSLClient(); 
 			// 实例化HTTP方法
-			HttpPost request = new HttpPost();
-			request.setURI(new URI(url));
-
+			HttpPost httpPost = new HttpPost();
+			httpPost.setURI(new URI(url));
+			httpPost.addHeader("Content-Type", "application/json;charset=UTF-8"); //设置请求头
 			// 设置参数
 			List<NameValuePair> nvps = new ArrayList<NameValuePair>();
 			for (Iterator iter = params.keySet().iterator(); iter.hasNext();) {
@@ -107,9 +110,12 @@ public class HttpClient {
 				nvps.add(new BasicNameValuePair(name, value));
 				// System.out.println(name +"-"+value);
 			}
-			request.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
+			UrlEncodedFormEntity encodedFormEntity = new UrlEncodedFormEntity(nvps, HTTP.UTF_8);
+			encodedFormEntity.setContentType("application/json;charset=UTF-8");
+			encodedFormEntity.setContentEncoding(new BasicHeader("Content-Type", "application/json;charset=UTF-8"));
+			httpPost.setEntity(encodedFormEntity);
 
-			HttpResponse response = client.execute(request);
+			HttpResponse response = client.execute(httpPost); //执行请求任务返回响应结果
 			int code = response.getStatusLine().getStatusCode();
 			if (code == 200) { // 请求成功
 				in = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "utf-8"));
@@ -377,6 +383,7 @@ public class HttpClient {
 			// 发送POST请求必须设置如下两行
 			conn.setDoOutput(true);
 			conn.setDoInput(true);
+			conn.setConnectTimeout(200000);
 			// 获取URLConnection对象对应的输出流
 			/*
 			 * out = new PrintWriter(conn.getOutputStream()); // 发送请求参数 out.print(param); //
