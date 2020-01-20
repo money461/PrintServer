@@ -501,6 +501,7 @@ $(function() {
         $('a[href$="' + url + '"]').click();
     };
     
+    
     // 右键菜单实现
     $.contextMenu({
         selector: ".menuTab",

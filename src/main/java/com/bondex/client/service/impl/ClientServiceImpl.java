@@ -42,13 +42,15 @@ import com.bondex.common.enums.ResEnum;
 import com.bondex.config.exception.BusinessException;
 import com.bondex.entity.Datagrid;
 import com.bondex.jdbc.entity.Label;
+import com.bondex.jdbc.entity.LabelAndTemplate;
 import com.bondex.jdbc.entity.Template;
+import com.bondex.mapper.TemplateDataMapper;
 import com.bondex.rabbitmq.Producer;
 import com.bondex.security.entity.Opid;
 import com.bondex.security.entity.UserInfo;
 import com.bondex.util.CloneUtils;
 import com.bondex.util.GsonUtil;
-import com.bondex.util.StringUtils;
+import com.github.pagehelper.PageHelper;
 
 @Component
 @Transactional
@@ -59,6 +61,9 @@ public class ClientServiceImpl implements ClientService {
 	private ClientDao clientDao;
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
+	
+	@Autowired
+	private TemplateDataMapper templateDataMapper;
 	@Autowired
 	private Producer producer;
 
@@ -188,10 +193,10 @@ public class ClientServiceImpl implements ClientService {
 	 *发送打印消息
 	 */
 	@Override
-	public void sendLabel(List<Label> labels, String region, UserInfo userInfo, String report,String businessType) {
-		List<Label> lables3 = new ArrayList<>();
+	public void sendLabel(List<LabelAndTemplate> LabelAndTemplates, String region, UserInfo userInfo, String report,String businessType) {
+		List<LabelAndTemplate> LabelAndTemplate3 = new ArrayList<>();
 		// 发送消息 并且 更新数据状态为"已打印“
-		for (Label label : labels) {
+		for (LabelAndTemplate label : LabelAndTemplates) {
 			
 			//当前时间
 //			LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HHmmss"))
@@ -231,8 +236,8 @@ public class ClientServiceImpl implements ClientService {
 			}
 		}
 		
-		if (!lables3.isEmpty()) {
-			labels = lables3;
+		if (!LabelAndTemplate3.isEmpty()) {
+			LabelAndTemplates = LabelAndTemplate3;
 		}
 
 		//第二次 获取打印区域 从数据库中获取
@@ -250,13 +255,13 @@ public class ClientServiceImpl implements ClientService {
 			clientDao.addDR(userInfo.getOpid(), rid);
 		}
 		List<Client> clients = new ArrayList<>();
-		for (Label label : labels) {
+		for (Label label : LabelAndTemplates) {
 			if (businessType.equals("medicine")) {
-				clients = getClients(labels, userInfo, businessType);
+				clients = getClients(LabelAndTemplates, userInfo, businessType);
 			} else {
 				String t[] = label.getTotal().split("\\.");
 				label.setTotal(t[0]);
-				clients = getClients(labels, userInfo, businessType);
+				clients = getClients(LabelAndTemplates, userInfo, businessType);
 			}
 		}
 		for (Client client : clients) {
@@ -271,7 +276,7 @@ public class ClientServiceImpl implements ClientService {
 	}
 
 	//封装打印数据
-	private List<Client> getClients(List<Label> labels2, UserInfo userInfo, String businessType) {
+	private List<Client> getClients(List<LabelAndTemplate> LabelAndTemplates2, UserInfo userInfo, String businessType) {
 		List<Client> clients = new ArrayList<>();
 		Client client;
 		ClientData clientData;
@@ -280,14 +285,14 @@ public class ClientServiceImpl implements ClientService {
 		JSONArray array;
 		JSONObject jsonObject = new JSONObject();
 		
-		for (Label label : labels2) {
+		for (LabelAndTemplate label : LabelAndTemplates2) {
 			client = new Client();// 打印数据
 			clientData = new ClientData();
 			vwOrderAlls = new ArrayList<VwOrderAll>();
 			vwOrderAll = new VwOrderAll();
 			array = new JSONArray();
 			
-			List<Template> template = jdbcTemplate.query("select * from template where id = ? or template_name=?",	new Object[] { label.getReserve3(), label.getReserve3() },	new BeanPropertyRowMapper<Template>(Template.class));
+			List<Template> template = jdbcTemplate.query("select * from template where id = ? or template_name=?",	new Object[] { label.getReserve3(), label.getTemplate_name() },	new BeanPropertyRowMapper<Template>(Template.class));
 			if(null==template || template.size()==0){
 				throw new BusinessException(ResEnum.FAIL.CODE, "请指定打印模板！");
 			}
@@ -413,10 +418,17 @@ public class ClientServiceImpl implements ClientService {
 	 * 获取操作 opids
 	 */
 	@Override
-	public List<Opid> getOpidName(String string) {
-		List<Opid> opids = jdbcTemplate.query("select distinct opid_name,opid from label where opid_name like '%"
-				+ string + "%' or opid like '%" + string + "%'", new Object[] {},new BeanPropertyRowMapper<Opid>(Opid.class));
+	public List<Opid> getOpidName(String param,Integer page,Integer limit) {
+		String sql = "select distinct opid_name,opid from label where opid_name like '%"+ param + "%' or opid like '%" + param + "%'"; 
+		//获取第1页，10条内容，默认查询总数count
+		page = page==null ? 1 :page;
+		limit = limit==null ? 10 : limit;
+		PageHelper.startPage(page, limit);
+		List<Opid> opids= templateDataMapper.queryOpidName(sql);
+		//List<Opid> opids = jdbcTemplate.query(, new Object[] {},new BeanPropertyRowMapper<Opid>(Opid.class));
 		return opids;
 	}
+	
+	
 
 }

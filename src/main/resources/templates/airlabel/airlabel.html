@@ -13,36 +13,57 @@
 		  <div class="col-sm-12 search-collapse">
 			<!--form表单数据搜索条件筛选区域-->
 			<form id='searchForm' class="form-horizontal center-vertical" role="form">
-				<!--空运标签 查询条件筛选区域-->
-				<table id="air" style="width: 100%;">
-					<tr>
-						<td style="text-align: right;">录入时间:</td>
-						<td><input type="text" id="start_time" name="start_time">-<input type="text" id="end_time" name="end_time"></td>
-						<td style="text-align: right;">航班日期:</td>
-						<td><input id="flight_date" type="text" name="flight_date"></input></td>
-						<td style="text-align: right;">MAWB:</td>
-						<td><textarea rows="1" class="easyui-textbox" data-options="multiline:true" name="mawb" id="mawb"></textarea></td>
-						<td style="text-align: right;">HAWB:</td>
-						<td><input type="text" id="hawb" class="easyui-textbox" name="hawb" maxlength="13"></td>
-						<td style="text-align: right;">件数:</td>
-						<td><input type="number" class="easyui-numberbox" id="total" name="total"></td>
-					</tr>
-					<tr>
-						<td style="text-align: right;">起始地:</td>
-						<td><input type="text" id="airport_departure" name="airport_departure" /></td>
-						<td style="text-align: right;">目的地:</td>
-						<td><input type="text" id="destination" name="destination" /></td>
-						<td style="text-align: right;">是否打印:</td>
-						<td><select id="status" name="status" class="easyui-combobox" style="width: 141px;">
-								<option value=""></option>
-								<option value="0" selected="selected">未打印</option>
-								<option value="1">已打印</option>
-						</select></td>
-						<td style="text-align: right;">录入人:</td>
-						<td><input type="text" id="opid_name" name="opid_name" maxlength="15" /></td>
-					</tr>
-				</table>
-				
+			
+				<!--空 运标签 查询条件筛选区域-->
+		     	<div class="select-list">
+		     	  <ul>
+		     	  	 <li>
+		     	  	 	<label>主单号：</label>
+		     	  	 	<textarea rows="1" class="easyui-textbox" data-options="multiline:true" name="mawb" id="mawb"></textarea>
+		     	  	 </li>
+		     	  	 <li>
+		     	  	 	<label>分单号：</label>
+		     	  	 	<input type="text" id="hawb" class="easyui-textbox" name="hawb" maxlength="13">
+		     	  	 </li>
+		     	  	 <li>
+		     	  	 	<label>件数：</label>
+		     	  	 	<input type="number" class="easyui-numberbox" id="total" name="total">
+		     	  	 </li>
+		     	  	 <li>
+		     	  	 	<label>录入时间：</label>
+		     	  	 		<input type="text" id="start_time"  placeholder="开始时间"   name="start_time"/>
+								<span>-</span>
+							<input type="text" id="end_time"  placeholder="结束时间" name="end_time"/>
+		     	  	 </li>
+		     	  	 <li>
+		     	  	 	<label>航班日期：</label>
+		     	  	 	<input id="flight_date" type="text" name="flight_date"/>
+		     	  	 </li>
+		     	  	 <li>
+		     	  	 	<label>起始地：</label>
+		     	  	 	<input type="text" id="airport_departure" name="airport_departure" />
+		     	  	 </li>
+		     	  	 <li>
+		     	  	 	<label>目的地：</label>
+		     	  	 	<input type="text" id="destination" name="destination" />
+		     	  	 </li>
+		     	  	 <li>
+		     	  	 	<label>打印：</label>
+		     	  	 	<select  type="select" id="status" name="status" style="width: 158px;">
+												<option value="0" selected="selected">未打印</option>
+												<option value="1">已打印</option>
+					    </select>
+		     	  	 </li>
+		     	  	 <li>
+		     	  	 	<label>录入操作：</label>
+		     	  	 	<input type="text" placeholder="请选择"  autocomplete="off" value="全部"   id="opid_name" name="opid_name" />
+		     	  	 </li>
+		     	  	 <@shiro.hasPermission  name="auth">
+		     	  	 <li><input type="text" style="display: none"/></li>
+		     	  	 </@shiro.hasPermission>
+		     	  </ul>
+		     	 </div>
+		     	
 			</form>
     </div>
      
@@ -239,7 +260,7 @@
 			buttons:buttons1
 		});	
 		$('#start_time').datetimebox({  
-			width:72,
+			width:110,
 		    required : false,  
 		    editable:false,
 		    buttons:buttons,
@@ -251,7 +272,7 @@
 		    }  
 		});
 		$('#end_time').datetimebox({
-			width:72,
+			width:110,
 		    required : false,  
 		    editable:false,
 		    buttons:buttons,
@@ -288,7 +309,32 @@
 	} 
 		pc = setTimeout(closemask, 10); 
 	}
-	</script>
+	
+	/* layer 选择下拉框表格展示 */
+	var tableSelect = layui.tableSelect;
+	tableSelect.render({
+		elem: '#opid_name',	//定义输入框input对象 必填
+		checkedKey: 'opid_name', //表格的唯一建值，非常重要，影响到选中状态 必填
+		searchKey: 'opid_name',	//搜索输入框的name值 默认keyword
+		searchPlaceholder: '操作号/名称关键词搜索',	//搜索输入框的提示文字 默认关键词搜索
+		table: {	//定义表格参数，与LAYUI的TABLE模块一致，只是无需再定义表格elem
+		url: '/labelPrint/client/getOpidName',
+		cols: [[
+			{ type: 'radio' },
+			{ field: 'opid', title: '操作号' },
+			{ field: 'opid_name', title: '操作姓名' }
+		]]
+		},
+		done: function (elem, data) {
+			var NEWJSON = [];
+			layui.each(data.data, function (index, item) {
+				NEWJSON.push(item.opid_name)
+			})
+			elem.val(NEWJSON.join(","));
+		}
+	})
+	
+</script>
 	
 	
 

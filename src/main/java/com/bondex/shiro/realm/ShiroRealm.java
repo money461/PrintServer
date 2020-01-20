@@ -68,7 +68,7 @@ public class ShiroRealm extends AuthorizingRealm {
 		Set<String> premissionSet = Collections.synchronizedSet(new LinkedHashSet<String>());
 		//获取到当前opid的权限
 		Map<String, Object> security = SecurityService.getSecurity(userInfo,premissionSet);
-//		System.out.println(GsonUtil.GsonString(security));
+		System.out.println(GsonUtil.GsonString(security));
 		Session session = ShiroUtils.getSession();
 		// 用户权限存放session
 		session.setAttribute(Common.Session_UserSecurity, security);
@@ -76,7 +76,7 @@ public class ShiroRealm extends AuthorizingRealm {
 		authorizationInfo.addRole(userInfo.getOpid());
 		//权限的添加
 		authorizationInfo.addStringPermissions(premissionSet);
-//		System.out.println(GsonUtil.GsonString(premissionSet));
+		System.out.println(GsonUtil.GsonString(premissionSet));
 		
 		return authorizationInfo;
 	}

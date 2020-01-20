@@ -29,7 +29,7 @@ import com.bondex.util.RandomUtil;
 /**
  * 
  * @author bondex_public
- *
+ * 订阅
  */
 @RestController
 @RequestMapping("subscribe")

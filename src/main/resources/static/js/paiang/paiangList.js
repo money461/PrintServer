@@ -221,7 +221,7 @@ paiang.prototype.initDataGridTable=function(){
 				
 				//更新完成后，刷新当前行
 				rowData.template_id=''; //设置模板id 此时标签的id是未被修改的，只能制空
-				rowData.reserve3=rowData.template_name;
+				rowData.reserve3='';
 				$("#paiang_tab").datagrid('refreshRow', rowIndex);
 				editRow = undefined;
 			},
@@ -265,6 +265,10 @@ function updateActions(index){
 //封装查询参数
 function getQueryCondition(){
    var formParm = getEntity('#searchForm'); //获取搜索表单form
+   var tMawb = formParm.mawb;
+   mawb = $.trim(tMawb) == undefined?"":$.trim(tMawb);
+   mawb = mawb.replace(/\s+/g, ',');
+   formParm.mawb=mawb;
     console.info(formParm);
   return formParm;
 }
@@ -323,6 +327,14 @@ paiang.prototype.search=function() {
 paiang.prototype.securityReload=function() {
 	//清除表单
 	$('#searchForm')[0].reset();
+	 $("#searchForm").find('input[type=text],input[type=hidden],textarea[type=textarea]').each(function() {
+		 if($(this).attr('type') == 'textarea'){
+			 //清除 textarea
+			 $(this).text('');
+		 }else if($(this).attr('type') == 'hidden'){
+			 $(this).val('');
+		 }
+	});
 	//重新加载
 	//$('#paiang_tab').datagrid('reload');
 	paiang.initDataGridTable();
@@ -584,8 +596,8 @@ paiang.prototype.tableprint = function() {
   	//初始化标签打印发送客户端 report打印人 
  paiang.prototype.printLabelSendClient=function(report,region) {
 	 var rows = $('#paiang_tab').datagrid('getSelections'); //获取被选中的数据
-	 if(rows.length!=1){
-     	layer.msg('请选择有且仅有一行数据操作！',{icon:2,time:1000});
+	 if(rows.length<1){
+     	layer.msg('请至少选择一行打印数据！',{icon:2,time:1000});
      	return;
      }
 	 $.messager.confirm("操作提示", "您确定要执行打印办公室:[ "+$("#quyu").text()+" ]打印操作吗？", function (flag) {
@@ -769,7 +781,7 @@ function setName(){
 //设置时间插件
 var buttons = $.extend([], $.fn.datetimebox.defaults.buttons);
 $('#start_time').datetimebox({  
-	width:72,
+	width:115,
     required : false,  
     editable:false,
     buttons:buttons,
@@ -781,7 +793,7 @@ $('#start_time').datetimebox({
 });
 //设置时间插件
 $('#end_time').datetimebox({
-	width:72,
+	width:115,
     required : false,  
     editable:false,
     buttons:buttons,
@@ -983,7 +995,7 @@ var paiangcolumns={
 /**
  * 录入人下拉选择
  */
-$('#opid_name').combogrid({    
+$('#opid_name11').combogrid({    
 	idField:'opid_name',    
 	textField:'opid_name',    
 	mode:'remote',

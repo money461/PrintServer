@@ -15,8 +15,7 @@ filter:
     log-slow-sql: true
 spring:
   profiles:
-    active:
-    - test
+    active: test
   http:
     encoding:
       force: true

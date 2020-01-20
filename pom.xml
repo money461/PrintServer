@@ -324,7 +324,6 @@
 				        <nonFilteredFileExtensions>
 				        	<nonFilteredFileExtension>PDF</nonFilteredFileExtension>
 				        </nonFilteredFileExtensions>
-	        
 				    </configuration>
 					 <executions> 
 					  <execution> 

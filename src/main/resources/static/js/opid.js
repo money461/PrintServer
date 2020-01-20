@@ -43,7 +43,7 @@ opids.prototype.init=function(){
 				success : function(result) { //根据结果显示菜单
 					if(result.status=='200'){
 						//2秒关闭
-						layer.msg(result.message, {icon: 1,time: 2000},function(){
+						layer.msg(result.message, {icon: 1,time: 1000},function(){
 							window.location.href="login";
 						});
 						

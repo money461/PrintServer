@@ -5,8 +5,10 @@ import java.io.InputStream;
 import java.util.List;
 
 import com.bondex.jdbc.entity.Label;
+import com.bondex.jdbc.entity.LabelAndTemplate;
 import com.bondex.security.entity.Opid;
 import com.bondex.security.entity.UserInfo;
+import com.github.pagehelper.Page;
 
 public interface ClientService {
 
@@ -40,7 +42,7 @@ public interface ClientService {
 	 * 
 	 * @return
 	 */
-	void sendLabel(List<Label> labelList, String region, UserInfo userInfo, String report, String businessType);
+	void sendLabel(List<LabelAndTemplate> labelList, String region, UserInfo userInfo, String report, String businessType);
 
 	String searchRegion(String q);
 
@@ -56,6 +58,6 @@ public interface ClientService {
 
 	String getThisRegion(String code, String opid);
 
-	List<Opid> getOpidName(String string);
+	List<Opid> getOpidName(String param,Integer page,Integer limit);
 
 }

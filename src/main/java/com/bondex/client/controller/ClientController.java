@@ -3,6 +3,7 @@ package com.bondex.client.controller;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,6 +27,7 @@ import com.bondex.client.service.ClientService;
 import com.bondex.common.Common;
 import com.bondex.entity.Datagrid;
 import com.bondex.jdbc.entity.Label;
+import com.bondex.jdbc.entity.LabelAndTemplate;
 import com.bondex.res.AjaxResult;
 import com.bondex.res.MsgResult;
 import com.bondex.security.entity.JsonResult;
@@ -35,6 +37,7 @@ import com.bondex.shiro.security.ShiroUtils;
 import com.bondex.util.GsonUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 @Controller
@@ -107,7 +110,7 @@ public class ClientController {
 	public AjaxResult printLabelSendClient(String labels, String regions, String report, String businessType,HttpServletRequest request) {
 		HttpSession session = request.getSession();
 		UserInfo userInfo = (UserInfo)session.getAttribute(Common.Session_UserInfo);
-		List<Label> labelList = GsonUtil.getGson().fromJson(labels, new TypeToken<List<Label>>() {}.getType());
+		List<LabelAndTemplate> labelList = GsonUtil.getGson().fromJson(labels, new TypeToken<List<LabelAndTemplate>>() {}.getType());
 		String gsonString = GsonUtil.GsonString(labelList);
 		logger.debug("提交准备打印的数据：{}",gsonString);
 		clientService.sendLabel(labelList, regions,userInfo, report, businessType);
@@ -188,6 +191,12 @@ public class ClientController {
 		return GsonUtil.GsonString(list);
 	}
 
+	/**
+	 * 获取起始地 - 目的地
+	 * @param request
+	 * @param q
+	 * @return
+	 */
 	@RequestMapping("getRegion")
 	@ResponseBody
 	public String getRegion(HttpServletRequest request, String q) {
@@ -204,11 +213,23 @@ public class ClientController {
 	 */
 	@RequestMapping("getOpidName")
 	@ResponseBody
-	public String getOpidName(HttpServletRequest request, HttpServletResponse response, String q) {
-		List<Opid> opids= clientService.getOpidName(q == null ? "" : q);
-		Datagrid<Opid> datagrid = new Datagrid<>();
-		datagrid.setRows(opids);
-		return GsonUtil.GsonString(datagrid);
+	public Object getOpidName(HttpServletRequest request, HttpServletResponse response, String q,Integer page, Integer limit,String opid_name) {
+		if(StringUtils.isNoneBlank(opid_name)){
+			q= opid_name;
+		}
+		q = q == null ? "" : q;
+		List<Opid> opids= clientService.getOpidName(q,page,limit);
+		
+		Map<String, Object> map = new LinkedHashMap<String,Object>();
+		map.put("code", 0);
+		map.put("count", opids.size());
+		map.put("data", opids);
+		
+		/*Datagrid<Opid> datagrid = new Datagrid<>();
+		datagrid.setRows(opids);*/
+		
+//		return GsonUtil.GsonString(datagrid);
+		return map;
 	}
 
 	/**

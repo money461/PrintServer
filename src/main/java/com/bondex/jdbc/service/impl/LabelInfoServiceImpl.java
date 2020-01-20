@@ -43,7 +43,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		Type objectType = new TypeToken<List<List<JsonResult>>>() {}.getType();
 		List<List<JsonResult>> jsonResultsList = GsonUtil.getGson().fromJson(GsonUtil.GsonString(listop), objectType);
 		
-		List<JsonResult> jsonResults = null==jsonResultsList?null:jsonResultsList.get(0);
+		List<JsonResult> jsonResults =jsonResultsList.get(0);
 		
 		String rt = ""; //'a357f19f-6a1f-4171-ab8e-1f1a2b77377a','988b4162-00af-4924-a6fe-6b310d161900','2b7eddea-d953-4186-bc3b-a642940d57ea','4e2b8f59-9858-4297-962f-6ee4862085aa'
 		
@@ -63,7 +63,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		StringBuffer sql = new StringBuffer();
 		sql.append("select * from label LEFT JOIN template t  on t.id = label.reserve3 where t.template_id in (" + rt + ") ");
 		//派昂模式
-		if (businessType.equals("medicine")) {
+		/*if (businessType.equals("medicine")) {
 			sql.append(" and business_type = 0 ");
 			if (label.getMBLNo() != null && !label.getMBLNo().equals("undefined") && !label.getMBLNo().equals("")) {
 				sql.append("and MBLNo like '%" + label.getMBLNo() + "%' ");
@@ -79,7 +79,8 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 			
 		} else {
 			sql.append(" and business_type <> 0 ");
-		}
+		}*/
+		sql.append(" and business_type <> 0 ");
 		sql.append("and reserve1 = '0' ");
 		if (start_time != null && !start_time.equals("undefined") && !start_time.equals("")) {
 			if (businessType.equals("medicine")) {
@@ -126,7 +127,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		if (label.getHawb() != null && !label.getHawb().equals("undefined") && !label.getHawb().equals("")) {
 			sql.append("and hawb like '%" + label.getHawb() + "%' ");
 		}
-		if (label.getOpid_name() != null && !label.getOpid_name().equals("undefined") && !label.getOpid_name().equals("") && !label.getOpid_name().equals("所有")) {
+		if (label.getOpid_name() != null && !label.getOpid_name().equals("undefined") && !label.getOpid_name().equals("") && !label.getOpid_name().equals("全部")) {
 			sql.append("and opid_name like '%" + label.getOpid_name() + "%' ");
 		}
 		if (label.getTotal() != null && !label.getTotal().equals("undefined") && !label.getTotal().equals("")) {
@@ -136,10 +137,10 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 			sql.append("and flight_date = '" + dateFormat.format(label.getFlight_date()) + "' ");
 		}
-		if (label.getAirport_departure() != null && !label.getAirport_departure().equals("undefined") && !label.getAirport_departure().equals("") && !label.getAirport_departure().equals("所有")) {
+		if (label.getAirport_departure() != null && !label.getAirport_departure().equals("undefined") && !label.getAirport_departure().equals("") && !label.getAirport_departure().equals("全部")) {
 			sql.append("and airport_departure like '%" + label.getAirport_departure() + "%' ");
 		}
-		if (label.getDestination() != null && !label.getDestination().equals("undefined") && !label.getDestination().equals("") && !label.getDestination().equals("所有")) {
+		if (label.getDestination() != null && !label.getDestination().equals("undefined") && !label.getDestination().equals("") && !label.getDestination().equals("全部")) {
 			sql.append("and destination like '%" + label.getDestination() + "%' ");
 		}
 		if (label.getIs_print() != null && !label.getIs_print().equals("undefined") && !label.getIs_print().equals("")) {
@@ -177,7 +178,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		} else {
 			totalsql.append("and business_type <> 0 ");
 		}
-		if (label.getOpid_name() != null && !label.getOpid_name().equals("undefined") && !label.getOpid_name().equals("") && !label.getOpid_name().equals("所有")) {
+		if (label.getOpid_name() != null && !label.getOpid_name().equals("undefined") && !label.getOpid_name().equals("") && !label.getOpid_name().equals("全部")) {
 			totalsql.append("and opid_name like '%" + label.getOpid_name() + "%' ");
 		}
 
@@ -227,10 +228,10 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		if (label.getTotal() != null && !label.getTotal().equals("undefined") && !label.getTotal().equals("")) {
 			totalsql.append("and total = '" + label.getTotal() + "' ");
 		}
-		if (label.getAirport_departure() != null && !label.getAirport_departure().equals("undefined") && !label.getAirport_departure().equals("") && !label.getAirport_departure().equals("所有")) {
+		if (label.getAirport_departure() != null && !label.getAirport_departure().equals("undefined") && !label.getAirport_departure().equals("") && !label.getAirport_departure().equals("全部")) {
 			totalsql.append("and airport_departure like '%" + label.getAirport_departure() + "%' ");
 		}
-		if (label.getDestination() != null && !label.getDestination().equals("undefined") && !label.getDestination().equals("") && !label.getDestination().equals("所有")) {
+		if (label.getDestination() != null && !label.getDestination().equals("undefined") && !label.getDestination().equals("") && !label.getDestination().equals("全部")) {
 			totalsql.append("and destination like '%" + label.getDestination() + "%' ");
 		}
 		if (label.getIs_print() != null && !label.getIs_print().equals("undefined") && !label.getIs_print().equals("")) {

@@ -9,7 +9,7 @@
     <!--[if lt IE 9]>
     <meta http-equiv="refresh" content="0;ie.html"/>
     <![endif]-->
-   <!--  <link href="${request.contextPath}/favicon.ico}" rel="stylesheet"/> -->
+    <link href="${request.contextPath}/img/favicon.ico" rel="shortcut icon" type="image/x-icon">
     <link href="${request.contextPath}/css/bootstrap.min.css" rel="stylesheet"/>
     <link href="${request.contextPath}/bootstrap-table-develop/dist/bootstrap-table.min.css" rel="stylesheet" />
     <!-- 右键菜单实现 样式 -->
@@ -253,16 +253,18 @@ $(function() {
         }
     }
     
+    $(window).unbind('beforeunload');
+  　　 window.onbeforeunload = null;
+    localStorage.clear();
 });
 
+/* 
 //localStorage 创建一个本地存储的 name/value 对
-
 //刷新页面，清除缓存
 window.onbeforeunload= function(event) { 
 	localStorage.clear();
 	return true; 
-}
-
+} */
 </script>
 
 

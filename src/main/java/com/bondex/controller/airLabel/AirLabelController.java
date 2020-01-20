@@ -121,12 +121,16 @@ public class AirLabelController {
 		HttpSession session = request.getSession();
 		Map<String, Object> map = (Map<String, Object>) session.getAttribute(Common.Session_UserSecurity);
 		if(StringUtils.isNull(map)||map.size()==0){
-			throw new BusinessException(ResEnum.FORBIDDEN.CODE,"你没有相关的打印模板权限,无法查看数据");
+			throw new BusinessException(ResEnum.FORBIDDEN.CODE,"操作号没有配置任何操作权限,无法查看数据");
 		}
 		UserInfo userInfo = ShiroUtils.getUserInfo();
 		opid = userInfo.getOpid();
 		//获取打印模板权限
 		List<JsonResult> list = (List<JsonResult>)map.get(opid + Common.UserSecurity_PrintButton);
+		if(StringUtils.isNull(list)||list.size()==0){
+			throw new BusinessException(ResEnum.FORBIDDEN.CODE,"操作号没有相关的打印模板权限,无法查看数据");
+		}
+		
 		Datagrid<?> datagrid = labelInfoService.findByPage(page, rows, JSON.parseObject(URLDecoder.decode(JSON.toJSONString(label), "utf-8"), Label.class), start_time, end_time, sort, order, opid, list, businessType);
 		return MsgResult.result(ResEnum.SUCCESS.CODE, ResEnum.SUCCESS.MESSAGE, datagrid);
 //		return datagrid;

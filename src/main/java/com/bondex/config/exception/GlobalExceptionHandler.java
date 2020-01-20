@@ -21,6 +21,7 @@ import com.bondex.util.ServletUtils;
 
 /**
  * 全局异常处理器
+ * 异常处理方式一般用来处理应用级别的异常，一些容器级别的错误就处理不了，比如 Filter 中抛出的异常
  * 
  * @author ruoyi
  */

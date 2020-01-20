@@ -54,7 +54,7 @@ public class PaiangServiceImple implements LabelInfoService {
 			//标签权限
 			Type objectType = new TypeToken<List<List<JsonResult>>>() {}.getType();
 			List<List<JsonResult>> jsonResultsList = GsonUtil.getGson().fromJson(GsonUtil.GsonString(list), objectType);
-			List<JsonResult> jsonResults = null==jsonResultsList?null:jsonResultsList.get(0);
+			List<JsonResult> jsonResults =jsonResultsList.get(0);
 			//查询指定的模板及其数据
 			Template template = getTemplate(jsonResults, "4");
 			
@@ -99,6 +99,7 @@ public class PaiangServiceImple implements LabelInfoService {
 			 for (LabelAndTemplate labelAndTemplate : datalist) {
 				 
 				 labelAndTemplate.setSendAddress("陕西派昂医药有限责任公司"); //发货人 固定
+				 labelAndTemplate.setReserve3(String.valueOf(template.getId())); //模版外键 
 				 labelAndTemplate.setId(template.getId());
 				 labelAndTemplate.setTemplate_id(template.getTemplate_id());
 				 labelAndTemplate.setTemplate_name(template.getTemplate_name());

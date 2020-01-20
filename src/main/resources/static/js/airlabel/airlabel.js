@@ -16,7 +16,7 @@ function label() {
 	var MBLNo="";//
 	var TakeCargoNo="";// 
 	var opid=""; //打印权限信息
-	var opid1; //当前操作id
+	var opid1; //当前操作的id
 	
 	//js初始化调用的接口
 	//获取操作opid
@@ -46,11 +46,11 @@ $(function(){
 		/**
 		 * 录入人下拉选择
 		 */
-		$('#opid_name').combogrid({    
+		$('#opid_name11').combogrid({    
 			idField:'opid_name',    
 			textField:'opid_name',    
 			mode:'remote',
-			value:'所有',    
+			value:'全部',    
 			height:34,
 			fitColumns:true,
 			scrollbarSize : 0,
@@ -69,7 +69,7 @@ $(function(){
 		    idField:'code',    
 		    textField:'name',    
 		    mode:'remote',
-		    value:'所有',    
+		    value:'全部',    
 		    height:34,
 		    fitColumns:true,
 		    scrollbarSize : 0,
@@ -86,7 +86,7 @@ $(function(){
 			idField:'code',    
 			textField:'name',
 			mode:'remote',
-			value:'所有',
+			value:'全部',
 			height:34,
 			fitColumns:true,
 			scrollbarSize : 0,
@@ -239,12 +239,12 @@ function formatDate(time){
 		start_time = "";
 		end_time = "";
 		flight_date= "";
-		$('#airport_departure').combogrid('setValue', '所有');// 替换为所有
-		$('#destination').combogrid('setValue', '所有');// 替换为所有
-		$('#opid_name').combogrid('setValue', '所有');// 替换为所有
+		$('#airport_departure').combogrid('setValue', '全部');// 替换为全部
+		$('#destination').combogrid('setValue', '全部');// 替换为全部
+		$('#opid_name').val('全部');// 替换为全部
 		opid_name= "";
 		if (isRefresh) {
-			label.initLabelDatagrid();
+			label.initLabelDatagrid(); //重新加载数据
 		}
 	}
 	//查询事件
@@ -873,6 +873,9 @@ label.prototype.printLabelSendClient = function(bq, t) {
 			},
 			// 结束编辑事件 当用户完成编辑一行时触发，参数包括：
 			onAfterEdit:function(rowIndex, rowData, changes){
+				//更新完成后，刷新当前行
+				rowData.template_id=''; //设置模板id 此时标签的id是未被修改的，只能制空
+				rowData.reserve3='';
 				$("#dg1").datagrid('refreshRow', rowIndex);
 				editRow = undefined;
 			},
@@ -883,7 +886,7 @@ label.prototype.printLabelSendClient = function(bq, t) {
 			onLoadSuccess: function (data) {
 				   if (data.total == 0) {
 					   $('#dg1').datagrid('appendRow',{
-						   mawb: '无数据！请更改查询条件，或<a href="#"  onclick="subscribe.initWindow()" style="color:green;"><b>订阅</b></a>主单号...',
+						   mawb: '无数据！请更改查询条件，或<a href="#"  onclick="subscribe.initWindow()" style="color:red;"><b>订阅</b></a>主单号...',
 					   }).datagrid('mergeCells',{
 						   index: 0,
 						   field: 'mawb',

@@ -17,29 +17,33 @@
 			<div class="select-list">
 			             <ul>
 							<li>
-								主单号：<textarea  type="textarea" rows="1" class="easyui-textbox" data-options="multiline:true" name="mawb" id="mawb" >${mawb!}</textarea>
+								<label>主单号：</label>
+								<textarea  type="textarea" rows="1" class="easyui-textbox"   data-options="multiline:true" name="mawb" id="mawb" >${mawb!}</textarea>
 							</li>
 							<li>
-								运单号：<textarea  type="textarea" rows="1" class="easyui-textbox" data-options="multiline:true" name="MBLNo" id="MBLNo"></textarea>
+								<label>运单号：</label>
+								<input  type="text" name="MBLNo" id="MBLNo"></input>
 							</li>
 							<li>
-								交货凭证号：<textarea  type="textarea" rows="1" class="easyui-textbox" data-options="multiline:true" name="TakeCargoNo" id="TakeCargoNo"></textarea>
+								<label>交货凭证号：</label>
+								<input  type="text" name="TakeCargoNo" id="TakeCargoNo"></input>
 							</li>
 							<li>
-								是否打印：<select  type="select" id="status" name="status" class="easyui-combobox" style="width: 141px;">
-							                	<option value=""></option>
-												<option value="0" selected="selected">未打印</option>
-												<option value="1">已打印</option>
-					                   </select>
-							</li>
-							<li class="select-time">
 								<label>发货时间： </label>
 								<input type="text" id="start_time"  placeholder="开始时间"   name="start_time"/>
 								<span>-</span>
 								<input type="text" id="end_time"  placeholder="结束时间" name="end_time"/>
 							</li>
 							<li>
-								录入人：<input type="text" id="opid_name" name="opidName" maxlength="15" />
+								<label>录入人：</label>
+								<input type="text" placeholder="请选择"  autocomplete="off" value="全部"   id="opid_name"  name="opid_name"/>
+							</li>
+							<li>
+								<label>是否打印：</label>
+								<select  type="select" id="status" name="status" style="width: 145px;">
+												<option value="0" selected="selected">未打印</option>
+												<option value="1">已打印</option>
+					             </select>
 							</li>
 							<!-- <li>
 								<button type="button"  class="btn btn-primary btn-rounded btn-sm" onclick="paiang.search();"><i class="fa fa-search"></i>&nbsp;搜索</button>
@@ -75,7 +79,31 @@
 	        // 获取ModelAndView中的paiangmawb对象}
 	            console.log("---派昂页面加载完成----");
 	        
-	         } 
+	         }
+	         
+	         /* layer 选择下拉框表格展示 */
+	     	var tableSelect = layui.tableSelect;
+	     	tableSelect.render({
+	     		elem: '#opid_name',	//定义输入框input对象 必填
+	     		checkedKey: 'opid_name', //表格的唯一建值，非常重要，影响到选中状态 必填
+	     		searchKey: 'opid_name',	//搜索输入框的name值 默认keyword
+	     		searchPlaceholder: '操作号/名称关键词搜索',	//搜索输入框的提示文字 默认关键词搜索
+	     		table: {	//定义表格参数，与LAYUI的TABLE模块一致，只是无需再定义表格elem
+	     		url: '/labelPrint/client/getOpidName',
+	     		cols: [[
+	     			{ type: 'radio' },
+	     			{ field: 'opid', title: '操作号' },
+	     			{ field: 'opid_name', title: '操作姓名' }
+	     		]]
+	     		},
+	     		done: function (elem, data) {
+	     			var NEWJSON = [];
+	     			layui.each(data.data, function (index, item) {
+	     				NEWJSON.push(item.opid_name)
+	     			})
+	     			elem.val(NEWJSON.join(","));
+	     		}
+	     	})
 	</script>
 	<script type="text/javascript" src="${request.contextPath}/js/paiang/paiangList.js"></script>
 </html>
