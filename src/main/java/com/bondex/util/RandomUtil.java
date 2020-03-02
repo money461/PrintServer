@@ -117,5 +117,9 @@ public class RandomUtil {
         sb.append(strNum);
         return sb.toString();
     }
+    
+    public static void main(String[] args) {
+		System.out.println(UUID36());
+	}
 
 }

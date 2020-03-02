@@ -1,10 +1,17 @@
 package com.bondex.entity;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Datagrid<T> {
-	private String total;
-	private List<T> rows;
+public class Datagrid<T> implements Serializable {
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7656894996768001892L;
+	
+	private String total; //总记录数
+	private List<T> rows; //数据集
 
 	public String getTotal() {
 		return total;

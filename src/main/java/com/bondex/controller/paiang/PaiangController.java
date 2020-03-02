@@ -29,7 +29,6 @@ import com.bondex.jdbc.entity.Label;
 import com.bondex.jdbc.entity.LabelAndTemplate;
 import com.bondex.jdbc.service.LabelInfoService;
 import com.bondex.res.MsgResult;
-import com.bondex.security.entity.JsonResult;
 import com.bondex.security.entity.UserInfo;
 import com.bondex.shiro.security.ShiroUtils;
 import com.bondex.util.StringUtils;
@@ -78,14 +77,7 @@ public class PaiangController {
 		}
 		UserInfo userInfo = ShiroUtils.getUserInfo();
 		opid = userInfo.getOpid();
-		//获取打印模板权限
-		List<JsonResult> list = (List<JsonResult>)map.get(opid + Common.UserSecurity_PrintButton);
-		if(StringUtils.isNull(list)||list.size()==0){
-			throw new BusinessException(ResEnum.FORBIDDEN.CODE,"操作号没有相关的打印模板权限,无法查看数据");
-		}
-		
-		
-		Datagrid datagrid = labelInfoService.findByPage(page, rows, label, start_time, end_time, sort, order, opid, list, "medicine");
+		Datagrid datagrid = labelInfoService.findByPage(page, rows, label, start_time, end_time, sort, order, "medicine");
 		 return MsgResult.result(ResEnum.SUCCESS.CODE,ResEnum.SUCCESS.MESSAGE,datagrid);
 	}
 	

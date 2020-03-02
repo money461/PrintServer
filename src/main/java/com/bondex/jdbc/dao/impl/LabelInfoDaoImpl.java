@@ -1,6 +1,7 @@
 package com.bondex.jdbc.dao.impl;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,8 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpEntity;
@@ -22,6 +25,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import com.alibaba.fastjson.JSONObject;
+import com.bondex.common.enums.NewPowerHttpEnum;
 import com.bondex.entity.Subscribe;
 import com.bondex.jdbc.dao.LabelInfoDao;
 import com.bondex.jdbc.entity.JsonRootBean;
@@ -30,7 +35,12 @@ import com.bondex.jdbc.entity.Label;
 import com.bondex.jdbc.entity.LabelAndTemplate;
 import com.bondex.jdbc.entity.Template;
 import com.bondex.mapper.TemplateDataMapper;
+import com.bondex.security.SecurityService;
+import com.bondex.security.entity.JsonResult;
+import com.bondex.security.entity.UserInfo;
+import com.bondex.shiro.security.ShiroUtils;
 import com.bondex.util.GsonUtil;
+import com.bondex.util.StringUtils;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
@@ -38,8 +48,13 @@ import com.google.gson.JsonSyntaxException;
 public class LabelInfoDaoImpl implements LabelInfoDao {
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
+	
 	@Autowired
+	@Qualifier("restTemplate")
 	private RestTemplate restTemplate;
+	
+	@Autowired
+	private SecurityService securityService;
 	
 	@Autowired
 	private TemplateDataMapper templateDataMapper;
@@ -115,6 +130,7 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 		return new JsonParser().parse(rt).getAsJsonObject().get("success").getAsString().equals("true") ? true : false;
 	}
 
+	//根据用户部门 保存标签数据
 	@Override
 	public void saveLabel(JsonRootBean jsonRootBean) {
 		String json = null;
@@ -122,26 +138,43 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 			json = GsonUtil.GsonString(jsonRootBean);
 			String main = jsonRootBean.getMain();
 			String[] hawb = null;
+			//main 中获取标签数据
 			Keywords keywords = GsonUtil.GsonToBean(main, Keywords.class);
 			if (keywords != null) {
 				if (keywords.getPARENT_BILL_NO() != null && keywords.getUNLOAD_CODE() != null && keywords.getPACK_NO() != 0.0 && keywords.getLOAD_CODE() != null) {
 					// 主单号为11位，才进行入库
 					if (keywords.getPARENT_BILL_NO().length() == 11) {
-						List<Template> template = jdbcTemplate.query("select * from label where list_id = ?", new Object[] { keywords.getLIST_ID() }, new BeanPropertyRowMapper<Template>(Template.class));
+     						//查询校验重复
+						    List<Template> template = jdbcTemplate.query("select * from label where list_id = ?", new Object[] { keywords.getLIST_ID() }, new BeanPropertyRowMapper<Template>(Template.class));
+						
+						    //设置标签绑定模板
+						    
+						    //1.判断当前用户部门
+						    UserInfo userInfo = ShiroUtils.getUserInfo();
+						    JSONObject jsonObject = securityService.getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetCompanyInfoOfDeptByOperatorID);
+						    String DeptID = jsonObject.getJSONObject("Data").getString("DeptID");
+						    String reserve3;
+						    if("0151".equals(DeptID)){ //海程邦达重庆分公司部门id
+						    	reserve3="5"; //重庆标签绑定
+						    }else{
+							    	
+								String hawb1 = keywords.getBILL_NO() == null ? "" : keywords.getBILL_NO();
+								if (!hawb1.equals("")) {
+									hawb = hawb1.split("_"); //切割
+								} else {
+									hawb = new String[] { "", "" };
+								}
+								
+								if (hawb[1].equals("")) {
+									reserve3 = "1"; //富士标签
+								} else {
+									reserve3 = "2"; //邦达普货标签
+								}
+						    }	
+							
 						if (template.isEmpty()) {// 无重复数据，执行插入操作
 							String sql = "INSERT INTO label(mawb,hawb,destination,total,airport_departure,flight_date,reserve3,list_id,opid,opid_name,business_type) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
-							String hawb1 = keywords.getBILL_NO() == null ? "" : keywords.getBILL_NO();
-							if (!hawb1.equals("")) {
-								hawb = hawb1.split("_");
-							} else {
-								hawb = new String[] { "", "" };
-							}
-							String reserve3;
-							if (hawb[1].equals("")) {
-								reserve3 = "1";
-							} else {
-								reserve3 = "2";
-							}
+							
 
 							String s1 = keywords.getPARENT_BILL_NO();
 							String s2 = "-";
@@ -149,8 +182,11 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 							String newString = s1.substring(0, i) + s2 + s1.substring(i, s1.length());
 
 							subscribe(newString);// 检查是否是订阅主单号，如果是则发送邮件提示订阅用户
+							
+							// 标签数据入库
 							Object args[] = { newString, hawb[1], keywords.getUNLOAD_CODE(), Math.round(keywords.getPACK_NO()), keywords.getLOAD_CODE(), keywords.getVOYAGE_DATE(), reserve3, keywords.getLIST_ID(), keywords.getGEN_ER(), keywords.getGEN_NAME(), 1 };
-							int temp = jdbcTemplate.update(sql, args);// 标签数据入库
+							
+							int temp = jdbcTemplate.update(sql, args);
 
 							// 入库失败，记录日志
 							if (temp <= 0) {
@@ -158,28 +194,20 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 							} else {
 								jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES(?,?,?,?,?,?,?)", new Object[] { newString, hawb[1], 0, "", "新增", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
 							}
+							
+							//存在重复数据
 						} else {// 执行更新操作
 							String sql = "update label set mawb=?,hawb=?,destination=?,total=?,airport_departure=?,flight_date=?,reserve3=?,opid=?,opid_name=? where list_id = ?";
-							String hawb1 = keywords.getBILL_NO() == null ? "" : keywords.getBILL_NO();
-							if (!hawb1.equals("")) {
-								hawb = hawb1.split("_");
-							} else {
-								hawb = new String[] { "", "" };
-							}
-							String reserve3;
-							if (hawb[1].equals("")) {
-								reserve3 = "1";
-							} else {
-								reserve3 = "2";
-							}
-
+							
 							String s1 = keywords.getPARENT_BILL_NO();
 							String s2 = "-";
 							int i = 3;// 插入到第三位
 							String newString = s1.substring(0, i) + s2 + s1.substring(i, s1.length());
 
+							// 标签数据入库
 							Object args[] = { newString, hawb[1], keywords.getUNLOAD_CODE(), Math.round(keywords.getPACK_NO()), keywords.getLOAD_CODE(), keywords.getVOYAGE_DATE(), reserve3, keywords.getLIST_ID(), keywords.getGEN_ER(), keywords.getGEN_NAME() };
-							int temp = jdbcTemplate.update(sql, args);// 标签数据入库
+							int temp = jdbcTemplate.update(sql, args);
+							
 							if (temp <= 0) {
 								jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES(?,?,?,?,?,?,?)", new Object[] { newString, hawb[1], 1, "更新未抛异常，但结果返回小于1", "更新", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
 							} else {
@@ -245,17 +273,52 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 			jdbcTemplate.update("UPDATE label SET reserve1 = ? WHERE label_id = ?", new Object[] { 1, label2.getLabel_id() });
 		}
 	}
-
+	
+	/**
+	 * 获取用户绑定的模板信息
+	 */
 	@Override
-	public Template getTemplate(String rt, String id) {
-		List<Template> template = jdbcTemplate.query("select * from template where id = ? and template_id in(" + rt + ") or template_name =?", new Object[] { id, id }, new BeanPropertyRowMapper<Template>(Template.class));
-		if (template.isEmpty()) {
+	public List<Template> getUserAuthtemplate(Template template) {
+		List<JsonResult> userPrintTemplateInfo = ShiroUtils.getUserPrintTemplateInfo();
+		String rt = userPrintTemplateInfo.stream().map(res -> res.getReportid()).collect(Collectors.joining("','"));
+		String sql = "select * from template where template_id in('" + rt + "')";
+		if(StringUtils.isNotBlank(template.getId())){
+			sql+="and id ="+template.getId();
+		}
+		if(StringUtils.isNotBlank(template.getTemplate_id())){
+			sql+="and template_id ="+template.getTemplate_id();
+		}
+		if(StringUtils.isNotBlank(template.getTemplate_name())){
+			sql+="and template_name ="+template.getTemplate_name();
+		}
+		List<Template> templates = jdbcTemplate.query(sql, new BeanPropertyRowMapper<Template>(Template.class));
+		if (templates.isEmpty()) {
+			templates = new ArrayList<Template>();
 			Template template2 = new Template();
 			template2.setTemplate_name("未配置打印模板");
-			return template2;
-		} else {
-			return template.get(0);
+			templates.add(template2);
 		}
+		return templates;
+	}
+
+	
+	/**
+	 * 获取数据库中的模板信息
+	 */
+	@Override
+	public List<Template> getTemplate(Template template) {
+		String sql= "select * from template where 1=1";
+		if(StringUtils.isNotBlank(template.getId())){
+			sql+="and id ="+template.getId();
+		}
+		if(StringUtils.isNotBlank(template.getTemplate_id())){
+			sql+="and template_id ="+template.getTemplate_id();
+		}
+		if(StringUtils.isNotBlank(template.getTemplate_name())){
+			sql+="and template_name ="+template.getTemplate_name();
+		}
+		List<Template> templates = jdbcTemplate.query(sql, new BeanPropertyRowMapper<Template>(Template.class));
+		return templates;
 	}
 
 }

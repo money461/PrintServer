@@ -39,6 +39,7 @@
 		     	  	 	<label>航班日期：</label>
 		     	  	 	<input id="flight_date" type="text" name="flight_date"/>
 		     	  	 </li>
+		     	  	 <!-- 
 		     	  	 <li>
 		     	  	 	<label>起始地：</label>
 		     	  	 	<input type="text" id="airport_departure" name="airport_departure" />
@@ -46,6 +47,17 @@
 		     	  	 <li>
 		     	  	 	<label>目的地：</label>
 		     	  	 	<input type="text" id="destination" name="destination" />
+		     	  	 </li>
+		     	  	  -->
+		     	  	 <li>
+		     	  	 	<label>起始地：</label>
+		                <select class="select2"  type="select" id="airport_departure"  name="airport_departure" href="/labelPrint/client/getRegion" inputMessage="请输入地址简码" style="height: 30px; width: 158px;">
+		                </select>
+		     	  	 </li>
+		     	  	 <li>
+		     	  	 	<label>目的地：</label>
+		                <select class="select2" type="select"  id="destination"  name="destination"   href="/labelPrint/client/getRegion" inputMessage="请输入地址简码" style="height: 30px; width: 158px;">
+		                </select>
 		     	  	 </li>
 		     	  	 <li>
 		     	  	 	<label>打印：</label>
@@ -283,11 +295,6 @@
 		    	label.search();
 		    }   
 		});
-		$("#ssdy").on("mouseover",function(){
-			if($("#cc").val()!="选择办公区域"){
-				$("#ssdy").fadeOut(1000);
-			}
-		})
 		
 		
 	});

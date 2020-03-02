@@ -38,7 +38,7 @@ public class Consumer {
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
-	@RabbitListener(queues = "air_label_queue_paiang")
+	@RabbitListener(queues={"air_label_queue_paiang"},containerFactory ="vpnNetListenerContainerFactory",id="派昂队列消费者")
 	public void flowPaiang(List<Map<String, Object>> msg) throws UnsupportedEncodingException {
 		logger.debug("收到消息：{}", msg);
 		for (Map<String, Object> map : msg) {
@@ -80,12 +80,13 @@ public class Consumer {
 
 	}
 
-	@RabbitListener(queues = "air_label_queue_o")
+	@RabbitListener(queues={"air_label_queue_o"},containerFactory ="vpnNetListenerContainerFactory",id="空运标签队列消费者")
 	public void flow1(byte[] msg) throws UnsupportedEncodingException {
 		String message = null;
 		try {
 			message = new String(msg, "utf-8");
 			logger.debug("队列名称：[{}]监听到的消息：[{}]", "air_label_queue_o", message);
+			//保存标签数据
 			labelInfoService.labelInfoSave(JSON.parseObject(message, JsonRootBean.class));
 			jdbcTemplate
 					.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES('','',3,'','','"

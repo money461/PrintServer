@@ -52,52 +52,17 @@ public class AirLabelController {
 		return false;
 	}
 
-	/**
-	 * 获取模板
-	 * @param opid
-	 * @param id 模板数据库表 id 或者    template_name 名称
-	 * @return
-	 */
-	@RequestMapping("template")
-	@ResponseBody
-	public String getTemplate(String opid, String id) {
-		Type objectType = new TypeToken<List<List<JsonResult>>>() {}.getType();
-		List<List<JsonResult>> jsonResults = GsonUtil.getGson().fromJson(opid, objectType);
-		return GsonUtil.GsonString(labelInfoService.getTemplate(jsonResults.get(0), id));
-	}
 
 	/**
 	 * 获取用户拥有的模板
 	 * @param opid
 	 * @return
 	 */
-	@RequestMapping("getUsertemplate")
+	@RequestMapping(value="getUserAuthtemplate",method={RequestMethod.POST,RequestMethod.GET})
 	@ResponseBody
-	public String getUsertemplate(@RequestParam(value="opid") String printAuth) {
-		Type objectType = new TypeToken<List<List<JsonResult>>>() {}.getType();
-		List<List<JsonResult>> jsonResults = GsonUtil.getGson().fromJson(printAuth, objectType);
-		String rt = "";
-		for (JsonResult jsonResult : jsonResults.get(0)) {
-			rt += "'" + jsonResult.getReportid() + "',";
-		}
-		rt = rt.substring(0, rt.length() - 1);
-		UserInfo userInfo = ShiroUtils.getUserInfo();
-		String opid = userInfo.getOpid();
-		String Sql=null;
-		if("280602".equals(opid) || "28080".equals(opid)){
-			Sql="select * from template";
-			
-		}else{
-			Sql="select * from template where template_id in(" + rt + ")";
-		}
-		List<Template> template = jdbcTemplate.query(Sql, new Object[] {}, new BeanPropertyRowMapper<Template>(Template.class));
-		if (template.isEmpty()) {
-			Template template2 = new Template();
-			template2.setTemplate_name("未配置打印模板");
-			return GsonUtil.GsonString(template2);
-		} else {
-			return GsonUtil.GsonString(template);
-		}
+	public List<Template> getUsertemplate(Template template) {
+		
+		return labelInfoService.getUserAuthtemplate(template);
 	}
 
 	/**
@@ -107,15 +72,15 @@ public class AirLabelController {
 	 * @param label
 	 * @param start_time
 	 * @param end_time
-	 * @param sort
-	 * @param order
+	 * @param sort desc 升序降序
+	 * @param order 按照该字段排序
 	 * @param opid
 	 * @param businessType 业务类型 air michine
 	 * @param request
 	 * @return
 	 * @throws Exception 
 	 */
-	@RequestMapping("all")
+	@RequestMapping(value="/all",method=RequestMethod.POST)
 	@ResponseBody
 	public Object findByPage(String page, String rows, Label label, String start_time, String end_time, String sort, String order, String opid, String businessType, HttpServletRequest request) throws Exception {
 		HttpSession session = request.getSession();
@@ -125,15 +90,9 @@ public class AirLabelController {
 		}
 		UserInfo userInfo = ShiroUtils.getUserInfo();
 		opid = userInfo.getOpid();
-		//获取打印模板权限
-		List<JsonResult> list = (List<JsonResult>)map.get(opid + Common.UserSecurity_PrintButton);
-		if(StringUtils.isNull(list)||list.size()==0){
-			throw new BusinessException(ResEnum.FORBIDDEN.CODE,"操作号没有相关的打印模板权限,无法查看数据");
-		}
 		
-		Datagrid<?> datagrid = labelInfoService.findByPage(page, rows, JSON.parseObject(URLDecoder.decode(JSON.toJSONString(label), "utf-8"), Label.class), start_time, end_time, sort, order, opid, list, businessType);
+		Datagrid<?> datagrid = labelInfoService.findByPage(page, rows, JSON.parseObject(URLDecoder.decode(JSON.toJSONString(label), "utf-8"), Label.class), start_time, end_time, sort, order,businessType);
 		return MsgResult.result(ResEnum.SUCCESS.CODE, ResEnum.SUCCESS.MESSAGE, datagrid);
-//		return datagrid;
 	}
 	
 	//更新打印模板

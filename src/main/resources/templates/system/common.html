@@ -5,24 +5,39 @@
 	
 		<div class="btn-group" style="float: right; background-color: #F5F5F5; width: 100%;">
 		
+		 <@shiro.hasPermission  name="AirPrintLabel.label-search"> 
 			<button type="button" class="btn btn-default" onclick="label.search();">
 				<span class="glyphicon glyphicon-search"></span> 查询(ctrl+1)
 			</button>
-			<button type="button" class="btn btn-default" onclick="label.print1()">
+		  </@shiro.hasPermission>
+		  
+		  <@shiro.hasPermission  name="AirPrintLabel.label-print"> 
+			<button type="button" class="btn btn-default" onclick="label.labelPrint()">
 				<span class="glyphicon glyphicon-print"></span> 打印
 			</button>
-			<button type="button" class="btn btn-default" onclick="label.export1()">
+		  </@shiro.hasPermission>
+		 	
+		  <@shiro.hasPermission  name="AirWaybillBooking.Index.Import"> 
+			<button type="button" class="btn btn-default" onclick="label.labelExport()">
 				<span class="glyphicon glyphicon-share"></span> 导出标签
 			</button>
-			<button type="button" class="btn btn-default" onclick="label.save();">
+		  </@shiro.hasPermission>
+		  
+		  <@shiro.hasPermission  name="AirWaybillBooking.Index.Edit">
+			<button type="button" class="btn btn-default" onclick="label.save();" id='saveButton'>
 				<span class="glyphicon glyphicon-floppy-disk"></span> 保存
 			</button>
-			<button type="button" class="btn btn-default" onclick="label.rejectChange();">
+		  </@shiro.hasPermission>
+		  
+			<button type="button" class="btn btn-default" onclick="label.rejectChange();" id='rejectButton'>
 				<span class="glyphicon glyphicon-share-alt"></span> 撤销
 			</button>
-			<button type="button" class="btn btn-default" onclick="label.delete1();">
+			
+		  <@shiro.hasPermission  name="AirWaybillBooking.Index.Delete">
+			<button type="button" class="btn btn-default" onclick="label.labelDelete();">
 				<span class="glyphicon glyphicon-remove"></span> 删除
 			</button>
+		  </@shiro.hasPermission>
 			<button type="button" class="btn btn-default" onclick="label.refresh(true)">
 				<span class="glyphicon glyphicon-refresh"></span> 刷新表单
 			</button>
@@ -32,9 +47,11 @@
 			<button type="button" class="btn btn-default" onclick="alert('')">
 				<span class="glyphicon glyphicon-bell"></span> 帮助
 			</button>
+			<@shiro.hasPermission  name="AirWaybillBooking.Index.AddHouse">
 			<button type="button" class="btn btn-default" onclick="label.alertprint()">
-				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: red; font-size: 14" id="quyu">更改打印区域</b>
+				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: red; font-size: 14" id="quyu">设置打印/办公室</b>
 			</button>
+			 </@shiro.hasPermission>
 		</div>
 	 </div>
 	
@@ -46,37 +63,45 @@
 	<div id="toolbar" style="width: 100%"  class="btn-group-sm"  role="group">
 	
 		<div class="btn-group" style="float: right; background-color: #F5F5F5; width: 100%;">
-		
+		 
 			<button type="button" class="btn btn-default" onclick="paiang.search();">
 				<span class="glyphicon glyphicon-search"></span> 查询(ctrl+1)
 			</button>
+		  
 			<button type="button" class="btn btn-default" onclick="paiang.tableprint()">
 				<span class="glyphicon glyphicon-print"></span> 打印
 			</button>
-			<button type="button" class="btn btn-default" onclick="paiang.export()">
+			
+			<button type="button" class="btn btn-default" onclick="paiang.labelExport()">
 				<span class="glyphicon glyphicon-share"></span> 导出标签
 			</button>
-			<button type="button" class="btn btn-default" onclick="paiang.save();">
+			
+			<button type="button" class="btn btn-default" onclick="paiang.save();" id='saveButton'>
 				<span class="glyphicon glyphicon-floppy-disk"></span> 保存
 			</button>
-			<button type="button" class="btn btn-default" onclick="paiang.rejectChange();">
+			
+			<button type="button" class="btn btn-default" onclick="paiang.rejectChange();" id='rejectButton'>
 				<span class="glyphicon glyphicon-share-alt"></span> 撤销
 			</button>
-			<button type="button" class="btn btn-default" onclick="paiang.delete();">
+			
+			<button type="button" class="btn btn-default" onclick="paiang.deletedata();">
 				<span class="glyphicon glyphicon-remove"></span> 删除
 			</button>
+			
 			<button type="button" class="btn btn-default" onclick="paiang.securityReload();">
 				<span class="glyphicon glyphicon-refresh"></span> 刷新表单
 			</button>
 			<button type="button" class="btn btn-default" onclick="subscribe.initWindow()">
 				<span class="glyphicon glyphicon-envelope"></span> 订阅
 			</button>
-			<button type="button" class="btn btn-default" onclick="alert('')">
+			<button type="button" class="btn btn-default" onclick="alert('该功能暂未上线')">
 				<span class="glyphicon glyphicon-bell"></span> 帮助
 			</button>
+			
 			<button type="button" class="btn btn-default" onclick="paiang.alertprint()">
-				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: red; font-size: 14" id="quyu">更改打印区域</b>
+				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: red; font-size: 14" id="quyu">设置打印/办公室</b>
 			</button>
+			
 		</div>
 	 </div>
 	
@@ -129,37 +154,48 @@
 <#macro selectRegion>
 	
 	<!--修改办公区域弹窗页面-->
-	<div id="region" style="display: none; margin-top: 20px;">
-		<blockquote class="text-success" style="display: none;" id="bqys">
-			选择标签样式 <select id="selectbq" class="form-control" style="height: 50px;">
-			</select>
-		</blockquote>
-		<blockquote class="text-success" style="display: none; width: 100%;" id="xzdy">
-		          <h5>设置打印办公室</h5>
-			<p style="display: none;" id="bgs">
-				<input type="radio" value="mr" name="bgs">默认办公室
-				<input type="radio" value="ls" name="bgs">临时办公室
+	<div id="region" style="display: none; margin-top: 10px;">
+		
+		  <blockquote class="text-success" style="display: none; padding-bottom: 10px;width: 100%;" id="xunwen">
+			<h3>是否每次点击打印都询问(登出后失效)</h3>
+			<p style="padding-bottom: 10px;" id="xunwenprint">
+				<input type="radio" value="yes" name="xunwen" checked='checked'><a>询问</a>
+				<input type="radio" value="no" name="xunwen"><a>不询问</a>
 			</p>
+		  </blockquote>
+		  <blockquote class="text-success" style="padding-bottom: 10px;width: 100%;" id="vpnnet">
+			<h3>设置发送内网/外网(登出后失效)</h3>
+			<p style="padding-bottom: 10px;" id="xunwenprint">
+				<input type="radio" value="vpnnet" name="mqaddress" checked='checked'><a>默认发送VPN内网</a>
+				<input type="radio" value="outnet" name="mqaddress"><a>发送外网</a>
+			</p>
+		  </blockquote>
+		  <blockquote class="text-success" style="display: none; padding-bottom: 10px;width: 100%;" id="bgs">
+				<h3>设置默认/临时办公室</h3>
+				<p style=" padding-bottom: 10px;" id="bgsradio">
+					<p><input type="radio" value="ls" name="bgs" checked='checked'><a>临时办公室(登出后失效)</a></p>
+					<p><input type="radio" value="mr" name="bgs"><a>默认办公室(永久绑定)</a></p>
+				</p>
+		</blockquote>
+		<blockquote class="text-success" style="padding-bottom: 10px;width: 100%;" id="treebgs">		
+			 <h3>选择打印办公室</h3>
+			<p style="margin-top: 5px;padding-bottom: 10px;">
 			<!--下拉菜单-->
-			<input id="cc" style="width: 100%; height: 50px;"> <input type="text" style="display: none;" id="code">
+			<input id="cc" style="width: 100%; height: 35px;">
+			</p>
 		</blockquote>
 		
-		<!-- 	
-		<blockquote class="text-success" style="display: none; width: 100%" id="ssdy">
-		搜索打印办公室<input id="cc1" name="dept" style="width: 100%; height: 50px;" />
-	   </blockquote> 
-	   -->
-	
-	
 		<div class="form-group col-md-12 col-sm-10" style="display: none;" id="dyan">
-			<button type="button" class="btn btn-info btn-lg btn-block" onclick="label.print()">打印</button>
+			<button type="button" class="btn btn-danger btn-lg btn-block" onclick="dialogPrint()">立即打印</button>
 		</div>
-		<div class="form-group col-md-12 col-sm-10" style="display: none;" id="dcan">
-			<button type="button" class="btn btn-info btn-lg btn-block" onclick="label.export()">导出</button>
-		</div>
+		
 		<div class="form-group col-md-12 col-sm-10" style="display: none;" id="xgmr">
-			<button type="button" class="btn btn-info btn-lg btn-block" onclick="updateRegion()">更改</button>
+			<button type="button" class="btn btn-success btn-lg btn-block" onclick="dialogUpdateOrAddRegion()">确认更改</button>
 		</div>
+		<div class="form-group col-md-12 col-sm-10">
+			<button type="button" class="btn btn-primary btn-lg btn-block" onclick="dialogClose()">取消关闭</button>
+		</div>
+		
 	</div>
 		
 

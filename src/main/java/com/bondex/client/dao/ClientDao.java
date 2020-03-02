@@ -9,14 +9,13 @@ import com.bondex.jdbc.entity.Label;
 
 public interface ClientDao {
 
-	public List<RegionJDBC> getAll(String opid);
-
 	/**
-	 * 获取区域名称
-	 * 
-	 * @return
+	 * 获取所有的区域办公室名称
 	 */
-	public List<RegionJDBC> getRegionName();
+	public List<RegionJDBC> getALLRegion();
+	
+	//根据用户id 查询相应的多个办公室
+	public List<RegionJDBC> getRegionByOpid(String opid);
 
 	public List<RegionJDBC> search(String q);
 
@@ -24,18 +23,18 @@ public interface ClientDao {
 
 	public List<Label> getLabel(String label);
 
-	public String isFrist(String opid);
+	//根据opid获取用户信息表
+	public DefaultRegion getDefaultRegionByOpid(String opid);
 
-	public String addDR(String opid, String region);
+	//添加或者更新办公地址信息表 用于树形展示
+	public Object addOrUpdateRegion(List<Region> regionlist);
 
-	public Region getRegion(String region);
+	//根据办公室id获取区域信息
+	public Region getRegionById(String regionid);
 
-	public String getRegionId(String string);
+	public Object updateOrAddUserRegion(String regionid);
 
-	public void updateRn(String region, String opid);
-
-	public Region getThisRegion(String code);
-
-	public Region getThisRegionForOpid(String opid);
+	//根据opid获取当前用户绑定的办公室信息
+	public Region getDefaultBindRegionByOpid(String opid);
 
 }

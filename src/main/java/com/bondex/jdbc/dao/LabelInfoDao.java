@@ -34,5 +34,17 @@ public interface LabelInfoDao {
 
 	public void delete(List<Label> label);
 
-	public Template getTemplate(String rt, String id);
+	/**
+	 * 获取用户绑定的模板
+	 * @param template
+	 * @return
+	 */
+	public List<Template> getUserAuthtemplate(Template template);
+	
+	/**
+	 * 获取数据库中的模板
+	 * @param template
+	 * @return
+	 */
+	public List<Template> getTemplate(Template template);
 }

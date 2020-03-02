@@ -2,7 +2,6 @@
   * Copyright 2018 bejson.com 
   */
 package com.bondex.jdbc.entity;
-import java.util.Date;
 
 /**
  * Auto-generated: 2018-06-26 10:49:28
@@ -19,7 +18,7 @@ public class Head {
     private String ReciverName;
     private String DocTypeID;
     private String DocTypeName;
-    private Date CreateTime;
+    private String CreateTime;
     private String FinishTime;
     private String DataInterfaceID;
     private String DataInterfaceName;
@@ -74,10 +73,10 @@ public class Head {
          return DocTypeName;
      }
 
-    public void setCreateTime(Date CreateTime) {
+    public void setCreateTime(String CreateTime) {
          this.CreateTime = CreateTime;
      }
-     public Date getCreateTime() {
+     public String getCreateTime() {
          return CreateTime;
      }
 

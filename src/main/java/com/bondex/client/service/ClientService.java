@@ -4,11 +4,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import com.bondex.client.entity.DefaultRegion;
+import com.bondex.client.entity.Region;
 import com.bondex.jdbc.entity.Label;
 import com.bondex.jdbc.entity.LabelAndTemplate;
 import com.bondex.security.entity.Opid;
 import com.bondex.security.entity.UserInfo;
-import com.github.pagehelper.Page;
 
 public interface ClientService {
 
@@ -20,14 +21,14 @@ public interface ClientService {
 	 * @return
 	 * @throws IOException
 	 */
-	List<InputStream> getPDF(List<Label> list, String report, UserInfo userInfo) throws IOException;
+	List<InputStream> getPDF(List<Label> list, UserInfo userInfo) throws IOException;
 
 	/**
-	 * 获取所有办公区域
+	 * 根据用户opid获取办公室区域 并封装为tree
 	 * 
 	 * @return
 	 */
-	String getRegion(String opid);
+	String getTreeRegionByOpid(String opid);
 
 	/**
 	 * 调用客户端，打印标签
@@ -42,21 +43,19 @@ public interface ClientService {
 	 * 
 	 * @return
 	 */
-	void sendLabel(List<LabelAndTemplate> labelList, String region, UserInfo userInfo, String report, String businessType);
+	void sendLabel(List<LabelAndTemplate> labelList, String regionid, UserInfo userInfo, String businessType,String mqaddress);
 
 	String searchRegion(String q);
 
 	List<Label> getLabel(String labels);
 
-	String isFrist(String opid);
+	DefaultRegion getDefaultRegionByOpid(String opid);
 
-	String addDR(String opid, String region);
+	Object updateOrAddUserRegion(String region);
 
-	void updateRn(String region, String opid);
+	Object postRegion(String code,Integer curPage,Integer pageSize);
 
-	String postRegion(String szm);
-
-	String getThisRegion(String code, String opid);
+	Region getDefaultBindRegionByOpid(String regionid, String opid);
 
 	List<Opid> getOpidName(String param,Integer page,Integer limit);
 

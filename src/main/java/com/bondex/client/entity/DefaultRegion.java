@@ -1,7 +1,12 @@
 package com.bondex.client.entity;
 
 import org.springframework.stereotype.Component;
-
+/**
+ * 用户办公室信息表
+ * @author Qianli
+ * 
+ * 2020年2月27日 下午4:52:50
+ */
 @Component
 public class DefaultRegion {
 	private Integer id;

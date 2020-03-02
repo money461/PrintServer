@@ -5,7 +5,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.shiro.ShiroException;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -68,15 +67,24 @@ public class ShiroRealm extends AuthorizingRealm {
 		Set<String> premissionSet = Collections.synchronizedSet(new LinkedHashSet<String>());
 		//获取到当前opid的权限
 		Map<String, Object> security = SecurityService.getSecurity(userInfo,premissionSet);
-		System.out.println(GsonUtil.GsonString(security));
-		Session session = ShiroUtils.getSession();
-		// 用户权限存放session
-		session.setAttribute(Common.Session_UserSecurity, security);
-		//进行角色的添加
-		authorizationInfo.addRole(userInfo.getOpid());
-		//权限的添加
-		authorizationInfo.addStringPermissions(premissionSet);
-		System.out.println(GsonUtil.GsonString(premissionSet));
+		
+//		JSONObject security  = JSONObject.parseObject(ReadTxtFile.readTxtFile("C:\\Users\\admin\\Desktop\\标签打印\\AuthData.json"));
+		
+		if(null!=security){
+			System.out.println(GsonUtil.GsonString(security));
+			Session session = ShiroUtils.getSession();
+			// 用户权限存放session
+			session.setAttribute(Common.Session_UserSecurity, security);
+			//进行角色的添加
+			authorizationInfo.addRole(userInfo.getOpid());
+			
+//			List<String> gsonToList = GsonUtil.GsonToList(ReadTxtFile.readTxtFile("C:\\Users\\admin\\Desktop\\标签打印\\premissionSet.json"),String.class);
+//			premissionSet = CollectionUtils.ListToSet(gsonToList);
+			
+			//权限的添加
+			authorizationInfo.addStringPermissions(premissionSet);
+			System.out.println(GsonUtil.GsonString(premissionSet));
+		}
 		
 		return authorizationInfo;
 	}

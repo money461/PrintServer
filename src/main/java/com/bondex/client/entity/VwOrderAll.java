@@ -11,11 +11,11 @@ package com.bondex.client.entity;
  */
 public class VwOrderAll {
 
-	private String Mblno;
-	private String Hblno;
-	private String Tquantity;
-	private String Dportcode;
-	private String Aprotcode;
+	private String Mblno; //主单
+	private String Hblno; //分单 
+	private String Tquantity; //件数
+	private String Dportcode; //起始地
+	private String Aprotcode; //目的地
 
 	public void setMblno(String Mblno) {
 		this.Mblno = Mblno;

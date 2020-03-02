@@ -1,17 +1,17 @@
 package com.bondex.jdbc.service.impl;
 
-import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bondex.common.enums.ResEnum;
+import com.bondex.config.exception.BusinessException;
 import com.bondex.controller.SubscribeController;
 import com.bondex.entity.Datagrid;
 import com.bondex.entity.Subscribe;
@@ -21,9 +21,9 @@ import com.bondex.jdbc.entity.Label;
 import com.bondex.jdbc.entity.LabelAndTemplate;
 import com.bondex.jdbc.entity.Template;
 import com.bondex.jdbc.service.LabelInfoService;
-import com.bondex.security.entity.JsonResult;
+import com.bondex.security.entity.UserInfo;
+import com.bondex.shiro.security.ShiroUtils;
 import com.bondex.util.GsonUtil;
-import com.google.gson.reflect.TypeToken;
 
 @Service(value="labelInfoServiceImpl")
 @Transactional(rollbackFor = Exception.class)
@@ -31,6 +31,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 	@Autowired
 	private LabelInfoDao labelInfoDao;
 
+	//保存标签数据
 	@Override
 	public boolean labelInfoSave(JsonRootBean jsonRootBean) {
 		labelInfoDao.saveLabel(jsonRootBean);
@@ -38,50 +39,24 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 	}
 
 	@Override
-	public Datagrid findByPage(String page, String rows, Label label, String start_time, String end_time, String sort, String order, String opid, List<JsonResult> listop, String businessType) {
-		// 获取用户拥有的标签模版，权限
-		Type objectType = new TypeToken<List<List<JsonResult>>>() {}.getType();
-		List<List<JsonResult>> jsonResultsList = GsonUtil.getGson().fromJson(GsonUtil.GsonString(listop), objectType);
-		
-		List<JsonResult> jsonResults =jsonResultsList.get(0);
-		
-		String rt = ""; //'a357f19f-6a1f-4171-ab8e-1f1a2b77377a','988b4162-00af-4924-a6fe-6b310d161900','2b7eddea-d953-4186-bc3b-a642940d57ea','4e2b8f59-9858-4297-962f-6ee4862085aa'
-		
-		if(null!=jsonResults){
-			Iterator<JsonResult> iterator = jsonResults.iterator();
-			while(iterator.hasNext()){
-				JsonResult jsonResult = iterator.next();
-				rt += "'" + jsonResult.getReportid() + "',";
-			}
-			rt = rt.substring(0, rt.length() - 1);
-		}
+	public Datagrid findByPage(String page, String rows, Label label, String start_time, String end_time, String sort, String order,String businessType) {
+	 try {
+			
 
+		UserInfo userInfo = ShiroUtils.getUserInfo();
+		String opid = userInfo.getOpid();
+		List<String> opidData = userInfo.getOpidData();
+		String opids = opidData.stream().collect(Collectors.joining(",")); //获取用户部门所有的opid
 		page = null == page ? "1" : page;
 		rows = null == rows ? "20" : rows;
 
 		//拼接SQL语句
 		StringBuffer sql = new StringBuffer();
-		sql.append("select * from label LEFT JOIN template t  on t.id = label.reserve3 where t.template_id in (" + rt + ") ");
-		//派昂模式
-		/*if (businessType.equals("medicine")) {
-			sql.append(" and business_type = 0 ");
-			if (label.getMBLNo() != null && !label.getMBLNo().equals("undefined") && !label.getMBLNo().equals("")) {
-				sql.append("and MBLNo like '%" + label.getMBLNo() + "%' ");
-			}
-			if (label.getTakeCargoNo() != null && !label.getTakeCargoNo().equals("undefined") && !label.getTakeCargoNo().equals("")) {
-				sql.append("and TakeCargoNo like '%" + label.getTakeCargoNo() + "%' ");
-			}
-			if (label.getIs_print() != null && !label.getIs_print().equals("undefined") && !label.getIs_print().equals("")) {
-				sql.append("and is_print = '" + label.getIs_print() + "' ");
-			} else if (label.getIs_print().equals("undefined")) {
-				sql.append("and is_print = '0' ");
-			}
-			
-		} else {
-			sql.append(" and business_type <> 0 ");
-		}*/
-		sql.append(" and business_type <> 0 ");
-		sql.append("and reserve1 = '0' ");
+		sql.append("select * from label LEFT JOIN template t  on t.id = label.reserve3 where label.opid in (" + opids + ") ");
+//		sql.append("select * from label LEFT JOIN template t  on t.id = label.reserve3 where t.template_id in (" + rt + ") ");
+		sql.append(" and business_type <> 0 "); //不是派昂医药的数据
+		sql.append("and reserve1 = '0' "); //未删除
+		
 		if (start_time != null && !start_time.equals("undefined") && !start_time.equals("")) {
 			if (businessType.equals("medicine")) {
 				sql.append("and EDeparture >= '" + start_time + "' ");
@@ -97,6 +72,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 			}
 		}
 		
+		
 		//订阅信息
 		List<Subscribe> listSubscribe;
 		if ((listSubscribe = SubscribeController.subscribeMap.get(opid)) != null) {
@@ -106,6 +82,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 				builder.append("'" + subscribe.getSrMawb() + "',");
 			}
 			sql.append("and mawb in (" + builder.substring(0, builder.length() - 1).toString() + ") ");
+			
 		} else if (label.getMawb() != null && !label.getMawb().equals("undefined") && !label.getMawb().trim().equals("")) {
 			if (label.getMawb().length() < 11) {
 				return new Datagrid<>("0", new ArrayList<>());
@@ -124,6 +101,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 			}
 			sql.append("and mawb in (" + mawb.substring(0, mawb.length() - 1) + ") ");
 		}
+		
 		if (label.getHawb() != null && !label.getHawb().equals("undefined") && !label.getHawb().equals("")) {
 			sql.append("and hawb like '%" + label.getHawb() + "%' ");
 		}
@@ -148,7 +126,10 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		} else if (label.getIs_print().equals("undefined")) {
 			sql.append("and is_print = '0' ");
 		}
-		sql.append("and airport_departure = (SELECT load_code from load_code where region_parent_code = (select parent_code from region where region_id = (SELECT office_id from default_region where opid = '" + opid + "' and type = 1))) ");
+		
+		//**********根据用户办公室地址检索查询标签起始地址  考虑废除
+		//sql.append("and airport_departure = (SELECT load_code from load_code where region_parent_code = (select parent_code from region where region_id = (SELECT office_id from default_region where opid = '" + opid + "' and type = 1))) ");
+		
 		if (sort != null && order != null) {
 			sql.append("ORDER BY " + sort + " " + order + " ");
 		} else {
@@ -160,8 +141,9 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		
 		//获取总的数据量
 		StringBuffer totalsql = new StringBuffer();
-		totalsql.append("select count(1) from label LEFT JOIN template t  on t.id = label.reserve3 where t.template_id in (" + rt + ") ");
+		totalsql.append("select count(1) from label LEFT JOIN template t  on t.id = label.reserve3 where label.opid in (" + opids + ") ");
 		totalsql.append("and reserve1 = '0' ");
+		
 		if (businessType.equals("medicine")) {
 			totalsql.append("and business_type = 0 ");
 			if (label.getMBLNo() != null && !label.getMBLNo().equals("undefined") && !label.getMBLNo().equals("")) {
@@ -177,6 +159,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 			}
 		} else {
 			totalsql.append("and business_type <> 0 ");
+			
 		}
 		if (label.getOpid_name() != null && !label.getOpid_name().equals("undefined") && !label.getOpid_name().equals("") && !label.getOpid_name().equals("全部")) {
 			totalsql.append("and opid_name like '%" + label.getOpid_name() + "%' ");
@@ -239,13 +222,18 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		} else if (label.getIs_print().equals("undefined")) {
 			totalsql.append("and is_print = '0' ");
 		}
-		totalsql.append("and airport_departure = (SELECT load_code from load_code where region_parent_code = (select parent_code from region where region_id = (SELECT office_id from default_region where opid = '" + opid + "' and type = 1))) ");
+		
+		//**************根据用户办公室地址检索查询标签起始地址  考虑废除
+		//totalsql.append("and airport_departure = (SELECT load_code from load_code where region_parent_code = (select parent_code from region where region_id = (SELECT office_id from default_region where opid = '" + opid + "' and type = 1))) ");
 
 		Datagrid datagrid = new Datagrid();
 		datagrid.setRows(keywords);
 		datagrid.setTotal(labelInfoDao.getTotel(totalsql.toString()));
 		System.out.println(GsonUtil.GsonString(datagrid));
 		return datagrid;
+	 } catch (Exception e) {
+		 throw new BusinessException(ResEnum.FAIL.CODE, "查询数据异常,请正确写入参数!");
+	 }
 	}
 
 	@Override
@@ -258,17 +246,15 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		labelInfoDao.delete(label);
 	}
 
+
 	@Override
-	public Template getTemplate(List<JsonResult> jsonResults, String id) {
-		String rt = "";
-		Iterator<JsonResult> iterator = jsonResults.iterator();
-		while(iterator.hasNext()){
-			JsonResult jsonResult = iterator.next();
-			rt += "'" + jsonResult.getReportid() + "',";
-		}
-		rt = rt.substring(0, rt.length() - 1);
-		Template template = labelInfoDao.getTemplate(rt, id);
-		return template;
+	public List<Template> getUserAuthtemplate(Template template) {
+		return labelInfoDao.getUserAuthtemplate(template);
+	}
+
+	@Override
+	public List<Template> getTemplate(Template template) {
+		return labelInfoDao.getTemplate(template);
 	}
 
 }

@@ -11,17 +11,17 @@ import java.util.List;
  * @author bejson.com (i@bejson.com)
  * @website http://www.bejson.com/java2pojo/
  */
-public class Search {
+public class Search  {
 
-	private List<Listarea> list;
+	private List<AreaBean> list;
 	private boolean success;
 	private String msg;
 
-	public List<Listarea> getList() {
+	public List<AreaBean> getList() {
 		return list;
 	}
 
-	public void setList(List<Listarea> list) {
+	public void setList(List<AreaBean> list) {
 		this.list = list;
 	}
 

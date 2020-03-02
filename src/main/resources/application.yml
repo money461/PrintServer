@@ -21,6 +21,9 @@ spring:
       force: true
       charset: UTF-8
       enabled: true
+  framework:
+       ###framework权限获取地址########
+       HttpUrl: http://frameworkapi.bondex.com.cn:8000
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource

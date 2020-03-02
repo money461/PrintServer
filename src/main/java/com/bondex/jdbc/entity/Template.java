@@ -1,15 +1,27 @@
 package com.bondex.jdbc.entity;
 
 public class Template {
-	private int id;
-	private String template_id;
-	private String template_name;
+	private String id; //数据库主键
+	private String template_id; //模板id
+	private String template_name; //模板名称
+	
+	public Template() {
+		super();
+	}
+	
+	public Template(String id, String template_id, String template_name) {
+		super();
+		this.id = id;
+		this.template_id = template_id;
+		this.template_name = template_name;
+	}
 
-	public int getId() {
+
+	public String getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

@@ -58,9 +58,12 @@
                     	<span class="fa arrow"></span>
                 	</a>
                     <ul class="nav nav-second-level collapse" aria-expanded="false" style="height: 0px;">
-						<li>
-							<a class="menuItem" href="layout/west/airlabel"><i class="fa fa-print" style="width: 20px;"></i>空运标签</a>
-						</li>
+                         
+                         <@shiro.hasPermission  name="AirPrintLabel"> 
+							<li>
+								<a class="menuItem" href="layout/west/airlabel"><i class="fa fa-print" style="width: 20px;"></i>空运标签</a>
+							</li>
+						</@shiro.hasPermission>
 						<li>
 							<a class="menuItem" href="paiang/viewdata"><i class="fa fa-print" style="width: 20px;"></i>派昂标签</a>
 						</li>
@@ -255,7 +258,7 @@ $(function() {
     
     $(window).unbind('beforeunload');
   　　 window.onbeforeunload = null;
-    localStorage.clear();
+    storage.clear();
 });
 
 /* 

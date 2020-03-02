@@ -14,11 +14,17 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.bondex.cas.SpringCasAutoconfig;
 import com.bondex.common.Common;
+import com.bondex.common.enums.NewPowerHttpEnum;
+import com.bondex.config.restTemplate.HttpRestTemplateUtil;
 import com.bondex.entity.Datagrid;
 import com.bondex.security.entity.JsonResult;
 import com.bondex.security.entity.Opid;
@@ -26,12 +32,11 @@ import com.bondex.security.entity.SecurityHead;
 import com.bondex.security.entity.SecurityModel;
 import com.bondex.security.entity.TokenResult;
 import com.bondex.security.entity.UserInfo;
-import com.bondex.shiro.security.ShiroUtils;
 import com.bondex.util.Axis2WebServiceClient;
 import com.bondex.util.GsonUtil;
 import com.bondex.util.HttpClient;
+import com.bondex.util.ReadTxtFile;
 import com.google.gson.reflect.TypeToken;
-import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion.User;
 /**
  * 权限获取模块
  * @author Qianli
@@ -43,7 +48,13 @@ public class SecurityService {
 
 	private  final Logger log = LoggerFactory.getLogger(this.getClass());
 	
+	@Autowired
+	@Qualifier("myRestTemplate")
+	private RestTemplate myRestTemplate;
+	
 	private String applicationId; //应用id
+	
+	private String frameworkapi;//framework权限获取地址
 	
 	private SpringCasAutoconfig springCasAutoconfig;
 	
@@ -51,6 +62,7 @@ public class SecurityService {
 		super();
 		this.springCasAutoconfig = springCasAutoconfig;
 		this.applicationId = springCasAutoconfig.getApplicationId();
+		this.frameworkapi = springCasAutoconfig.getFrameworkapi();
 	}
 
 	
@@ -80,9 +92,16 @@ public class SecurityService {
 						getBindingOpid = userInfo.getAllOpid().get(0).getOpid();//默认第一个号作为登陆
 						BindingOpid(getBindingOpid, userInfo.getToken()); //绑定一个默认的opid
 					}
-					  userInfo.setOpid(getBindingOpid);
-					  userInfo.setOpname(userInfo.getOpids().get(getBindingOpid));
-					  
+					 userInfo.setOpid(getBindingOpid);
+					 userInfo.setOpname(userInfo.getOpids().get(getBindingOpid));
+					//获取用户的操作及系统获取操作数据权限
+					if(com.bondex.util.StringUtils.isNotBlank(getBindingOpid)){
+						JSONObject object = getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetUserRoleOp);
+//						JSONObject object  = JSONObject.parseObject(ReadTxtFile.readTxtFile("C:\\Users\\admin\\Desktop\\标签打印\\RoleData.json"));
+						JSONArray jsonArray = object.getJSONArray("Data");
+						List<String> opidData = JSONObject.parseArray( JSONObject.toJSONString(jsonArray), String.class);
+						userInfo.setOpidData(opidData);
+					} 
 					//初始页面 的时候弹出 opids 提供用户选择
 					Datagrid<Opid> datagrid = new Datagrid<Opid>();
 					datagrid.setTotal(new Integer(userInfoList.size()).toString());
@@ -113,6 +132,9 @@ public class SecurityService {
 		
 		// 获取当前用户与token绑定的opid
 		String opid = GetBindingOpid(userInfo.getToken());
+		if(StringUtils.isBlank(opid)){
+			return null;
+		}
 		//List<Opid> opids = userInfo.getAllOpid(); //获取所有的opid
 		userInfo.setOpid(opid);
 		userInfo.setOpname(userInfo.getOpids().get(opid));
@@ -202,6 +224,111 @@ public class SecurityService {
 		return authorizationMap;
 	}
 
+	
+	/**
+	 * 获取数据
+	 * @param paramap 接口参数
+	 * @param userInfo 当前用户信息
+	 * @param HttpEnum 请求的接口方法名称 枚举中设置
+	 * @return
+	 */
+	public JSONObject getFrameworkHttp(Map<String, String> paramap, UserInfo userInfo, NewPowerHttpEnum HttpEnum) {
+		JSONObject jsonObject =null;
+		StringBuffer rootUrlStr = new StringBuffer(frameworkapi);
+
+		JSONObject param = new JSONObject();
+		param.put("Token", userInfo.getToken()); //cas token
+		switch (HttpEnum) {
+		case GetHasPermissionModuleList:
+			rootUrlStr.append(NewPowerHttpEnum.GetHasPermissionModuleList.url);
+			//封装参数
+			param.put("ApplicationID", applicationId);
+			param.put("OperatorID", userInfo.getOpid());
+			urlGetMethodFrameWork(rootUrlStr, param); //拼接url
+			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
+			return jsonObject;
+			
+		case GetHasPermissionPageButton:
+			rootUrlStr.append(NewPowerHttpEnum.GetHasPermissionPageButton.url);
+			param.put("ApplicationID", applicationId);
+			param.put("PageCode", paramap.get("PageCode"));
+			param.put("OperatorID", userInfo.getOpid());
+			urlGetMethodFrameWork(rootUrlStr, param);
+			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
+			return jsonObject;
+			
+		case GetPageButtonByPermissionValue:
+			rootUrlStr.append(NewPowerHttpEnum.GetPageButtonByPermissionValue.url);
+			param.put("ApplicationID", applicationId);
+			param.put("PageCode", paramap.get("PageCode")); //页面代码code
+			param.put("PreButtonName", paramap.get("PreButtonName")); //前缀
+			param.put("PermissionValue", paramap.get("PermissionValue")); //访问权限值
+			urlGetMethodFrameWork(rootUrlStr, param);
+			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
+			return jsonObject;
+			
+		case GetOperatorPagePermission:
+			rootUrlStr.append(NewPowerHttpEnum.GetOperatorPagePermission.url);
+			param.put("ApplicationID", applicationId);
+			param.put("PageCode", paramap.get("PageCode")); //页面代码code
+			param.put("OperatorID", userInfo.getOpid()); //操作id
+			urlGetMethodFrameWork(rootUrlStr, param);
+			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
+			return jsonObject;
+			
+		case GetUserRoleOp:
+			rootUrlStr.append(NewPowerHttpEnum.GetUserRoleOp.url);
+			param.put("ApplicationID", applicationId);
+			param.put("OperatorID", userInfo.getOpid());
+			urlGetMethodFrameWork(rootUrlStr, param);
+			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
+			return jsonObject;
+			
+		case GetCompanyInfoOfDeptByOperatorID:
+			rootUrlStr.append(NewPowerHttpEnum.GetCompanyInfoOfDeptByOperatorID.url);
+			param.put("OperatorID", userInfo.getOpid());
+			urlGetMethodFrameWork(rootUrlStr, param);
+			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
+			return jsonObject;
+			
+		case GetFlowNo:
+			rootUrlStr.append(NewPowerHttpEnum.GetFlowNo.url);
+			param.put("ApplicationID", applicationId);
+			param.put("EmsID", userInfo.getOpid());
+			param.put("ProFile", paramap.get("ProfitId"));
+			urlGetMethodFrameWork(rootUrlStr, param);
+			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
+			return jsonObject;
+			
+		case GetOperator:
+			rootUrlStr.append(NewPowerHttpEnum.GetOperator.url);
+			urlGetMethodFrameWork(rootUrlStr, param);
+			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
+			return jsonObject;
+		default:
+			break;
+		}
+		return jsonObject;
+	}
+
+	//GET请求拼接参数 获取完整的ApiUrl
+	private void urlGetMethodFrameWork(StringBuffer rootUrlStr, JSONObject objpare) {
+		Set<String> set = objpare.keySet();
+		String[] keys = new String[set.size()];
+		set.toArray(keys);
+		for (int i = 0; i < keys.length; i++) {
+			if (i == 0) {
+				rootUrlStr.append("?");
+			}
+			String keyStr = keys[i];
+			rootUrlStr.append(keyStr + "=" + objpare.getString(keyStr));
+			if (keys.length - 1 != i) {
+				rootUrlStr.append("&");
+			}
+		}
+	}
+
+	
 	
 	/**
 	 * 获取当前用户最新的操作ID
@@ -302,5 +429,6 @@ public class SecurityService {
 		userInfo.setToken(token);
 		return userInfo;
 	}
+	
 	
 }

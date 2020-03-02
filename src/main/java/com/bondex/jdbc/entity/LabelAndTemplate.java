@@ -18,7 +18,7 @@ public class LabelAndTemplate extends Label {
 	 * 
 	 */
 	private static final long serialVersionUID = -5426506160226547998L;
-	private Integer id; //模板主键
+	private String id; //模板主键
 	private String template_id; //模板编号
 	private String template_name; //模板名称
 

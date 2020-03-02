@@ -1,10 +1,8 @@
 package com.bondex.jdbc.service.impl;
 
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -24,11 +22,9 @@ import com.bondex.jdbc.entity.Label;
 import com.bondex.jdbc.entity.LabelAndTemplate;
 import com.bondex.jdbc.entity.Template;
 import com.bondex.jdbc.service.LabelInfoService;
-import com.bondex.security.entity.JsonResult;
 import com.bondex.util.GsonUtil;
 import com.bondex.util.HttpClient;
 import com.bondex.util.StringUtils;
-import com.google.gson.reflect.TypeToken;
 @Service(value="paiangServiceImple")
 public class PaiangServiceImple implements LabelInfoService {
 
@@ -48,15 +44,12 @@ public class PaiangServiceImple implements LabelInfoService {
 	//派昂调用接口获取数据
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Datagrid findByPage(String page, String rows, Label label, String start_time, String end_time, String sort,	String order, String opid, List<JsonResult> list, String businessType) throws Exception {
+	public Datagrid findByPage(String page, String rows, Label label, String start_time, String end_time, String sort,String order, String businessType) throws Exception {
 		if (businessType.equals("medicine")) {
 			
-			//标签权限
-			Type objectType = new TypeToken<List<List<JsonResult>>>() {}.getType();
-			List<List<JsonResult>> jsonResultsList = GsonUtil.getGson().fromJson(GsonUtil.GsonString(list), objectType);
-			List<JsonResult> jsonResults =jsonResultsList.get(0);
 			//查询指定的模板及其数据
-			Template template = getTemplate(jsonResults, "4");
+			Template template = new Template("4", null, null);
+			template = getUserAuthtemplate(template).get(0);
 			
 			//调用接口获取数据
 			 JSONObject jsonStu = (JSONObject)JSONObject.toJSON(label);
@@ -172,19 +165,6 @@ public class PaiangServiceImple implements LabelInfoService {
 		
 	}
 
-	@Override
-	public Template getTemplate(List<JsonResult> jsonResults, String id) {
-		String rt = "";
-		Iterator<JsonResult> iterator = jsonResults.iterator();
-		while(iterator.hasNext()){
-			JsonResult jsonResult = iterator.next();
-			rt += "'" + jsonResult.getReportid() + "',";
-		}
-		rt = rt.substring(0, rt.length() - 1);
-		Template template = labelInfoDao.getTemplate(rt, id);
-		return template;
-	}
-
 	
 	 //求和
     private  BigDecimal getSum(BigDecimal ...num){
@@ -195,6 +175,17 @@ public class PaiangServiceImple implements LabelInfoService {
         }
         return result;
     }
+
+	@Override
+	public List<Template> getUserAuthtemplate(Template template) {
+		
+		return labelInfoDao.getUserAuthtemplate(template);
+	}
+
+	@Override
+	public List<Template> getTemplate(Template template) {
+		return labelInfoDao.getTemplate(template);
+	}
 
 	
 	

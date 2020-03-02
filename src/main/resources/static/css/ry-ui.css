@@ -306,8 +306,18 @@
 	border-color: #1AB394;
 	padding: 1px 10px;
 	color: #fff
+	
 }
 
+.select2-container--default .select2-selection--single, .select2-selection .select2-selection--single {
+    height: 30px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgb(210, 214, 222);
+    border-image: initial;
+    border-radius: 0px;
+    padding: 4px 8px;
+}
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
 	margin-right: 5px;
 	color: rgba(255,255,255,0.7)
@@ -697,7 +707,7 @@ label {
 	background: transparent;
 	outline: none;
 	height: 30px;
-	width: 200px;
+	width: 158px;
 }
 
 .select-list .btn-default:hover,.select-list .btn-default:focus,.select-list .btn-default:active,.select-list .btn-default.active,.open .dropdown-toggle.btn-default {
@@ -708,7 +718,7 @@ label {
 
 .select-list .bootstrap-select:not([class*="col-"]):not([class*="form-control"]):not(.input-group-btn) {
   height: 30px;
-  width: 200px;
+  width: 158px;
 }
 
 .select-list .bootstrap-select > .dropdown-toggle.bs-placeholder,

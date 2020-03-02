@@ -29,6 +29,8 @@ public class UserInfo implements Serializable {
 	private String tgt; //票据
 	private List<String> usercorplist;
 	private int TZ;
+	private List<String> opidData; //当前操作id 所属下 操作及系统获取操作数据权限
+	
 	public String getCstoken() {
 		return cstoken;
 	}
@@ -114,6 +116,13 @@ public class UserInfo implements Serializable {
 	public void setTZ(int tZ) {
 		TZ = tZ;
 	}
+	public List<String> getOpidData() {
+		return opidData;
+	}
+	public void setOpidData(List<String> opidData) {
+		this.opidData = opidData;
+	}
+	
 	
 
 /*{

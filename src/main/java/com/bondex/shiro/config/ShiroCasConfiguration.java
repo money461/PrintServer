@@ -3,6 +3,7 @@ package com.bondex.shiro.config;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -10,6 +11,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import javax.servlet.Filter;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
@@ -173,7 +176,7 @@ public class ShiroCasConfiguration {
         filters.put("authc", new FormAuthenticationFilter());
         filters.put("roles", new RolesAuthorizationFilter());
         filters.put("user", new UserFilter());
-        filters.put("myauth", new LoginFilter());
+        filters.put("myauth", new LoginFilter(casAutoconfig.getIgnorePattern()));
         //<!--单点登出过滤器-->
       /*  LogoutFilter logoutFilter = new LogoutFilter();
         // <!-- 注销时重定向的URL -->

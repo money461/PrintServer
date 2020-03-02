@@ -13,14 +13,16 @@ import java.util.List;
  */
 public class ClientData {
 
-	private List<VwOrderAll> vwOrderAll;
+	private List<Object> vwOrderAll;
 
-	public void setVwOrderAll(List<VwOrderAll> vwOrderAll) {
+	public List<Object> getVwOrderAll() {
+		return vwOrderAll;
+	}
+
+	public void setVwOrderAll(List<Object> vwOrderAll) {
 		this.vwOrderAll = vwOrderAll;
 	}
 
-	public List<VwOrderAll> getVwOrderAll() {
-		return vwOrderAll;
-	}
+	
 
 }

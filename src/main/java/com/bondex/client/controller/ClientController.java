@@ -21,11 +21,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.bondex.client.entity.DefaultRegion;
+import com.bondex.client.entity.Region;
 import com.bondex.client.service.ClientService;
 import com.bondex.common.Common;
-import com.bondex.entity.Datagrid;
+import com.bondex.common.enums.ResEnum;
 import com.bondex.jdbc.entity.Label;
 import com.bondex.jdbc.entity.LabelAndTemplate;
 import com.bondex.res.AjaxResult;
@@ -35,9 +38,6 @@ import com.bondex.security.entity.Opid;
 import com.bondex.security.entity.UserInfo;
 import com.bondex.shiro.security.ShiroUtils;
 import com.bondex.util.GsonUtil;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 @Controller
@@ -56,69 +56,75 @@ public class ClientController {
 		return regions;
 	}
 
-	//校验是否是第一次打印(获取打印办公司)
-	@RequestMapping("isFrist")
+	//校验是否是第一次打印(获取打印办公室)
+	@RequestMapping(value="getDefaultRegionByOpid",method=RequestMethod.POST)
 	@ResponseBody
-	public String isFrist(String opid) {
-		String regions = clientService.isFrist(opid);
-		return regions;
+	public DefaultRegion getDefaultRegionByOpid() {
+		UserInfo userInfo = ShiroUtils.getUserInfo();
+		DefaultRegion defaultRegion = clientService.getDefaultRegionByOpid(userInfo.getOpid());
+		return defaultRegion;
 	}
 
-	@RequestMapping("addDR")
+
+	/**
+	 * 树形菜单展示区域
+	 * @param opid 当前用户id
+	 * @return
+	 */
+	@RequestMapping(value="getTreeRegionByOpid",method=RequestMethod.POST)
 	@ResponseBody
-	public String addDR(String opid, String region) {
-		String regions = clientService.addDR(opid, region);
+	public String getTreeRegionByOpid() {
+		UserInfo userInfo = ShiroUtils.getUserInfo();
+		String regions = clientService.getTreeRegionByOpid(userInfo.getOpid());
 		return regions;
 	}
 
 	/**
-	 * 树形菜单展示区域
-	 * @param opid
+	 * 更新用户信息和办公室信息
+	 * @param region chengdu/jichang
+	 * @param request
 	 * @return
 	 */
-	@RequestMapping("printLabel")
+	@RequestMapping(value="/updateOrAddUserRegion",method=RequestMethod.POST)
 	@ResponseBody
-	public String printLabel(String opid) {
-		String regions = clientService.getRegion(opid);
-		return regions;
-	}
-
-	@RequestMapping("updateRn")
-	@ResponseBody
-	public String updateRn(String region,HttpServletRequest request) {
-		HttpSession session = request.getSession();
-		String opid = (String) session.getAttribute(Common.Session_thisOpid);
+	public Object updateOrAddUserRegion(String regionid,HttpServletRequest request) {
 		try {
-			clientService.updateRn(region, opid);
-			return "true";
+			return clientService.updateOrAddUserRegion(regionid);
 		} catch (Exception e) {
-			e.printStackTrace();
-			return "false";
+			return  MsgResult.nodata(ResEnum.FAIL.CODE, ResEnum.FAIL.MESSAGE);
 		}
 	}
 
 	/**
 	 * 发送打印消息 多个标签
 	 * @param labels 多个标签
-	 * @param regions 区域
-	 * @param report 打印人 标识 第一次 有值，第二次 没有值
+	 * @param regionid 办公室区域
 	 * @param businessType air
+	 * @param mqaddress vpnnet 内网  outnet外网
 	 * @return
 	 */
-	@RequestMapping("printLabelSendClient")
+	@RequestMapping(value="printLabelSendClient",method=RequestMethod.POST)
 	@ResponseBody
-	public AjaxResult printLabelSendClient(String labels, String regions, String report, String businessType,HttpServletRequest request) {
+	public AjaxResult printLabelSendClient(String labels, String regionid, String businessType,String mqaddress, HttpServletRequest request) {
 		HttpSession session = request.getSession();
 		UserInfo userInfo = (UserInfo)session.getAttribute(Common.Session_UserInfo);
 		List<LabelAndTemplate> labelList = GsonUtil.getGson().fromJson(labels, new TypeToken<List<LabelAndTemplate>>() {}.getType());
 		String gsonString = GsonUtil.GsonString(labelList);
 		logger.debug("提交准备打印的数据：{}",gsonString);
-		clientService.sendLabel(labelList, regions,userInfo, report, businessType);
+		clientService.sendLabel(labelList, regionid,userInfo, businessType,mqaddress);
 		return AjaxResult.success();
 	}
 
-	@RequestMapping("exportLabel")
-	public void exportLabel(String labels, HttpServletRequest request, HttpServletResponse response, String report) throws IOException {
+	/**
+	 * 导出标签数据
+	 * @param labels
+	 * @param request
+	 * @param response
+	 * @param report
+	 * @throws IOException
+	 */
+	@RequestMapping(value="exportLabel",method=RequestMethod.GET)
+	public void exportLabel(String labels, HttpServletRequest request, HttpServletResponse response) throws IOException {
 		HttpSession session = request.getSession();
 		OutputStream out = null;
 		try {
@@ -132,7 +138,7 @@ public class ClientController {
 			UserInfo userInfo = (UserInfo) session.getAttribute(Common.Session_UserInfo);
 
 			List<Label> labels2 = clientService.getLabel(labels);
-			List<InputStream> pdf = clientService.getPDF(labels2, report, userInfo);
+			List<InputStream> pdf = clientService.getPDF(labels2, userInfo);
 			if (pdf == null) {
 				response.setStatus(444);
 				return;
@@ -184,26 +190,24 @@ public class ClientController {
 	@RequestMapping("getPrint")
 	@ResponseBody
 	public String getPrint(HttpServletRequest request) {
-		HttpSession session = request.getSession();
-		UserInfo userInfo = ShiroUtils.getUserInfo();
-		Map<String, Object> map = (Map<String, Object>) session.getAttribute(Common.Session_UserSecurity);
-		List<JsonResult> list = (List<JsonResult>) map.get(userInfo.getOpid() + Common.UserSecurity_PrintButton);
+		List<JsonResult> list = ShiroUtils.getUserPrintTemplateInfo();
 		return GsonUtil.GsonString(list);
 	}
 
 	/**
-	 * 获取起始地 - 目的地
-	 * @param request
-	 * @param q
+	 * 分页获取起始地 - 目的地
+	 * @param code 地址简码 CTU
+	 * @param curPage 当前页码
+	 * @param pageSize 每页记录数
 	 * @return
 	 */
-	@RequestMapping("getRegion")
+	@RequestMapping(value="getRegion",method = {RequestMethod.POST,RequestMethod.GET})
 	@ResponseBody
-	public String getRegion(HttpServletRequest request, String q) {
-		HttpSession session = request.getSession();
-		return clientService.postRegion(q == null ? "a" : q);
+	public Object getRegion(@RequestParam(defaultValue="CTU") String code,@RequestParam(defaultValue="1") Integer curPage,@RequestParam(defaultValue="10") Integer pageSize) {
+		return clientService.postRegion(code,curPage,pageSize);
 	}
-
+	
+	
 	/**
 	 * 数据库获取录入人操作信息
 	 * @param request
@@ -233,21 +237,21 @@ public class ClientController {
 	}
 
 	/**
-	 * 获取区域
+	 * 获取用户opid绑定的默认办公室区域或者临时使用的办公室
 	 * @param request
 	 * @param session
-	 * @param code 办公司id
-	 * @param opid
+	 * @param regionid 区域办公室id 存在则表示临时的办公室
+	 * @param opid 操作id
 	 * @return
 	 */
-	@RequestMapping(value="getThisRegion",method=RequestMethod.POST)
+	@RequestMapping(value="getDefaultBindRegionByOpid",method=RequestMethod.POST)
 	@ResponseBody
-	public String getThisRegion(HttpServletRequest request, String code, String opid) {
+	public Region getDefaultBindRegionByOpid(String regionid, String opid) {
 		if (StringUtils.isBlank(opid) ){
 			opid =ShiroUtils.getUserInfo().getOpid();
 		}
 		
-		return clientService.getThisRegion(code, opid);
+		return clientService.getDefaultBindRegionByOpid(regionid, opid);
 	}
 
 }

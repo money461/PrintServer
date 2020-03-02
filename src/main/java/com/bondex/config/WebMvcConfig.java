@@ -50,6 +50,7 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
 //		registry.addViewController("/").setViewName("forward:/login");  //请求转发最终路径http://localhost:8088/
 		registry.addViewController("/error/403").setViewName("/error/403"); //渲染页面视图
 		registry.addViewController("/system/main").setViewName("/system/main"); //渲染首页
+		registry.addViewController("/love").setViewName("/LoveCode/loveyou"); //渲染首页
 		registry.setOrder(Ordered.HIGHEST_PRECEDENCE);
 		super.addViewControllers(registry);
 	}

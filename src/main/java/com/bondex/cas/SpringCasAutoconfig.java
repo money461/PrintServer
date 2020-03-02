@@ -28,6 +28,9 @@ public class SpringCasAutoconfig {
 	private String port;
 	@Value("${server.applicationId}")
 	private String applicationId; //应用id
+	
+	@Value("${spring.framework.HttpUrl}") 
+	private String frameworkapi; //framework权限获取地址
 
 	static final String separator = "|";
 
@@ -217,6 +220,14 @@ public class SpringCasAutoconfig {
 
 	public void setCasClientUrl(String casClientUrl) {
 		this.casClientUrl = casClientUrl;
+	}
+
+	public String getFrameworkapi() {
+		return frameworkapi;
+	}
+
+	public void setFrameworkapi(String frameworkapi) {
+		this.frameworkapi = frameworkapi;
 	}
 	
 	

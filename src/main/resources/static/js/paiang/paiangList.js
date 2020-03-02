@@ -5,22 +5,11 @@ function paiang(){
 //定义全局 表格对象
 var editRow = undefined;
 var paiang_tab;
-var baseName='paiang'; //数据库名称
 var type ="medicine"; //派昂标签类型
-var mawb="";
-var hawb="";
-var destination="";// 目的地
-var total="";// 件数
-var airport_departure="";// 起始地
-var is_print="";// 是否打印
-var start_time;// 开始时间
-var end_time;// 结束时间
-var flight_date="";// 结束时间
-var opid_name="";// 录入人
-var MBLNo="";//
-var TakeCargoNo="";// 
-var printAuth=""; //打印权限信息
-var opid =""; //获取当前用户opid //全局变量引用
+var opid =null; //获取当前用户opid //全局变量引用
+
+var thisRegionid=null; //打印当前现中的办公室id
+
 $(function(){
 	//js初始化调用的接口
 		$.ajax({
@@ -32,27 +21,34 @@ $(function(){
 			}
 		});
 	
-	//初始化页面 获取打印区域 opid 当前操作号 code  办公司id
-		$.ajax({
-			url : "/labelPrint/client/getThisRegion?opid="+opid+"&code="+localStorage.getItem('ls'),
-			type : 'POST',
-			async:false,
-			success : function(result) {
-				var	rt = eval("("+result+")");
-				$("#quyu").text(rt.parent_name+'/'+rt.region_name); //修改区域标签
-			}
-		});	
-		
-		//获取打印权限
-		$.ajax({
-			url : "/labelPrint/client/getPrint",
-			type : 'POST',
-			async:false,
-			success : function(result) {
-				printAuth = eval('(' + result + ')');
-			}
-		});
+		setRegionByOpid(); //初始化打印办公室
 });
+
+
+
+//修改办公室
+function setRegionByOpid(){
+	//初始化页面 获取打印区域 opid 当前操作号   regionid办公司id
+	$.ajax({
+		url : "/labelPrint/client/getDefaultBindRegionByOpid",
+		type : 'POST',
+		data: {opid:opid,regionid:storage.get('regionid')},//chengdu/jichang id=2
+		async:false,
+		success : function(result) {
+			if($.common.isEmpty(result)){
+				return;
+			}else{
+				$("#quyu").text(result.parent_name+'/'+result.region_name); //修改区域标签
+				var bgs = storage.get('bgs');
+				bgs = bgs!=null?bgs:'mr'; 
+				storage.set('bgs',bgs);
+				storage.set('regionid',result.region_id); //初始化获取用户绑定的办公室id
+			}
+		}
+	});
+}
+	
+
 //初始化表格  返回格式 返回的参数必须是total和rows，total返回数据集总个数，rows返回table的json格式
 paiang.prototype.initDataGridTable=function(){
 
@@ -96,81 +92,41 @@ paiang.prototype.initDataGridTable=function(){
 		    },
 		  //当用户单击一个单元格时触发。
 		    onClickCell:function(index,field,value){
-		    	 if (editRow != undefined) {
-					 $(this).datagrid('endEdit', editRow);
-		 
-		            }
+		    	 
 		    },
 		    //当用户双击一个单元格时触发。
 		    onDblClickCell:function(rowIndex, field, value){
-		    	if (editRow != undefined) {
-					 $(this).datagrid('beginEdit', editRow);
-				 }
-				
-			if (editRow == undefined) {
 		    	
 				if (field=="RecCustomerName"||field=="template_name"||field=="packages") {
-			        var rows = $('#paiang_tab').datagrid('getRows');// 返回当前页的行。
+					
+					if (editRow !=rowIndex) {
+						$(this).datagrid('endEdit', editRow);
+					}
+			        var rows = $(this).datagrid('getRows');// 返回当前页的行。
 			        var row = rows[rowIndex];// 根据index获得其中一行。
 					
 					$(this).datagrid('beginEdit', rowIndex); //开启编辑
+					$(this).datagrid('selectRow',rowIndex); //选中该行
+					$("#rejectButton").attr("disabled",false); //启用撤销
+					$("#saveButton").attr("disabled",false); //启用保存
 					editRow = rowIndex; //记录当前编辑行索引
 					
 					var ed = $(this).datagrid('getEditor', {index:rowIndex,field:'template_name'}); //获取指定的编辑器， options 参数包含两个属性：index：行的索引。field：字段名。
-					//使用编辑器对该字段添加多选框
-					$(ed.target[0]).combobox({    
-					    valueField:'template_name',  
-					    textField:'text'
-					});
-					// 设置模版下拉框的值
-					if (printAuth.length==0) {
-						$(ed.target[0]).combobox('setValue', row.template_name);
-						$(ed.target[0]).combobox("select",row.template_name); //将行中原来的模板设置为选中
-						
-					}else {
-						var result1;
-						$.ajax({
-							url : "/labelPrint/label/getUsertemplate", //获取用户绑定的模板
-							type : 'POST',
-							async:false,
-							data:{
-								opid:JSON.stringify(printAuth)
-							},
-							success : function(result) {
-								result1= eval('(' + result + ')');
-							}
-						});
-						var data = [];
-						for (var i = 0; i < result1.length; i++) {
-							data.push({ "template_name": result1[i].template_name, "text": result1[i].template_name });
-						}
-						$(ed.target[0]).combobox('loadData', data);
-						
-						// 设置下拉框选中的值
-						var result1;
-						$.ajax({
-							url : "/labelPrint/label/template",
-							type : 'POST',
-							async:false,
-							data:{
-								opid:JSON.stringify(printAuth),
-								id:row.template_name
-							},
-							success : function(result) {
-								result1= eval('(' + result + ')');
-							}
-						});
-						$(ed.target[0]).combobox("select",result1.template_name); //将行中原来的模板设置为选中
-					}
 					
-					/*var ed = $(this).datagrid('getEditor', {index:rowIndex,field:field});
-					$(ed.target[0]).focus();// 获取焦点
-					// 失去焦点事件,结束编辑
-					$(ed.target[0]).blur(function(){
-						 $("#beginEdit").datagrid('endEdit', rowIndex);
-					});*/
+					$(ed.target[0]).combobox({
+						url:"/labelPrint/label/getUserAuthtemplate",
+						method:'GET',
+						textField:'template_name',
+					    valueField:'template_name',
+					    onSelect: function(rec){
+					    	row.reserve3=rec.id;//修改label外键id
+					    	row.template_id=rec.template_id;//修改模板id
+					    }
+						
+					});
+					$(ed.target[0]).combobox("select",row.template_name); //设置默认的初始值
+				
 				}
-			  }
 			},
 	        onLoadSuccess: function (data) {
         	  if (data.total == 0) {
@@ -203,27 +159,8 @@ paiang.prototype.initDataGridTable=function(){
 			},*/
 			// 结束编辑事件
 			onAfterEdit:function(rowIndex, rowData, changes){
-				/*$.ajax({
-					url : "/labelPrint/label/update",
-					type : 'POST',
-					data:{
-						hawb:rowData.hawb,
-						template_name:rowData.template_name,
-						destination:rowData.destination,
-						label_id:rowData.label_id,
-						total:rowData.total
-					},
-					success : function(result) {
-					// 更新完成后，刷新当前行
-					$("#paiang_tab").datagrid('refreshRow', rowIndex);
-					}
-				});*/
-				
 				//更新完成后，刷新当前行
-				rowData.template_id=''; //设置模板id 此时标签的id是未被修改的，只能制空
-				rowData.reserve3='';
 				$("#paiang_tab").datagrid('refreshRow', rowIndex);
-				editRow = undefined;
 			},
 			onCancelEdit:function(index,row){
 				updateActions(index);
@@ -253,6 +190,7 @@ paiang.prototype.initDataGridTable=function(){
     });*/
 	
 }
+
 
 function updateActions(index){
 	$('#paiang_tab').datagrid('updateRow',{
@@ -317,28 +255,35 @@ function getField(fieldNames, value, result) {
 
 //搜索按钮
 paiang.prototype.search=function() {
-	
-	var queryParams = $('#paiang_tab').datagrid('options').queryParams;
-	//重新加载
-	$('#paiang_tab').datagrid('load',getQueryCondition());
+	 if(paiang.checksave()){
+		 var queryParams = $('#paiang_tab').datagrid('options').queryParams;
+		 //重新加载
+		 $('#paiang_tab').datagrid('load',getQueryCondition());
+		 
+	 }
 
 }
-//重新加载数据
+//重新加载数据刷新表单
 paiang.prototype.securityReload=function() {
-	//清除表单
-	$('#searchForm')[0].reset();
-	 $("#searchForm").find('input[type=text],input[type=hidden],textarea[type=textarea]').each(function() {
-		 if($(this).attr('type') == 'textarea'){
-			 //清除 textarea
-			 $(this).text('');
-		 }else if($(this).attr('type') == 'hidden'){
-			 $(this).val('');
-		 }
-	});
-	//重新加载
-	//$('#paiang_tab').datagrid('reload');
-	paiang.initDataGridTable();
-	
+	 if(paiang.checksave()){
+		 //清除表单
+//	$('#searchForm')[0].reset();
+		 $("#searchForm").form("clear");
+		 $("#searchForm").find('input[type=text],input[type=hidden],textarea[type=textarea]').each(function() {
+			 if($(this).attr('type') == 'textarea'){
+				 //清除 textarea
+				 $(this).text('');
+			 }else if($(this).attr('type') == 'hidden'){
+				 $(this).val('');
+			 }
+		 });
+		 $("#searchForm").find("select[name='status']").val("0").trigger('change'); //重置下拉
+		 //重新加载
+		 //$('#paiang_tab').datagrid('reload');
+		 paiang.initDataGridTable();
+		 
+	 }
+	 
 }
 
 
@@ -489,35 +434,55 @@ $("#btn_delete_ids").click(function (){
 		
 //保存被修改的行
 paiang.prototype.save = function(){
-	$("#paiang_tab").datagrid('endEdit', editRow);
 	
-	//使用JSON序列化datarow对象，发送到后台。
-//    var rows = $("#paiang_tab").datagrid('getChanges');
-	var data=$('#paiang_tab').datagrid("getData").rows; // 获取所有数据
-
-    var rowstr = JSON.stringify(data);
-    
-   //保存数据库
-	$.ajax({
-		url : "/labelPrint/paiang/update",
-		type : 'POST',
-		dataType:"json",      
-        contentType:"application/json",
-		data:rowstr,
-		success : function(result) {
-			// 更新完成后，刷新当前行
-			//$("#dg1").datagrid('refreshRow', rowIndex);
-			if("200"==result.status){
-				//重新加载数据
-				$("#paiang_tab").datagrid('loadData',result.data);
-				
-				//layer.msg(result.message,{icon:1,time:1000});
-			}else{
-				layer.msg(result.message,{icon:2,time:1000});
-			}
+  $.messager.confirm("操作提示", "您确定要执行保存操作吗？", function (data) {
+         if (data) {
+				//点保存后无法点击撤销
+				$("#rejectButton").attr("disabled",true); //禁用撤销
+				$("#paiang_tab").datagrid('endEdit', editRow); //结束编辑
+	    		 editRow = undefined; //重置编辑行
+				//使用JSON序列化datarow对象，发送到后台。
+			//    var rows = $("#paiang_tab").datagrid('getChanges');
+				var data=$('#paiang_tab').datagrid("getData").rows; // 获取所有数据
 			
-		}
-	});
+			    var rowstr = JSON.stringify(data);
+			    
+			   //保存数据库
+				$.ajax({
+					url : "/labelPrint/paiang/update",
+					type : 'POST',
+					dataType:"json",      
+			        contentType:"application/json",
+					data:rowstr,
+					success : function(result) {
+						// 更新完成后，刷新当前行
+						//$("#paiang_tab").datagrid('refreshRow', rowIndex);
+						if("200"==result.status){
+							//重新加载数据
+							$("#paiang_tab").datagrid('loadData',result.data);
+							
+							//layer.msg(result.message,{icon:1,time:1000});
+						}else{
+							layer.msg(result.message,{icon:2,time:1000});
+						}
+						
+					}
+				});
+         }else{
+        	 layer.msg("已取消保存");
+        }
+   });
+
+}
+//校验是否需要保存
+paiang.prototype.checksave= function(){
+	if(editRow != undefined){
+		layer.msg("请确认是否保存编辑修改的数据?",{icon:2,time:1000});
+		return false;
+	}else{
+		return true;
+	}
+	
 	
 }
 //撤销被修改的行
@@ -525,258 +490,265 @@ paiang.prototype.rejectChange = function(){
 	editRow = undefined;
     $("#paiang_tab").datagrid('rejectChanges');
     $("#paiang_tab").datagrid('unselectAll');
+    $("#saveButton").attr("disabled",true); //禁用保存
 }
 
       
  //打印按钮事件 打印权限判断 获取办公室区域信息
 paiang.prototype.tableprint = function() {
-  		var rows = $('#paiang_tab').datagrid('getSelections');// 获取所有选中行的数据
-  		// 查询是否是第一次登录
-  		$.ajax({
-  			url : "/labelPrint/client/isFrist?opid="+opid, //查询打印办公室
-  			type : 'POST',
-  			async:false,
-  			success : function(result) {
-  					if (result=="false") {// 第一次登录 还未获取办公司信息
-  						// 获取用户选择的区域
-  						if (rows.length > 0) {
-  							$.ajax({
-  								url : "/labelPrint/client/getPrint",
-  								type : 'POST',
-  								success : function(result) {
-  									printAuth = eval('(' + result + ')');
-  									if (printAuth.length==0) {
-  										alert("你没有该功能权限，请先申请权限");
-  										return
-  									}
-  									if (printAuth[0].length > 1) {// 打印标签模版不止一个
-  										$("#dyan").css("display", "block");// 显示打印按钮
-  										$("#dcan").css("display", "none");// 隐藏导出按钮
-  										$("#xgmr").css("display", "none");// 隐藏按钮
-  										paiang.initSelectRegion();
-  										$("#xzdy").css("display", "block");
-  										$("#ssdy").css("display", "block");
-  										// $("#bqys").css("display", "block");
-  										$("#selectbq").children().remove();// 清理缓存
-  										$("#selectbq").append('<option selected="selected">请选择标签样式</option>');
-  										for (var i = 0; i < printAuth[0].length; i++) { //追加标签样式
-  											$("#selectbq").append('<option value =' + printAuth[0][i].Reportid + ',' + printAuth[0][i].Reportname + '>' + printAuth[0][i].Reportname + '</option>');
-  										}
-  									} else {
-  										$("#dyan").css("display", "block");// 显示打印按钮
-  										$("#dcan").css("display", "none");// 隐藏导出按钮
-  										$("#xgmr").css("display", "none");// 隐藏按钮
-  										
-  										$("#xzdy").css("display", "block");
-  										$("#ssdy").css("display", "block");
-  										paiang.initSelectRegion();
-  									}
-  								}
-  							});
-  					} else {
-  						alert('请选择一条数据，再打印');
-  					}
-  				}else {// 不是第一次登录
-  					if(rows.length <= 0){
-  						alert('请选择一条数据，再打印');
-  						return;
-  					}
-  					mr = eval('(' + result + ')');
-  					if (localStorage.getItem("ls")!=null) { //临时办公室
-  						paiang.printLabelSendClient("", localStorage.getItem("ls"));
-  					}else {
-  						paiang.printLabelSendClient("", mr[0].office_id);
-  					}
-  				}
-  			}
-  		});
-  	}
+	
+	 if(paiang.checksave()){
+		 var rows = $('#paiang_tab').datagrid('getSelections');// 获取所有选中行的数据
+		 // 获取用户选择的区域
+		 if (rows.length ==0) {
+			 layer.msg("请至少选择一条打印标签！",{icon:2,time:2000});
+			 return;
+		 }
+		 
+		 //判断是否需要打印提示
+		 var xunwenprint = storage.get('xunwenprint'); //********全局询问打印设置
+		 xunwenprint = xunwenprint!=null?xunwenprint:'yes';
+		 var regionid = storage.get('regionid'); //打印办公室id
+		 
+		 if($.common.equalsIgnoreCase('yes',xunwenprint) || $.common.isEmpty(regionid)){
+			 //弹出对话框
+			 $("#dyan").css("display", "block");// 显示打印按钮
+			 paiang.initdialog('打印提示框'); //显示打印会话框 不展示默认办公室选项
+		 }else{
+			 //进入打印程序
+			 paiang.printLabelSendClient();
+		 }
+		 
+	 }
+	
+}
 
     //点击打印按钮事件
   	//初始化标签打印发送客户端 report打印人 
- paiang.prototype.printLabelSendClient=function(report,region) {
-	 var rows = $('#paiang_tab').datagrid('getSelections'); //获取被选中的数据
-	 if(rows.length<1){
-     	layer.msg('请至少选择一行打印数据！',{icon:2,time:1000});
-     	return;
-     }
-	 $.messager.confirm("操作提示", "您确定要执行打印办公室:[ "+$("#quyu").text()+" ]打印操作吗？", function (flag) {
-         if (flag) {
-        	 var url = "/labelPrint/client/printLabelSendClient"; //发送打印客户端
-       		 $.ajax({
-       			url : url,
-       			type : 'POST',
-       			data : {
-       				labels : JSON.stringify(rows), //置为JSON字符串
-       				regions : region,
-    				businessType : type, //默认mechine
-    				report : report //打印人
-       			},
-       			success : function(result) {
-       				
-       				if(result.status=="200"){
-       					//弹框提示
-       					$.messager.show({
-       						title:'<b style="font-size:12;text-align:center;">我的消息</b>',
-       						msg:'<h3 style="color:green;text-align:center;">标签已发往客户端打印</h3>',
-       						timeout:3000,
-       						showType:'fade'
-       					});
-       				}else{
-       					layer.msg(result.message,{icon:2,time:1000});
-       				}
-       				
-       				try {
-    					$('#region').dialog("close");
-    				} catch (e) {
-    					console.info("面板关闭失败");
-    				}
-       			},
-       		    //网络请求失败
-   	            error: $.tool.ajaxError
-       		});
-         }
-         else {
-             alert("取消打印");
-         }
-     });
-  		
-  	}
+ paiang.prototype.printLabelSendClient = function(regionid) {
+	  
+	  var regionid_storage = storage.get('regionid'); //打印办公室id
+	  
+	  if($.common.isEmpty(regionid)){
+		  regionid = regionid_storage;
+	  }
+	  
+	  if($.common.isEmpty(regionid)){
+		  layer.msg("请选择打印办公室",{icon:2,time:1000});
+		  return;
+	  }
+	  
+	    var url = "/labelPrint/client/printLabelSendClient";
+	  
+	       var mqaddress = "vpnnet"; //默认外网
+			var rows = $('#paiang_tab').datagrid('getSelections');
+			$.ajax({
+				url : url,
+				type : 'POST',
+				data : {
+					labels : JSON.stringify(rows),
+					regionid : regionid, //chengdu/jichang id=2
+					businessType : type,
+					mqaddress: mqaddress //内网还是外网
+				},
+				success : function(result) {
+					if(result.status=="200"){
+	   					//弹框提示
+	   					$.messager.show({
+	   						title:'<b style="font-size:12;text-align:center;">我的消息</b>',
+	   						msg:'<h3 style="color:green;text-align:center;">标签已发往客户端打印</h3>',
+	   						timeout:3000,
+	   						showType:'fade'
+	   					});
+	   					dialogClose();//关闭会话
+	   					//刷新表格
+	   					$('#paiang_tab').datagrid('reload');
+	   				}else{
+	   					layer.msg(result.message,{icon:2,time:1000});
+	   				}
+					
+				}
+			});
+	  
+	//点击单选按钮radio后触发，即，我们  选择默认办公室/临时办公室时，触发一个事件，弹出选中的值
+	  $("#mqaddress input[name=mqaddress]").click(function(){
+	      mqaddress = $(this).val();
+	  });
+	  
+	}
 
  /**
 	 * 修改打印配置的信息
 	 */
 paiang.prototype.alertprint = function() {
-	$.ajax({
-			url : "/labelPrint/client/getPrint",
-			type : 'POST',
-			success : function(result) {
-				printAuth = eval('(' + result + ')');
-				if (printAuth.length==0) {
-					alert("你没有该功能权限，请先申请权限");
-					return
-				}
-				$("#xgmr").css("display", "block");
-				$("#dcan").css("display", "none");// 隐藏导出按钮
-				$("#dyan").css("display", "none");// 显示打印按钮
-				
-				
-				$("#xzdy").css("display", "block");
-				$("#ssdy").css("display", "block");
-				paiang.initSelectRegion(true);
-			}
-		});
+	$("#xunwen").css("display", "block");//展示询问打印
+	$("#bgs").css("display", "block");// 展示默认办公室radio
+	$("#xgmr").css("display", "block"); //显示修改默认
+	paiang.initdialog('配置打印/办公室信息对话框'); //修改区域 展示默认radio
 }
  
+
 /**
- * 弹框修改打印配置 初始化 打印 按钮需要的选择控件
+ * 初始化 打印对话框 按钮需要的选择控件
  */
-paiang.prototype.initSelectRegion= function(isRadio) {
-		// 初始化弹出 更新打印办公室
-		$('#region').dialog({
-			title : ' ',
-			width : 500,
-			height : 250,
-			maximizable : true,
-			cache : false,
-			modal : true,
-			onClose:function(){
-				try {
-					$("input[name='bgs']:checked").prop('checked', false);
-					$("#code").val("");
-					$("#bgs").css("display","none");
-				} catch (e) {
-					console.info("初始化单选框失败");
-				}
-			},
-			onBeforeOpen:function(){
-				if(isRadio){
-					try {
-						$("#bgs").css("display","block");
-					} catch (e) {
-					}
-				}
+paiang.prototype.initdialog = function(title) {
+	// 初始化弹出 更新打印办公室
+	$('#region').dialog({
+		title : title,
+		width : 550,
+		height : 400,
+		maximizable : true,
+		cache : false,
+		modal : true,
+		onClose:function(){ //弹框恢复初始状态 隐藏所有的标签
+			try {
+				$("#dyan").css("display", "none");// 隐藏打印按钮
+				$("#xgmr").css("display", "none");// 隐藏修改默认
+				$("#bgs").css("display", "none");//隐藏办公室radio
+				$("#xunwen").css("display", "none");//隐藏询问设置
+				
+				thisRegionid=null;//清除当前选中的地址
+			} catch (e) {
+				console.info("初始化单选框失败");
 			}
-		});
-		
-		// 初始化下拉树
-		$('#cc').combotree({
-			required : true,
-			url : "/labelPrint/client/printLabel?opid="+opid,
-			onBeforeSelect : function(node) {
-				return false
-			},
-			onClick : function(node) {
-				if ($('#cc').tree('isLeaf', node.target)) {// 判断是否是叶子节点
-					$('#cc').combotree('setValue', node.pname + "/" + node.text);
-					$('#code').val(node.parent_code + "/" + node.region_code); //子节点数据设置 办公室区域
-				} else {
-					// 如果是父节点，实现点击展开/关闭节点
-					if (node.state == "closed") {
-						$(this).tree('expand', node.target);
-						$('#cc').combotree("showPanel");
-					} else {
-						$(this).tree('collapse', node.target);
-						$('#cc').combotree("showPanel");
-					}
-				}
-			}
-		});
-		
-		$('#cc').combotree('setValue', '选择办公区域');
-	}
+		},
+		onBeforeOpen:function(){ //对话框初始化
+			paiang.initTree(); //初始化办公室树
+			var xunwenprint = storage.get('xunwenprint'); //********全局询问打印设置
+			xunwenprint = xunwenprint!=null?xunwenprint:'yes';
+			$("input:radio[value="+xunwenprint+"]").prop('checked','true'); //设置当前是询问还是不询问
+			
+			//加载当前设置
+			var bgs=storage.get('bgs');
+			 //$("input[name='bgs']:checked").prop('checked', false); //radio不被选中 不清楚当前是临时还是默认
+			bgs = bgs!=null?bgs:'ls';
+			 $("input:radio[value="+bgs+"]").prop('checked','true'); //设置当前是临时还是默认
+			 
+			 var vpn=storage.get('vpn');
+			 vpn = vpn!=null?vpn:'vpnnet';
+			 $("input:radio[value="+vpn+"]").prop('checked','true'); //设置当前是vpn/外网
+			
+		}
+	});
 	
-/**
- * 更新按钮事件修改 办公室
- */	
-function updateRegion() {
-		var bgs = $("input[name='bgs']:checked").val();
-		$("input[name='bgs']:checked").prop('checked', false);
-		
-		var t = $("#code").val(); //获取下拉菜单数据 chengdu/jichang
-		if (t!=""&&undefined!=bgs) {
-			if (bgs=="ls") { //临时办公室
-				if (typeof(Storage) !== "undefined") {
-				    localStorage.setItem("ls", t); //设置办公司  chengdu/jichang
-					$('#region').dialog("close"); //关闭弹框
-					$("#code").val("");
-					setName(); //修改办公室
+}
+
+// 初始化办公室下拉树
+paiang.prototype.initTree = function(){
+	$('#cc').combotree({
+		required : true,
+		url : "/labelPrint/client/getTreeRegionByOpid",
+		method : 'POST',
+		onBeforeSelect : function(node) {
+			return false
+		},
+		onLoadSuccess : function(node,data) {
+			//combotree 设置默认值
+			var regionid = storage.get('regionid');
+			if($.common.isNotEmpty(regionid)){
+				 var tree = $('#cc').combotree('tree');
+				var nodedata = tree.tree('find',regionid);
+				var text = nodedata.pname + "/" + nodedata.text;
+				$('#cc').combotree('setValue',text); 
+				tree.tree('select', nodedata.target); 
+			}else{
+				$('#cc').combotree('setValue', '指定打印办公室位置'); 
+			}
+		},
+		onClick : function(node) {
+			if ($('#cc').tree('isLeaf', node.target)) {// 判断是否是叶子节点
+				//子节点即选择该节点
+				$('#cc').combotree('setValue', node.pname + "/" + node.text); //设置值
+//				storage.set("regionid",node.id); //设置区域办公室id
+				thisRegionid=node.id;
+			} else {
+				// 如果是父节点，实现点击展开/关闭节点
+				if (node.state == "closed") {
+					$(this).tree('expand', node.target);
+					$('#cc').combotree("showPanel");
 				} else {
-					alert("你的浏览器不兼容系统，建议更换谷歌浏览器");
+					$(this).tree('collapse', node.target);
+					$('#cc').combotree("showPanel");
 				}
-			}else if (bgs="mr") { //默认办公司
-				$.ajax({
-					url : "/labelPrint/client/updateRn?region="+t,
-					type : 'POST',
-					success : function(result) {
-						if (result=="true") {
-							alert("更改成功");
-							$('#region').dialog("close");
-							$("#code").val("");
-							setName();
+			}
+		}
+	});
+}
+
+//关闭办公室选择弹框
+function dialogClose(){
+	try {
+		$('#region').dialog("close");  
+	} catch (e) {
+		console.info("面板关闭失败");
+	}
+}
+
+//弹出会话框后点击打印
+function dialogPrint() {
+	   //立即执行打印
+	   paiang.printLabelSendClient(thisRegionid);
+}
+
+/**
+ * 弹出会话框后点击更新或者添加用户办公室信息
+ */	
+function dialogUpdateOrAddRegion (){
+		
+	  var bgs = $("input[name='bgs']:checked").val();
+		//获取办公室id
+		if(bgs=="mr" ){
+			if($.common.isEmpty(thisRegionid)){
+				thisRegionid = storage.get('regionid');
+				if($.common.isEmpty(thisRegionid)){
+					layer.msg("选择默认办公室必须选择绑定指定办公室",{icon:2,time:1000});
+					return;
+				}
+			}
+		     //默认办公司
+				if (typeof(Storage) !== "undefined") {
+					$.ajax({
+						url : "/labelPrint/client/updateOrAddUserRegion", //修改办公室区域 chengdu/jichang
+						type : 'POST',
+						data :{regionid:thisRegionid},
+					    success : function(result) {
+						if (result.status=="200") {
+							layer.msg("更改配置成功！",{icon:1,time:1000});
+							paiang.dialogRegion();
 						}else{
-							alert("更改失败，请联系管理员");
+							layer.msg("更改失败，请联系管理员",{icon:2,time:1000});
 						}
 					}
-				});
-			}
+					});
+				} else {
+					layer.msg("你的浏览器不兼容系统，建议更换谷歌浏览器",{icon:2,time:1000});
+				}
 		}else{
-			alert("请选择打印办公室，并勾选（默认）或（临时）");
+			paiang.dialogRegion();
 		}
-	}
-
-//修改办公室
-function setName(){
-		$.ajax({
-			url : "/labelPrint/client/getThisRegion?opid="+opid+"&code="+localStorage.getItem('ls'),
-			type : 'POST',
-			success : function(result) {
-				var	rt = eval("("+result+")");
-				$("#quyu").text(rt.parent_name+'/'+rt.region_name);
-			}
-		});
 }
+
+
+paiang.prototype.dialogRegion =function(){
+	//获取办公室信息
+	var bgs = $("input[name='bgs']:checked").val();
+	storage.set('bgs',bgs);
 	
+	//询问打印
+	var xunwenprint = $("input[name='xunwen']:checked").val();
+	storage.set('xunwenprint',xunwenprint);
+	
+	//内网/外网
+	var vpn = $("input[name='mqaddress']:checked").val();
+	storage.set('vpn',vpn);
+	
+	if($.common.isNotEmpty(thisRegionid)){
+		storage.set('regionid',thisRegionid); //****************设置全局办公室id*************************
+	}
+	setRegionByOpid(bgs);//修改办公室
+	//关闭会话
+	$('#region').dialog("close");
+}
 
 //设置时间插件
 var buttons = $.extend([], $.fn.datetimebox.defaults.buttons);
@@ -803,6 +775,18 @@ $('#end_time').datetimebox({
     onChange: function(newValue, oldValue){
     }   
 });
+
+//删除
+paiang.prototype.deletedata = function(){
+	 var rows = $('#paiang_tab').datagrid('getSelections'); //获取被选中的数据
+	 if(rows.length<1){
+     	layer.msg('请至少选择一行打印数据！',{icon:2,time:1000});
+     	return;
+     }
+	 
+	 layer.msg('暂不支持删除！',{icon:2,time:1000});
+	 return;
+}
 
 var toolbar ={
 			tools:[ {
