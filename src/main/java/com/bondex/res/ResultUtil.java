@@ -26,6 +26,7 @@ import java.util.Map;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.bondex.common.enums.ResEnum;
+import com.bondex.entity.page.Datagrid;
 import com.github.pagehelper.PageInfo;
 
 /**
@@ -80,12 +81,12 @@ public class ResultUtil {
     }
 
     public static Datagrid tablePage(long total, List<?> list) {
-        return new Datagrid(String.valueOf(total), list);
+        return new Datagrid(total, list);
     }
 
     public static Datagrid tablePage(PageInfo info) {
         if (info == null) {
-            return new Datagrid("0", new ArrayList());
+            return new Datagrid(0L, new ArrayList());
         }
         return tablePage(info.getTotal(), info.getList());
     }

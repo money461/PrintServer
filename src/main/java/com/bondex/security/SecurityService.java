@@ -11,11 +11,13 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -24,8 +26,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.bondex.cas.SpringCasAutoconfig;
 import com.bondex.common.Common;
 import com.bondex.common.enums.NewPowerHttpEnum;
+import com.bondex.config.CacheManagerConfig;
 import com.bondex.config.restTemplate.HttpRestTemplateUtil;
-import com.bondex.entity.Datagrid;
+import com.bondex.entity.page.Datagrid;
 import com.bondex.security.entity.JsonResult;
 import com.bondex.security.entity.Opid;
 import com.bondex.security.entity.SecurityHead;
@@ -35,7 +38,6 @@ import com.bondex.security.entity.UserInfo;
 import com.bondex.util.Axis2WebServiceClient;
 import com.bondex.util.GsonUtil;
 import com.bondex.util.HttpClient;
-import com.bondex.util.ReadTxtFile;
 import com.google.gson.reflect.TypeToken;
 /**
  * 权限获取模块
@@ -51,6 +53,10 @@ public class SecurityService {
 	@Autowired
 	@Qualifier("myRestTemplate")
 	private RestTemplate myRestTemplate;
+	
+	@Autowired
+	@Qualifier(CacheManagerConfig.CacheManagerName.EHCACHE_CACHE_MAANGER)
+	private EhCacheManager cacheManager;
 	
 	private String applicationId; //应用id
 	
@@ -104,7 +110,7 @@ public class SecurityService {
 					} 
 					//初始页面 的时候弹出 opids 提供用户选择
 					Datagrid<Opid> datagrid = new Datagrid<Opid>();
-					datagrid.setTotal(new Integer(userInfoList.size()).toString());
+					datagrid.setTotal((long)userInfoList.size());
 					datagrid.setRows(userInfo.getAllOpid());
 					session.setAttribute(Common.Session_opids, datagrid);
 					session.setAttribute(Common.Session_thisOpid, getBindingOpid);
@@ -430,5 +436,25 @@ public class SecurityService {
 		return userInfo;
 	}
 	
-	
+	/**
+	 * 获取公共账户token
+	 * @return
+	 */
+	public String getPublicToken() {
+		
+		org.apache.shiro.cache.Cache<Object, Object> cache = cacheManager.getCache("PublicTokenCache");
+		String token= (String) cache.get("SystemPublicToken");
+		if(StringUtils.isNoneBlank(token)){
+			return token;
+		}
+		ResponseEntity<JSONObject > res = myRestTemplate.getForEntity(springCasAutoconfig.getCasPublicUrl(), JSONObject.class);
+		JSONObject body = res.getBody();
+		if (null!=body && body.getBoolean("success")) {
+		    JSONArray message =body.getJSONArray("message");
+		    JSONObject json = (JSONObject) message.get(0);
+		    token = json.getString("token");
+		    cache.put("SystemPublicToken", token);
+		}
+		return token;
+	}
 }

@@ -1,339 +1,290 @@
+<#include "/system/common.html" encoding="UTF-8" parse=true/>
 <!DOCTYPE html>
-<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<html  lang="zh">
 <head>
-<th:block th:include="system/include :: header('标签打印主页')" />
-<link rel="stylesheet" th:href="@{/css/style.css}"/>
-<!-- 解决bootstrap、easyui样式冲突 -->
-<style type="text/css">
-.jz {
-	text-align: center;
-	vertical-align: middle;
-}
-
-/*datagrid无数据提示居中*/
-.datagrid-td-merged {
-	text-align: center;
-}
-
-.accordion {
-	border-width: 0px;
-}
-
-.btn {
-	border: 0px solid transparent;
-}
-
-.datagrid-editable-input {
-	color: black;
-}
-</style>
-
-
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <title>标签打印系统</title>
+    <!--[if lt IE 9]>
+    <meta http-equiv="refresh" content="0;ie.html"/>
+    <![endif]-->
+    <link href="${request.contextPath}/img/printer.ico" rel="shortcut icon" type="image/x-icon">
+    <link href="${request.contextPath}/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="${request.contextPath}/bootstrap-table-develop/dist/bootstrap-table.min.css" rel="stylesheet" />
+    <!-- 右键菜单实现 样式 -->
+    <link href="${request.contextPath}/css/jquery.contextMenu.min.css" rel="stylesheet"/>
+    <link href="${request.contextPath}/css/font-awesome.min.css" rel="stylesheet"/>
+    <link href="${request.contextPath}/css/animate.css" rel="stylesheet"/>
+    <link href="${request.contextPath}/css/style.css" rel="stylesheet"/>
+    <link href="${request.contextPath}/css/skins.css" rel="stylesheet"/>
+    <link href="${request.contextPath}/css/ry-ui.css?v=4.1.0" rel="stylesheet"/>
 </head>
+<body class="fixed-sidebar full-height-layout gray-bg" style="overflow: hidden">
+<div id="wrapper">
 
-<!--body-->
-
-<body class="hold-transition skin-blue sidebar-mini fixed">
-	<div class="wrapper">
-	  
-		<header class="main-header">
-			<a href="/" class="logo"> 
-			  <span class="logo-lg"><b>标签打印</b></span>
-			</a>
-			<!-- 顶部右边 -->
-			<nav class="navbar navbar-static-top" role="navigation">
-				<a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button"><span class="sr-only">切换导航</span></a>
-				<div class="navbar-custom-menu">
-					<ul class="nav navbar-nav">
-						<li><a href="javascript:void(0);" onclick="Fullscreen();" id="fullScreen" title="全屏"><i class="fa fa-arrows-alt"></i></a></li>
-						<!-- User Account Menu -->
-						<li class="dropdown user user-menu">
-							<!-- Menu Toggle Button --> 
-							<a href="#" class="dropdown-toggle" data-toggle="dropdown"> 
-							<!-- The user image in the navbar--> 
-							<img th:src="@{/adminlte/dist/img/user2-160x160.jpg}" class="user-image" alt="User Image"/> 
-							<!-- hidden-xs hides the username on small devices so only the image appears. --> 
-							<span class="hidden-xs" th:text="${session.userInfo.psnname}"></span>
+    <!--左侧导航开始-->
+    <nav class="navbar-default navbar-static-side" role="navigation">
+        <div class="nav-close">
+            <i class="fa fa-times-circle"></i>
+        </div>
+        <div class="sidebar-collapse">
+            <ul class="nav" id="side-menu">
+                <a href="login">
+                  <li class="logo">
+				    <span class="logo-lg" >标签打印</span> 
+            	  </li>
+            	</a>
+            	<li>
+            		<div class="user-panel">
+				        <div class="pull-left image">
+						<img src="adminlte/dist/img/user2-160x160.jpg" class="img-circle" alt="User Image"/>
+					    </div>
+						<div class="pull-left info">
+							<p>${userInfo.psnname!"admin"}</p>
+							<!-- Status -->
+							<a href="#"><i class="fa fa-circle text-success"></i> Online</a>
+							<a href="logout" style="padding-left:5px;"><i class="fa fa-sign-out text-danger"></i> 注销</a>
+						</div>
+				        
+				    </div>
+				    
+            	</li>
+            	
+            	<li>
+                	<a href="#">
+                		<i class="fa fa-print"></i>
+                    	<span class="nav-label">标签打印</span> 
+                    	<span class="fa arrow"></span>
+                	</a>
+                    <ul class="nav nav-second-level collapse" aria-expanded="false" style="height: 0px;">
+                         
+                         <@shiro.hasPermission  name="AirPrintLabel"> 
+							<li>
+								<a class="menuItem" href="layout/west/airlabel"><i class="fa fa-print" style="width: 20px;"></i>空运标签</a>
+							</li>
+						</@shiro.hasPermission>
+						
+						<!--  <@shiro.hasPermission  name="PaiangPrintLabel"> 
+						</@shiro.hasPermission> -->
+						<li>
+							<a class="menuItem" href="paiang/viewdata"><i class="fa fa-print" style="width: 20px;"></i>派昂标签</a>
+						</li>
+					</ul>
+                </li>
+                
+                <!--  <@shiro.hasRole name="280602">   -->
+					<!-- </@shiro.hasRole> -->
+                 
+            	<li>
+                	<a href="#">
+                		<i class="fa fa-gear"></i>
+                    	<span class="nav-label">系统管理</span> 
+                    	<span class="fa arrow"></span>
+                	</a>
+                    <ul class="nav nav-second-level collapse" aria-expanded="false" style="height: 0px;">
+						<li>
+							<a class="menuItem" href="admin/user"><i class="fa fa-gear" style="width: 20px;"></i>用户权限管理</a>
+						</li>
+						
+						<li>
+							<a class="menuItem" href="admin/labeltemplate"><i class="fa fa-gear" style="width: 20px;"></i>标签模板管理</a>
+						</li>
+						
+						<li>
+							<a class="menuItem" href="admin/region"><i class="fa fa-gear" style="width: 20px;"></i>区域办公室管理</a>
+						</li>
+						
+						<li>
+							<a class="menuItem" href="admin/log"><i class="fa fa-gear" style="width: 20px;"></i>标签日志</a>
+						</li>
+						
+						<li>
+							<a class="menuItem" href="swagger-ui.html"><i class="fa fa-book" style="width: 20px;"></i>API文档</a>
+						</li>
+						
+						<li>
+							<a class="menuItem" href="druid"><i class="fa fa-database" style="width: 20px;"></i>数据监控</a>
+						</li>
+						
+						<li>
+							<a class="menuItem" href="monitor/server"><i class="fa fa-gear" style="width: 20px;"></i>服务监控</a>
+							
+						</li>
+						
+						
+					</ul>
+                </li>
+                
+            </ul>
+        </div>
+    </nav>
+    <!--左侧导航结束-->
+    
+    <!--右侧部分开始-->
+    <div id="page-wrapper" class="gray-bg dashbard-1">
+        <div class="row border-bottom">
+            <nav class="navbar navbar-static-top" role="navigation" style="margin-bottom: 0">
+                <div class="navbar-header">
+                    <a class="navbar-minimalize minimalize-styl-2" style="color:#FFF;" href="#" title="收起菜单">
+                    	<i class="fa fa-bars"></i>
+                    </a>
+                </div>
+                <ul class="nav navbar-top-links navbar-right welcome-message">
+	                <li><a title="全屏显示" href="javascript:void(0)" id="fullScreen"><i class="fa fa-arrows-alt"></i> 全屏显示</a></li>
+	                <!-- 用户信息区域 -->
+                    <li class="dropdown user user-menu">
+						<a href="javascript:void(0)" class="dropdown-toggle" data-hover="dropdown">
+							<img src="adminlte/dist/img/user2-160x160.jpg" class="user-image">
+							<span class="hidden-xs"> ${Session["userInfo"].psnname!'Admin'}</span>
 						</a>
-							<ul class="dropdown-menu">
-								<!-- The user image in the menu -->
-								<li class="user-header"><img th:src="@{adminlte/dist/img/user2-160x160.jpg}" class="img-circle" alt="User Image"/>
-									<p th:text="${session.userInfo.email}">
-										<small>Member since Nov. 2012</small>
-									</p></li>
+						
+						<!-- 用户信息详情面板 -->
+						<ul class="dropdown-menu">
+							<!-- The user image in the menu -->
+								<li class="user-header" style="padding: 10px;text-align:center;height: 155px;"><img src="adminlte/dist/img/user2-160x160.jpg"  style="margin: auto;    height: 90px;    width: 90px;" class="img-circle" alt="User Image"/>
+									<p style="text-align:center;margin: 10px;">
+									<span style="color: #ffff;">${Session["userInfo"].email!'XX@bondex.com.cn'}</span>
+									</p>
+									</li>
 								<!-- Menu Body -->
-								<li class="user-body">
+								<li class="user-body" style="padding: 10px 0px;">
 									<div class="row">
-										<div class="col-xs-6 text-center" th:text="${session.userInfo.opname}"></div>
-										<div class="col-xs-6 text-center"  th:text="${session.userInfo.opid}"></div>
+										<div class="col-xs-6 text-center" >${Session['userInfo'].opname!'admin'}</div>
+										<div class="col-xs-6 text-center" >${Session['userInfo'].opid!'000'}</div>
 									</div>
 								</li>
 								<!-- Menu Footer-->
-								<li class="user-footer">
-									<div class="pull-left">
+								<li class="user-footer" >
+									<div class="pull-left" style="padding-bottom: 10px;">
 										<a data-toggle="modal" data-target="#myModal" class="btn btn-default btn-flat" id="qhczh">切换操作号</a>
 									</div>
 									<div class="pull-right">
 										<a href="logout" class="btn btn-default btn-flat">退出登录</a>
 									</div>
 								</li>
-							</ul>
-						</li>
-						<!-- Control Sidebar Toggle Button -->
-						<li onclick="setBgs();"><a href="#" data-toggle="control-sidebar"><i class="fa fa-gears"></i></a></li>
-					</ul>
-				</div>
-			</nav>
-			
-		</header>
-		
-		<!-- 左边菜单部分Left side column. contains the logo and sidebar -->
-		<aside class="main-sidebar">
-
-			<!-- sidebar: style can be found in sidebar.less -->
-			<section class="sidebar">
-
-				<!-- Sidebar user panel 头像 (optional) -->
-				<div class="user-panel">
-					<div class="pull-left image">
-						<img th:src="@{adminlte/dist/img/user2-160x160.jpg}" class="img-circle" alt="User Image"/>
-					</div>
-					<div class="pull-left info">
-						<p th:text="${session.userInfo.psnname}"></p>
-						<!-- Status -->
-						<a href="#"><i class="fa fa-circle text-success"></i> Online</a>
-					</div>
-				</div>
-				
-			<ul class="sidebar-menu">
-			
-		        <li class="header">导航</li>
-		        
-		        <li class="active treeview">
-		          <a href="#">
-		            <i class="fa fa-print"></i> <span>标签打印</span>
-		            <span class="pull-right-container">
-		              <i class="fa fa-angle-left pull-right"></i>
-		            </span>
-		          </a>
-		          <ul class="treeview-menu" style="display: none;">
-		            <li><a arget="navTab" target_type="iframe" href="layout/west/airlabel"><i class="fa fa-print"></i> <span>空运标签</span></a></li>
-		            <li><a arget="navTab" target_type="iframe" href="paiang/viewdata"><i class="fa fa-print"></i><span> 派昂医药</span> </a></li>
-		          </ul>
-		        </li>
-		        
-		        <li class="header">系统</li>
-		        <li><a arget="navTab" target_type="iframe" href="layout/west/system"><i class="fa fa-gear"></i> <span>系统管理</span></a></li>
-		        
-		        
-		      </ul>
-				
-			</section>
-	</aside>
-	
-		<!-- 主页面内容 -->
-		
-		<div class="content-wrapper">
-			
-			<!-- Content Header (Page header) 内容页面抬头部分 -->
-			<section class="content-header-navtabs">
-			
-			<div class="tabs-page">
-					<ul class="tabs-list clearfix" id="navTabs">
-						<li class="active"><span>首页</span></li>
-					</ul>
-					<a href="javascript:void(0);" class="prev fa fa-step-backward"></a>
-					<a href="javascript:void(0);" class="next fa fa-step-forward"></a> 
-		   </div>
-				
-			     <!-- 右键按钮 -->
-				<div class="context-menu" id="contextMenu">
-					<ul class="ct-nav">
-						<li rel="reload">刷新标签页</li>
-						<li rel="closeCurrent">关闭标签页</li>
-						<li rel="closeOther">关闭其他标签页</li>
-						<li rel="closeAll">关闭全部标签页</li>
-					</ul>
-				</div>
-				
-		    </section>
-		
-	   <!--Main content -->
-		<section class="content" id="content">
-			<div class="tabs-panel">
-				<h1>欢迎使用标签打印系统</h1>
-			</div>
-		</section>
-		
-		</div>
-		
+						</ul>
+						
+						
+					</li>
+                </ul>
+            </nav>
+        </div>
+        
+        <!--  内容抬头tabs-->
+        <div class="row content-tabs">
+        
+            <button class="roll-nav roll-left tabLeft">
+                <i class="fa fa-backward"></i>
+            </button>
+            
+            <nav class="page-tabs menuTabs">
+                <div class="page-tabs-content">
+                    <a href="javascript:;" class="active menuTab" data-id="system/main">首页</a>
+                </div>
+            </nav>
+            
+            <button class="roll-nav roll-right tabRight">
+                <i class="fa fa-forward"></i>
+            </button>
+            
+            <a href="javascript:void(0);" class="roll-nav roll-right tabReload"><i class="fa fa-refresh"></i> 刷新</a>
+            
+        </div>
+        
+        <a id="ax_close_max" class="ax_close_max" href="#" title="关闭全屏"> <i class="fa fa-times-circle-o"></i> </a>
+                
+        <!-- 页面内容 -->    
+        <div class="row mainContent" id="content-main">
+            <iframe class="RuoYi_iframe" name="iframe0" width="100%" height="100%" data-id="system/main" src="system/main" frameborder="0" seamless></iframe>
+        </div>
+        
+        <div class="footer">
+            <div class="pull-right">© 2020-2030 Bondex Copyright </div>
+        </div>
+    </div>
+    <!--右侧部分结束-->
 </div>
-<!-- index 首页结束 -->
+<!-- 引入模态框 -->
+<@modal/>
+
+<!-- 全局js -->
+<script src="${request.contextPath}/jquery/jquery.min.js"></script>
+	<!-- Bootstrap 3.3.7 -->
+<script src="${request.contextPath}/jquery/bootstrap.min.js"></script>
+<script src="${request.contextPath}/jquery/jquery.contextMenu.min.js"></script>
+<script src="${request.contextPath}/jquery/plugins/metisMenu/jquery.metisMenu.js"></script>
+<script src="${request.contextPath}/jquery/plugins/slimscroll/jquery.slimscroll.min.js"></script>
+<!-- bootstrap-table 表格插件 -->
+<script src="${request.contextPath}/bootstrap-table-develop/dist/bootstrap-table.min.js"></script>
+<script src="${request.contextPath}/bootstrap-table-develop/dist/locale/bootstrap-table-zh-CN.min.js"></script>
+
+<!--jquery-confirm-->
+<script src="https://cdn.bootcss.com/jquery-confirm/2.5.1/jquery-confirm.min.js" type="text/javascript"></script>
+<!-- 遮罩层 -->
+<script src="${request.contextPath}/ajax/libs/blockUI/jquery.blockUI.js"></script>
+<script src="${request.contextPath}/ajax/libs/layer/layer.min.js"></script>
+<script src="${request.contextPath}/js/ry-ui.js?v=4.1.0"></script>
+<script src="${request.contextPath}/js/common.js?v=4.1.0"></script>
+<script src="${request.contextPath}/js/index.js"></script>
+<script src="${request.contextPath}/ajax/libs/fullscreen/jquery.fullscreen.js"></script>
+<script src="${request.contextPath}/js/opid.js"></script>
+<script type="text/javascript">
+var ctx = "/";
+var skin = storage.get("skin");
+// 本地主题优先，未设置取系统配置
+if($.common.isNotEmpty(skin)){
+	$("body").addClass(skin.split('|')[0]);
+	$("body").addClass(skin.split('|')[1]);
+} else {
+	var sideTheme = "theme-dark";
+	var skinName = "skin-blue";
+	$("body").addClass(sideTheme);
+	$("body").addClass(skinName); 
+}
+
+/* 用户管理-重置密码 */
+function resetPwd() {
+    var url = ctx + 'system/user/profile/resetPwd';
+    $.modal.open("重置密码", url, '770', '380');
+}
+/* 切换主题 */
+function switchSkin() {
+    layer.open({
+		type : 2,
+		shadeClose : true,
+		title : "切换主题",
+		area : ["530px", "386px"],
+		content : [ctx + "system/switchSkin", 'no']
+	})
+}
+
+// 排除非左侧菜单链接
+var excludesUrl = ["/system/user/profile"];
+$(function() {
+    var hash = location.hash;
+    if (hash !== '') {
+        var url = hash.substring(1, hash.length);
+        $('a[href$="' + decodeURI(url) + '"]').click();
+        if($.inArray(url, excludesUrl)){
+            $('a[href$="' + url + '"]').parent("li").addClass("selected").parents("li").addClass("active").end().parents("ul").addClass("in");
+        }
+    }
+    
+    $(window).unbind('beforeunload');
+  　　 window.onbeforeunload = null;
+    storage.clear();
+});
+
+/* 
+//localStorage 创建一个本地存储的 name/value 对
+//刷新页面，清除缓存
+window.onbeforeunload= function(event) { 
+	localStorage.clear();
+	return true; 
+} */
+</script>
 
 
-	<!-- 模态框（Modal） -->
-	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-keyboard="false" data-backdrop="static">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-body">
-					<table id="opid_table">
-						<caption class="text-center">双击选择操作号</caption>
-					</table>
-				</div>
-			</div>
-		</div>
-	</div>
-	
-	<!-- 搜索框（Modal） -->
-	<div class="modal fade" id="searchModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-					<h4 class="modal-title" id="myModalLabel">模态框（Modal）标题</h4>
-				</div>
-				<div class="modal-body">在这里添加一些文本</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-					<button type="button" class="btn btn-primary">提交更改</button>
-				</div>
-			</div>
-			<!-- /.modal-content -->
-		</div>
-		<!-- /.modal -->
-	</div>
-
-	<!-- 引入通用js -->
-	<th:block th:include="system/include :: footer" />
-	
-	<script th:inline="javascript">
-	   
-		//页面加载完成后，判断该用户有几个操作号。如果有多个，则弹框让用户选择
-		 var opids = [[${userInfo.allOpid}]];
-		if (opids.length>1) { //多个操作号
-			$('#myModal').modal('show'); //显示模态框 切换操作号
-		}else {
-			//禁止点击”切换操作号“按钮
-			$("#qhczh").removeAttr('data-target');
-			$("#qhczh").html('无可切操作号');
-		}
-		
-		//弹框选择opid
-		$('#myModal').on('shown.bs.modal', function() {
-			$('#opid_table').bootstrapTable({
-				url : 'getOpids',
-				method : 'GET', // 请求方式（*）
-				// toolbar: '#toolbar', //工具按钮用哪个容器
-				striped : false, // 是否显示行间隔色
-				cache : true, // 是否使用缓存
-				columns : [ {
-					field : 'opid',
-					title : '操作号'
-				}, {
-					field : 'username',
-					title : '组织部门'
-				} ],
-				responseHandler : function(res) {
-					return res.rows;
-				},
-				onLoadSuccess : function(row) {
-				},
-				onLoadError : function() {
-					$.tool.alertError("用户操作号加载失败！",-1);
-				},
-				onDblClickRow : function(row) { //双击选中opid后
-					$('#myModal').modal('hide'); //隐藏模态框
-					//选择opid后重新授权
-					$.ajax({
-						url : "getOpidSecurity",
-						type : 'POST',
-						data : {
-							opid : row.opid,
-							username : row.username
-						},
-						success : function(result) { //根据结果显示菜单
-							 $.messager.alert("操作提示", "切换账户成功！","info");
-						},
-						error:function(){
-							 $.messager.alert("操作提示", "切换账户失败！","error");
-						}
-					});
-
-				}
-			});
-		})
-		
-		//刷新页面，清除缓存
-		window.onbeforeunload= function(event) {
-			localStorage.clear();
-			return true; 
-		}
-		
-		  /* 全屏 */ 
-		  function Fullscreen(){  
-		   
-		         var docElm = document.documentElement;  
-		         //W3C   
-		         if (docElm.requestFullscreen) {  
-		             docElm.requestFullscreen();  
-		         }  
-		             //FireFox   
-		         else if (docElm.mozRequestFullScreen) {  
-		             docElm.mozRequestFullScreen();  
-		         }  
-		             //Chrome等   
-		         else if (docElm.webkitRequestFullScreen) {  
-		             docElm.webkitRequestFullScreen();  
-		         }  
-		             //IE11   
-		         else if (elem.msRequestFullscreen) {  
-		             elem.msRequestFullscreen();  
-		         }
-		         //修改点击事件
-		         document.getElementById('fullScreen').onclick = function(){ 
-		        	 exitFullscreen(); 
-		         }
-		     };
-		    
-		     var exitFullscreen=function(){
-		    	    var elem=document;
-		    	    if(elem.webkitCancelFullScreen){
-		    	        elem.webkitCancelFullScreen();    
-		    	    }else if(elem.mozCancelFullScreen){
-		    	        elem.mozCancelFullScreen();
-		    	    }else if(elem.cancelFullScreen){
-		    	        elem.cancelFullScreen();
-		    	    }else if(elem.exitFullscreen){
-		    	        elem.exitFullscreen();
-		    	    }else{
-		    	        //浏览器不支持全屏API或已被禁用
-		    	    }
-		    	  //修改点击事件
-		    	    document.getElementById('fullScreen').onclick = function(){ 
-		    	    	Fullscreen(); 
-		            }
-		     }
-		     
-		     function onClickCheckbox(clickName, target) {
-		         var status = false;
-		         if (document.getElementById(clickName).checked) {
-		             status = true;
-		         }
-		         var list = document.getElementsByName(target);
-		         for (var i = 0; i < list.length; i++) {
-		             list[i].checked = status;
-		         }
-		     } 
-
-		   function iFrameHeight() {
-		         var ifm = document.getElementById("content");
-		         var subWeb = document.frames ? document.frames["content"].document : ifm.contentDocument; //容纳框架的内容的文档。
-		         if (ifm != null && subWeb != null) {
-		             ifm.height = subWeb.body.scrollHeight; //规定 iframe 的高度。 定在 <iframe> 中显示的页面的 HTML 内容。
-		         }
-		     }
-		      
-		     
-	</script>
 </body>
 </html>

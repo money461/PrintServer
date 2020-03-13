@@ -1723,13 +1723,13 @@
   overflow: hidden;
   height: 18px;
   line-height: 18px;
-  font-size: 14px;
+  font-size: 13px;
 }
 .datagrid-header .datagrid-cell {
   height: auto;
 }
 .datagrid-header .datagrid-cell span {
-  font-size: 14px;
+  font-size: 13px;
 }
 .datagrid-cell-group {
   text-align: center;
@@ -1770,7 +1770,6 @@
 .datagrid-cell-check {
   padding: 0;
   width: 27px;
-  height: 18px;
   font-size: 1px;
   text-align: center;
   overflow: hidden;

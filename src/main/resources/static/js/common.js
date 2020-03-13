@@ -222,8 +222,10 @@ function createMenuItem(dataUrl, menuName) {
         $('.mainContent', topWindow).find('iframe.RuoYi_iframe').hide().parents('.mainContent').append(str1);
         
         window.parent.$.modal.loading("数据加载中，请稍后...");
+        
         $('.mainContent iframe:visible', topWindow).load(function () {
-        	window.parent.$.modal.closeLoading();
+        	
+        	window.parent.$.modal.closeLoading(); //关闭加载
         });
 
         // 添加选项卡

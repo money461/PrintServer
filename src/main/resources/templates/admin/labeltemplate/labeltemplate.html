@@ -1,0 +1,139 @@
+<#include "/system/include.html" encoding="UTF-8" parse=true/>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<!-- 引入样式css -->
+	<@commoncss title='打印标签模板管理'/>
+</head>
+<body class="gray-bg">
+	<div class="container-div">
+		<div class="row">
+			<div class="col-sm-12 search-collapse">
+				<form id="post-form">
+					<div class="select-list">
+						<ul>
+							<li>
+								模板编码：<input type="text" name="template_id"/>
+							</li>
+							<li>
+								模板名称：<input type="text" name="template_name"/>
+							</li>
+							<li>
+								模板状态：						
+								<select name="status">
+									<option value="" check='checked'>所有</option>
+									<option value="0">正常</option>
+									<option value="1">停用</option>
+								</select>
+								
+							</li>
+							<li>
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+							    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</li>
+						</ul>
+					</div>
+				</form>
+			</div>
+			
+			<div class="btn-group-sm" id="toolbar" role="group">
+				<a class="btn btn-success" onclick="$.operate.add()">
+	                <i class="fa fa-plus"></i> 新增
+	            </a>
+				<a class="btn btn-primary single disabled" onclick="$.operate.edit()">
+		            <i class="fa fa-edit"></i> 修改
+		        </a>
+				<a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" >
+		            <i class="fa fa-remove"></i> 删除
+		        </a>
+				<a class="btn btn-warning" onclick="$.table.exportExcel()">
+		            <i class="fa fa-download"></i> 导出
+		        </a>
+	        </div>
+	        
+	        <div class="col-sm-12 select-table table-striped">
+			    <table id="bootstrap-table"></table>
+			</div>
+			
+		</div>
+	</div>
+	
+	<!-- 引入通用js -->
+	<@commonjs/>
+	<!-- 模板js -->
+	<script src="${request.contextPath}/js/admin/labeltemplate.js"></script>
+	
+	<script  type="text/javascript">
+	
+		var editFlag = ''; //引入权限标签 使表格中的按钮会被shiro权限控制
+		var removeFlag = '';
+		var datas ="";
+		var prefix = ctx + "/label";
+
+		$(function() {
+		    var options = {
+		        url: prefix + "/getAlltemplate",
+		        createUrl: prefix + "/addtemplate",
+		        updateUrl: prefix + "/edit/{id}",
+		        removeUrl: prefix + "/remove",
+		        exportUrl: prefix + "/export",
+		        sortName: "createTime",
+		        modalName: "打印模板",
+		        columns: [{
+		            checkbox: true
+		        },
+		        {
+		            field: 'id',
+		            title: '序号'
+		        },
+		        {
+		            field: 'template_id',
+		            title: '模板编码',
+		            sortable: true
+		        },
+		        {
+		            field: 'template_name',
+		            title: '模板名称',
+		            sortable: true
+		        },
+		        {
+		            field: 'width',
+		            title: '打印宽度',
+		            sortable: true
+		        },
+		        {
+		            field: 'height',
+		            title: '打印高度',
+		            sortable: true
+		        },
+		        {
+		            field: 'status',
+		            title: '状态',
+		            align: 'center',
+		            formatter: function(value, row, index) {
+		            	return labeltemplate.selectDictLabel(value);
+		            }
+		        },
+		        {
+		            field: 'createTime',
+		            title: '创建时间',
+		            sortable: true
+		        },
+		        {
+		            title: '操作',
+		            align: 'center',
+		            formatter: function(value, row, index) {
+		                var actions = [];
+		                actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="$.operate.edit(\'' + row.template_id + '\')"><i class="fa fa-edit"></i>编辑</a> ');
+		                actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="$.operate.remove(\'' + row.template_id + '\')"><i class="fa fa-remove"></i>删除</a>');
+		                return actions.join('');
+		            }
+		        }]
+		    };
+		    $.table.init(options);
+		});
+		
+		
+	</script>
+</body>
+</html>

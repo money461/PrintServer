@@ -6,4 +6,8 @@ public class TemplateDataProvider {
 		return SQL;
 	}
 	
+	public String adminDataCurrentSQL(String SQL){
+		return SQL;
+	}
+	
 }

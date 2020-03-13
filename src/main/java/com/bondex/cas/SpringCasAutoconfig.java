@@ -143,7 +143,7 @@ public class SpringCasAutoconfig {
 	public String getLocalServerName() {
 		
 //		if ("dev".equals(ApplicationContextProvider.getActiveProfile())) {
-		if ("dev".equals(active)) {
+		if ("test".equals(active)) {
 			return "http://" + IpUtil.getIntranetIp() + ":" + port;
 		}
 		return localServerName;

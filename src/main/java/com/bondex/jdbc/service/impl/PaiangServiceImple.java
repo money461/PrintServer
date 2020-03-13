@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,7 +17,7 @@ import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.bondex.config.exception.BusinessException;
-import com.bondex.entity.Datagrid;
+import com.bondex.entity.page.Datagrid;
 import com.bondex.jdbc.dao.LabelInfoDao;
 import com.bondex.jdbc.entity.JsonRootBean;
 import com.bondex.jdbc.entity.Label;
@@ -27,6 +29,12 @@ import com.bondex.util.HttpClient;
 import com.bondex.util.StringUtils;
 @Service(value="paiangServiceImple")
 public class PaiangServiceImple implements LabelInfoService {
+	
+
+	/**
+	 * org.slf4j.Logger
+	 */
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	@Value("${system.interface.paiang}")
 	private String paiangaddress;
@@ -48,7 +56,8 @@ public class PaiangServiceImple implements LabelInfoService {
 		if (businessType.equals("medicine")) {
 			
 			//查询指定的模板及其数据
-			Template template = new Template("4", null, null);
+			Template template = new Template();
+			template.setId("4");
 			template = getUserAuthtemplate(template).get(0);
 			
 			//调用接口获取数据
@@ -80,7 +89,7 @@ public class PaiangServiceImple implements LabelInfoService {
 				 throw new BusinessException(msg);
 			 }
 			 JSONArray datarows = parseObject.getJSONArray("rows");
-			 Integer total = parseObject.getInteger("total");
+			 Long total = parseObject.getLong("total");
 			 
 			 //反序列化
 			 List<LabelAndTemplate> datalist = JSONObject.parseArray(datarows.toJSONString(), LabelAndTemplate.class);
@@ -143,10 +152,9 @@ public class PaiangServiceImple implements LabelInfoService {
 			 
 			 
 			 
-			 Datagrid<LabelAndTemplate> datagrid = new Datagrid<LabelAndTemplate>(String.valueOf(total), datalist);
-			 System.out.println(GsonUtil.GsonString(datagrid));
-			 
-			 
+			 Datagrid<LabelAndTemplate> datagrid = new Datagrid<LabelAndTemplate>(total, datalist);
+			 String reString =  GsonUtil.GsonString(datagrid);
+			 logger.debug(reString);
 			 return datagrid;
 		}
 		
@@ -161,7 +169,7 @@ public class PaiangServiceImple implements LabelInfoService {
 	}
 
 	@Override
-	public void delete(List<Label> label) {
+	public void deleteLabel(List<Label> label) {
 		
 	}
 
@@ -183,8 +191,15 @@ public class PaiangServiceImple implements LabelInfoService {
 	}
 
 	@Override
-	public List<Template> getTemplate(Template template) {
-		return labelInfoDao.getTemplate(template);
+	public List<Template> getALLTemplate(Template template) {
+		return labelInfoDao.getALLTemplate(template);
+	}
+
+	@Override
+	public void saveorupdateTempalte(Template template) {
+		
+		 labelInfoDao.saveorupdateTempalte(template);
+		
 	}
 
 	

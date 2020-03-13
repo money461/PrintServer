@@ -2,7 +2,7 @@ package com.bondex.jdbc.service;
 
 import java.util.List;
 
-import com.bondex.entity.Datagrid;
+import com.bondex.entity.page.Datagrid;
 import com.bondex.jdbc.entity.JsonRootBean;
 import com.bondex.jdbc.entity.Label;
 import com.bondex.jdbc.entity.Template;
@@ -17,7 +17,7 @@ public interface LabelInfoService {
 
 	public void updateLabel(Label label);
 
-	public void delete(List<Label> label);
+	public void deleteLabel(List<Label> label);
 
 	/**
 	 * 获取用户绑定的模板
@@ -31,6 +31,12 @@ public interface LabelInfoService {
 	 * @param template
 	 * @return
 	 */
-	public List<Template> getTemplate(Template template);
+	public List<Template> getALLTemplate(Template template);
+
+	/**
+	 * 修改更新模板
+	 * @param template
+	 */
+	public void saveorupdateTempalte(Template template);
 	
 }

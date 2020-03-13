@@ -3,7 +3,6 @@ package com.bondex.shiro.config;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -11,8 +10,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import javax.servlet.Filter;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
@@ -27,10 +24,6 @@ import org.apache.shiro.realm.Realm;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
-import org.apache.shiro.web.filter.authc.AnonymousFilter;
-import org.apache.shiro.web.filter.authc.FormAuthenticationFilter;
-import org.apache.shiro.web.filter.authc.UserFilter;
-import org.apache.shiro.web.filter.authz.RolesAuthorizationFilter;
 import org.apache.shiro.web.mgt.CookieRememberMeManager;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.mgt.DefaultWebSubjectFactory;
@@ -48,7 +41,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.web.filter.DelegatingFilterProxy;
 
 import com.bondex.cas.SpringCasAutoconfig;
-import com.bondex.filter.LoginFilter;
+import com.bondex.config.CacheManagerConfig;
+import com.bondex.filter.MyAuthenticationFilter;
 import com.bondex.shiro.realm.ShiroRealm;
 
 /**
@@ -127,10 +121,10 @@ public class ShiroCasConfiguration {
     @Bean
     public FilterRegistrationBean delegatingFilterProxy() {
         FilterRegistrationBean filterRegistration = new FilterRegistrationBean();
-        filterRegistration.setFilter(new DelegatingFilterProxy("shiroFilter"));  //
+        filterRegistration.setFilter(new DelegatingFilterProxy("shiroFilter"));  //注册shiroFilter过滤器容器代理
         //  该值缺省为false,表示生命周期由SpringApplicationContext管理,设置为true则表示由ServletContainer管理
         filterRegistration.addInitParameter("targetFilterLifecycle", "true");
-//      filterRegistration.addUrlPatterns("/*");
+//      filterRegistration.addUrlPatterns("/*");  此处关闭 交由 CAS  AuthenticationFilter 过滤器负责全程拦截
         filterRegistration.setEnabled(true);
         return filterRegistration;
     }
@@ -172,18 +166,33 @@ public class ShiroCasConfiguration {
         //添加filter过滤器集合
         Map<String, Filter> filters = new HashMap<String, Filter>();
         
-        filters.put("anon", new AnonymousFilter());
+        //Shiro 的默认Filter 过滤器
+        
+       /* filters.put("anon", new AnonymousFilter());
         filters.put("authc", new FormAuthenticationFilter());
+        filters.put("authcBasic", new BasicHttpAuthenticationFilter());
+        filters.put("logout", new LogoutFilter());
+        filters.put("noSessionCreation", new LogoutFilter());
+        filters.put("perms", new  PermissionsAuthorizationFilter());
         filters.put("roles", new RolesAuthorizationFilter());
-        filters.put("user", new UserFilter());
-        filters.put("myauth", new LoginFilter(casAutoconfig.getIgnorePattern()));
+        filters.put("port", new PortFilter());
+        filters.put("rest", new HttpMethodPermissionFilter());
+        filters.put("ssl", new SslFilter());
+        filters.put("user", new UserFilter());*/
+        
+        //自定义Shiro Filter  extends AccessControlFilter 
+        
+//        filters.put("myauth", new LoginFilter(casAutoconfig.getIgnorePattern()));
+        filters.put("myauth", new MyAuthenticationFilter(casAutoconfig.getIgnorePattern()));
+        
         //<!--单点登出过滤器-->
       /*  LogoutFilter logoutFilter = new LogoutFilter();
         // <!-- 注销时重定向的URL -->
         logoutFilter.setRedirectUrl(logoutUrl);
         //过滤器名称 logout
         filters.put("logout",logoutFilter);*/
-        shiroFilterFactoryBean.setFilters(filters);
+        
+        shiroFilterFactoryBean.setFilters(filters); //工厂装配过滤器容器
        
         //配置过滤器规则
         loadShiroFilterChain(shiroFilterFactoryBean);
@@ -208,12 +217,14 @@ public class ShiroCasConfiguration {
         //配置退出 过滤器,其中的具体的退出代码Shiro已经替我们实现了
         // 配置不会被拦截的链接，一般是排除前端文件（anon:指定的url可以匿名访问）
         filterChainDefinitionMap.put("/*.js", "anon");
+        filterChainDefinitionMap.put("/img/**", "anon");
         filterChainDefinitionMap.put("/swagger-ui/**","anon");
         filterChainDefinitionMap.put("/druid/**","anon");  //允许访问Druid数据库链接监控客户端
         //<!-- 过滤链定义，从上向下顺序执行，一般将 /**放在最为下边 -->:这是一个坑呢，一不小心代码就不好使了;
         //<!-- authc:所有url都必须认证通过才可以访问; anon:所有url都都可以匿名访问-->
        //控制页面跳转的权限
-//        filterChainDefinitionMap.put("/data/dataTables","perms[data/dataTables]");	  
+        filterChainDefinitionMap.put("/layout/west/airlabel","perms[AirPrintLabel]");  
+//        filterChainDefinitionMap.put("paiang/viewdata","perms[paiangPrintLabel]");	  
         //user:需要已登录或“记住我”的用户才能访问;
 //        filterChainDefinitionMap.put("/**", "user");
         //4.登录过的不拦截
@@ -321,9 +332,9 @@ public class ShiroCasConfiguration {
     }*/
     
     /**
-     * 缓存管理器 使用Ehcache实现
+     * shiro cache缓存管理器 使用Ehcache实现
      */
-    @Bean
+    @Bean(name=CacheManagerConfig.CacheManagerName.EHCACHE_CACHE_MAANGER) 
     public EhCacheManager ehcacheManager()
     {
         net.sf.ehcache.CacheManager cacheManager = net.sf.ehcache.CacheManager.getCacheManager("bondex-labelPrint");

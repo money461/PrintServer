@@ -76,11 +76,12 @@ public class Producer {
 		//定义队列，均为持久化
 		// 1.队列名2.是否持久化，3是否局限与链接，4不再使用是否删除，5其他的属性
 		vpnNetRabbitAdmin.declareQueue(new Queue(QUEUE_NAME, true, false, false, null));
+		
 		//Binding 绑定
 		vpnNetRabbitAdmin.declareBinding(new Binding(QUEUE_NAME,Binding.DestinationType.QUEUE, EXCHANGES_NAME,ROUNTING_KEY,new HashMap()));
 		
 		
-		logger.info("发送消息至交换机：【{}】,路由器：【{}】,队列名称：【{}】，消息体：【{}】",EXCHANGES_NAME,ROUNTING_KEY,QUEUE_NAME,message);
+		logger.info("发送消息至内网交换机：【{}】,路由器：【{}】,队列名称：【{}】，消息体：【{}】",EXCHANGES_NAME,ROUNTING_KEY,QUEUE_NAME,message);
 		
 		CorrelationData correlationId = new CorrelationData(RandomUtil.generateStr(32));
 		
@@ -107,7 +108,7 @@ public class Producer {
 		//Binding 绑定
 		outNetRabbitAdmin.declareBinding(new Binding(QUEUE_NAME,Binding.DestinationType.QUEUE, EXCHANGES_NAME,ROUNTING_KEY,new HashMap()));
 		
-		logger.info("发送消息至交换机：【{}】,路由器：【{}】,队列名称：【{}】，消息体：【{}】",EXCHANGES_NAME,ROUNTING_KEY,QUEUE_NAME,message);
+		logger.info("发送消息至外网交换机：【{}】,路由器：【{}】,队列名称：【{}】，消息体：【{}】",EXCHANGES_NAME,ROUNTING_KEY,QUEUE_NAME,message);
 		
 		CorrelationData correlationId = new CorrelationData(RandomUtil.generateStr(32));
 		
@@ -134,7 +135,7 @@ public class Producer {
 //		amqpTemplate.convertAndSend(QUEUE_NAME, message,correlationId); 
 		//{"Version":"2.0","ReportID":"4e2b8f59-9858-4297-962f-6ee4862085aa","ReportTplName":"标签-派昂医药","SenderName":"资讯/赵辰辉/赵辰辉","SendOPID":"0001655","OtherToShow":"","ReportWidth":"100","ReportHeight":"100","data":"{\"vwOrderAll\":[{\"eDeparture\":\"2019-07-16\",\"label_id\":0,\"mBLNo\":\"YD2019071501\",\"recAddress\":\"贵阳***(\",\"recCustomerName\":\"贵州省医药（集团）有限责任公司(\",\"reserve3\":\"4\",\"sendAddress\":\"西安杨森\",\"takeCargoNo\":\"8650384640(\"}]}"}
 		
-		logger.info("发送消息至交换机：【{}】,路由器：【{}】,队列名称：【{}】，消息体：【{}】",EXCHANGES_NAME,ROUNTING_KEY,QUEUE_NAME,message);
+		logger.info("发送消息至内网交换机：【{}】,路由器：【{}】,队列名称：【{}】，消息体：【{}】",EXCHANGES_NAME,ROUNTING_KEY,QUEUE_NAME,message);
 		
 		// 根据连接工厂创建连接
 		ConnectionFactory rabbitConnectionFactory = vpnNetConnectionFactory.getRabbitConnectionFactory();
@@ -149,7 +150,6 @@ public class Producer {
 		channel.basicPublish("",QUEUE_NAME, null,message.getBytes("UTF-8"));
 		channel.close();// 关闭管道
 		connection.close();// 关闭连接
-		
 	}
 	
 	

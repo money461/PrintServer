@@ -1,0 +1,56 @@
+<#include "/system/include.html" encoding="UTF-8" parse=true/>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<!-- 引入样式css -->
+	<@commoncss title='打印办公室树形列表展示'/>
+	<@ztreecss/>
+</head>
+<style>
+	body{height:auto;font-family: "Microsoft YaHei";}
+	button{font-family: "SimSun","Helvetica Neue",Helvetica,Arial;}
+</style>
+<body class="hold-transition box box-main">
+	<input id="treeId"   name="treeId"   type="hidden" value="${region.region_code}"/>
+	<input id="treeName" name="treeName"  type="hidden" value="${region.region_name}"/>
+	<div class="wrapper"><div class="treeShowHideButton" onclick="$.tree.toggleSearch();">
+		<label id="btnShow" title="显示搜索" style="display:none;">︾</label>
+		<label id="btnHide" title="隐藏搜索">︽</label>
+	</div>
+	<div class="treeSearchInput" id="search">
+		<label for="keyword">关键字：</label><input type="text" class="empty" id="keyword" maxlength="50">
+		<button class="btn" id="btn" onclick="$.tree.searchNode()"> 搜索 </button>
+	</div>
+	<div class="treeExpandCollapse">
+		<a href="#" onclick="$.tree.expand()">展开</a> /
+		<a href="#" onclick="$.tree.collapse()">折叠</a>
+	</div>
+	<div id="tree" class="ztree treeselect"></div>
+	</div>
+	
+	<!-- 引入通用js -->
+	<@commonjs/>
+	<@ztreejs/>
+	<script  type="text/javascript">
+	var prefix = ctx + "/region"
+	//初始化树
+		$(function() {
+			var url = prefix + "/treeAllRegionData";
+			var options = {
+		        url: url,
+		        expandLevel: 1,
+		        onClick : zOnClick //用于捕获节点被点击的事件回调函数
+		    };
+			$.tree.init(options);
+		});
+		
+	    //点击选中
+		function zOnClick(event, treeId, treeNode) {
+		    var treeId = treeNode.id;
+		    var treeName = treeNode.name;
+		    $("#treeId").val(treeId); //父级节点 
+		    $("#treeName").val(treeName); //父级名称
+		}
+	</script>
+</body>
+</html>

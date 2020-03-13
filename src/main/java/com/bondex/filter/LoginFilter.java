@@ -53,7 +53,7 @@ public class LoginFilter implements Filter {
 		
 		 final HttpServletRequest request = (HttpServletRequest) requ;
 		 if (isRequestUrlExcluded(request)) {
-			   log.debug("Request is ignored.");
+			   log.debug("URL=>{} Request is ignored.",request.getRequestURI());
 	            chain.doFilter(requ, resp);
 	            return;
 	        }

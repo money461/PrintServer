@@ -24,7 +24,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.bondex.common.Common;
 import com.bondex.common.enums.ResEnum;
 import com.bondex.config.exception.BusinessException;
-import com.bondex.entity.Datagrid;
+import com.bondex.entity.page.Datagrid;
 import com.bondex.jdbc.entity.Label;
 import com.bondex.jdbc.entity.LabelAndTemplate;
 import com.bondex.jdbc.service.LabelInfoService;
@@ -134,7 +134,7 @@ public class PaiangController {
 		             
 		}
 		 
-		 Datagrid<LabelAndTemplate> datagrid = new Datagrid<LabelAndTemplate>(String.valueOf(datalist.size()), datalist);
+		 Datagrid<LabelAndTemplate> datagrid = new Datagrid<LabelAndTemplate>((long) datalist.size(), datalist);
 		
 		return MsgResult.result(ResEnum.SUCCESS.CODE,ResEnum.SUCCESS.MESSAGE,datagrid);
 		

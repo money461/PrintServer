@@ -8,7 +8,7 @@ var paiang_tab;
 var type ="medicine"; //派昂标签类型
 var opid =null; //获取当前用户opid //全局变量引用
 
-var thisRegionid=null; //打印当前现中的办公室id
+var thisdefault_region_code=null; //打印当前现中的办公室id
 
 $(function(){
 	//js初始化调用的接口
@@ -28,11 +28,11 @@ $(function(){
 
 //修改办公室
 function setRegionByOpid(){
-	//初始化页面 获取打印区域 opid 当前操作号   regionid办公司id
+	//初始化页面 获取打印区域 opid 当前操作号   default_region_code办公司id
 	$.ajax({
 		url : "/labelPrint/client/getDefaultBindRegionByOpid",
 		type : 'POST',
-		data: {opid:opid,regionid:storage.get('regionid')},//chengdu/jichang id=2
+		data: {opid:opid,default_region_code:storage.get('default_region_code')},//chengdu/jichang id=2
 		async:false,
 		success : function(result) {
 			if($.common.isEmpty(result)){
@@ -42,7 +42,7 @@ function setRegionByOpid(){
 				var bgs = storage.get('bgs');
 				bgs = bgs!=null?bgs:'mr'; 
 				storage.set('bgs',bgs);
-				storage.set('regionid',result.region_id); //初始化获取用户绑定的办公室id
+				storage.set('default_region_code',result.region_code); //初始化获取用户绑定的办公室id
 			}
 		}
 	});
@@ -121,6 +121,8 @@ paiang.prototype.initDataGridTable=function(){
 					    onSelect: function(rec){
 					    	row.reserve3=rec.id;//修改label外键id
 					    	row.template_id=rec.template_id;//修改模板id
+					    	row.width=rec.width; //修改宽度
+					    	row.width=rec.height; //修改高度
 					    }
 						
 					});
@@ -505,12 +507,17 @@ paiang.prototype.tableprint = function() {
 			 return;
 		 }
 		 
+	    //获取会话框中的网路选项
+		//内网/外网
+		var vpn = $("input[name='mqaddress']:checked").val();
+	    storage.set('vpn',vpn);//获取内网外网
+	    
 		 //判断是否需要打印提示
 		 var xunwenprint = storage.get('xunwenprint'); //********全局询问打印设置
 		 xunwenprint = xunwenprint!=null?xunwenprint:'yes';
-		 var regionid = storage.get('regionid'); //打印办公室id
+		 var default_region_code = storage.get('default_region_code'); //打印办公室id
 		 
-		 if($.common.equalsIgnoreCase('yes',xunwenprint) || $.common.isEmpty(regionid)){
+		 if($.common.equalsIgnoreCase('yes',xunwenprint) || $.common.isEmpty(default_region_code)){
 			 //弹出对话框
 			 $("#dyan").css("display", "block");// 显示打印按钮
 			 paiang.initdialog('打印提示框'); //显示打印会话框 不展示默认办公室选项
@@ -525,31 +532,30 @@ paiang.prototype.tableprint = function() {
 
     //点击打印按钮事件
   	//初始化标签打印发送客户端 report打印人 
- paiang.prototype.printLabelSendClient = function(regionid) {
+ paiang.prototype.printLabelSendClient = function(default_region_code) {
 	  
-	  var regionid_storage = storage.get('regionid'); //打印办公室id
+	  var default_region_code_storage = storage.get('default_region_code'); //打印办公室id
 	  
-	  if($.common.isEmpty(regionid)){
-		  regionid = regionid_storage;
+	  if($.common.isEmpty(default_region_code)){
+		  default_region_code = default_region_code_storage;
 	  }
 	  
-	  if($.common.isEmpty(regionid)){
+	  if($.common.isEmpty(default_region_code)){
 		  layer.msg("请选择打印办公室",{icon:2,time:1000});
 		  return;
 	  }
-	  
+	   var vpn=storage.get('vpn');//获取内网外网
 	    var url = "/labelPrint/client/printLabelSendClient";
 	  
-	       var mqaddress = "vpnnet"; //默认外网
 			var rows = $('#paiang_tab').datagrid('getSelections');
 			$.ajax({
 				url : url,
 				type : 'POST',
 				data : {
 					labels : JSON.stringify(rows),
-					regionid : regionid, //chengdu/jichang id=2
+					default_region_code : default_region_code, //chengdu/jichang id=2
 					businessType : type,
-					mqaddress: mqaddress //内网还是外网
+					mqaddress: vpn //内网还是外网
 				},
 				success : function(result) {
 					if(result.status=="200"){
@@ -584,6 +590,7 @@ paiang.prototype.alertprint = function() {
 	$("#xunwen").css("display", "block");//展示询问打印
 	$("#bgs").css("display", "block");// 展示默认办公室radio
 	$("#xgmr").css("display", "block"); //显示修改默认
+	$("#mqaddress").css("display", "block"); //显示修改内网外网
 	paiang.initdialog('配置打印/办公室信息对话框'); //修改区域 展示默认radio
 }
  
@@ -605,9 +612,10 @@ paiang.prototype.initdialog = function(title) {
 				$("#dyan").css("display", "none");// 隐藏打印按钮
 				$("#xgmr").css("display", "none");// 隐藏修改默认
 				$("#bgs").css("display", "none");//隐藏办公室radio
+				$("#mqaddress").css("display", "none"); //显示修改内网外网
 				$("#xunwen").css("display", "none");//隐藏询问设置
 				
-				thisRegionid=null;//清除当前选中的地址
+				thisdefault_region_code=null;//清除当前选中的地址
 			} catch (e) {
 				console.info("初始化单选框失败");
 			}
@@ -625,7 +633,7 @@ paiang.prototype.initdialog = function(title) {
 			 $("input:radio[value="+bgs+"]").prop('checked','true'); //设置当前是临时还是默认
 			 
 			 var vpn=storage.get('vpn');
-			 vpn = vpn!=null?vpn:'vpnnet';
+			 vpn = vpn!=null?vpn:'outnet';
 			 $("input:radio[value="+vpn+"]").prop('checked','true'); //设置当前是vpn/外网
 			
 		}
@@ -644,10 +652,10 @@ paiang.prototype.initTree = function(){
 		},
 		onLoadSuccess : function(node,data) {
 			//combotree 设置默认值
-			var regionid = storage.get('regionid');
-			if($.common.isNotEmpty(regionid)){
+			var default_region_code = storage.get('default_region_code');
+			if($.common.isNotEmpty(default_region_code)){
 				 var tree = $('#cc').combotree('tree');
-				var nodedata = tree.tree('find',regionid);
+				var nodedata = tree.tree('find',default_region_code);
 				var text = nodedata.pname + "/" + nodedata.text;
 				$('#cc').combotree('setValue',text); 
 				tree.tree('select', nodedata.target); 
@@ -659,8 +667,9 @@ paiang.prototype.initTree = function(){
 			if ($('#cc').tree('isLeaf', node.target)) {// 判断是否是叶子节点
 				//子节点即选择该节点
 				$('#cc').combotree('setValue', node.pname + "/" + node.text); //设置值
-//				storage.set("regionid",node.id); //设置区域办公室id
-				thisRegionid=node.id;
+//				storage.set("default_region_code",node.id); //设置区域办公室id
+				//thisdefault_region_code=node.region_code;
+				thisdefault_region_code=node.id;
 			} else {
 				// 如果是父节点，实现点击展开/关闭节点
 				if (node.state == "closed") {
@@ -686,8 +695,12 @@ function dialogClose(){
 
 //弹出会话框后点击打印
 function dialogPrint() {
-	   //立即执行打印
-	   paiang.printLabelSendClient(thisRegionid);
+	//获取会话框中的网路选项
+	//内网/外网
+	var vpn = $("input[name='mqaddress']:checked").val();
+    storage.set('vpn',vpn);//获取内网外网
+   //立即执行打印
+   paiang.printLabelSendClient(thisdefault_region_code);
 }
 
 /**
@@ -698,9 +711,9 @@ function dialogUpdateOrAddRegion (){
 	  var bgs = $("input[name='bgs']:checked").val();
 		//获取办公室id
 		if(bgs=="mr" ){
-			if($.common.isEmpty(thisRegionid)){
-				thisRegionid = storage.get('regionid');
-				if($.common.isEmpty(thisRegionid)){
+			if($.common.isEmpty(thisdefault_region_code)){
+				thisdefault_region_code = storage.get('default_region_code');
+				if($.common.isEmpty(thisdefault_region_code)){
 					layer.msg("选择默认办公室必须选择绑定指定办公室",{icon:2,time:1000});
 					return;
 				}
@@ -710,7 +723,7 @@ function dialogUpdateOrAddRegion (){
 					$.ajax({
 						url : "/labelPrint/client/updateOrAddUserRegion", //修改办公室区域 chengdu/jichang
 						type : 'POST',
-						data :{regionid:thisRegionid},
+						data :{default_region_code:thisdefault_region_code},
 					    success : function(result) {
 						if (result.status=="200") {
 							layer.msg("更改配置成功！",{icon:1,time:1000});
@@ -742,8 +755,8 @@ paiang.prototype.dialogRegion =function(){
 	var vpn = $("input[name='mqaddress']:checked").val();
 	storage.set('vpn',vpn);
 	
-	if($.common.isNotEmpty(thisRegionid)){
-		storage.set('regionid',thisRegionid); //****************设置全局办公室id*************************
+	if($.common.isNotEmpty(thisdefault_region_code)){
+		storage.set('default_region_code',thisdefault_region_code); //****************设置全局办公室id*************************
 	}
 	setRegionByOpid(bgs);//修改办公室
 	//关闭会话

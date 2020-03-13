@@ -34,6 +34,7 @@ import com.bondex.jdbc.entity.Keywords;
 import com.bondex.jdbc.entity.Label;
 import com.bondex.jdbc.entity.LabelAndTemplate;
 import com.bondex.jdbc.entity.Template;
+import com.bondex.mapper.AdminDataCurrentMapper;
 import com.bondex.mapper.TemplateDataMapper;
 import com.bondex.security.SecurityService;
 import com.bondex.security.entity.JsonResult;
@@ -48,6 +49,9 @@ import com.google.gson.JsonSyntaxException;
 public class LabelInfoDaoImpl implements LabelInfoDao {
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
+	
+	@Autowired
+	private  AdminDataCurrentMapper adminDataCurrentMapper;
 	
 	@Autowired
 	@Qualifier("restTemplate")
@@ -141,38 +145,44 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 			//main 中获取标签数据
 			Keywords keywords = GsonUtil.GsonToBean(main, Keywords.class);
 			if (keywords != null) {
+				//主单号                                                                                           //目的地                                                                                 //件数                                                                      //起始地
 				if (keywords.getPARENT_BILL_NO() != null && keywords.getUNLOAD_CODE() != null && keywords.getPACK_NO() != 0.0 && keywords.getLOAD_CODE() != null) {
 					// 主单号为11位，才进行入库
 					if (keywords.getPARENT_BILL_NO().length() == 11) {
-     						//查询校验重复
-						    List<Template> template = jdbcTemplate.query("select * from label where list_id = ?", new Object[] { keywords.getLIST_ID() }, new BeanPropertyRowMapper<Template>(Template.class));
+     						//查询校验重复 list_id mq报文id，用于判断报文是否重复 res=0 不存在 返回值 存在
+						    String res= jdbcTemplate.queryForObject("select ifnull((select list_id  from label where list_id=? limit 1 ), 0)", String.class,keywords.getLIST_ID());
 						
 						    //设置标签绑定模板
 						    
 						    //1.判断当前用户部门
-						    UserInfo userInfo = ShiroUtils.getUserInfo();
+						    UserInfo userInfo = new UserInfo();
+						    String gen_ER = keywords.getGEN_ER();
+						    userInfo.setOpid(gen_ER);
+						    //获取token
+						    String token = securityService.getPublicToken();
+						    userInfo.setToken(token);
 						    JSONObject jsonObject = securityService.getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetCompanyInfoOfDeptByOperatorID);
 						    String DeptID = jsonObject.getJSONObject("Data").getString("DeptID");
 						    String reserve3;
-						    if("0151".equals(DeptID)){ //海程邦达重庆分公司部门id
-						    	reserve3="5"; //重庆标签绑定
-						    }else{
 							    	
-								String hawb1 = keywords.getBILL_NO() == null ? "" : keywords.getBILL_NO();
-								if (!hawb1.equals("")) {
-									hawb = hawb1.split("_"); //切割
-								} else {
-									hawb = new String[] { "", "" };
-								}
-								
-								if (hawb[1].equals("")) {
-									reserve3 = "1"; //富士标签
-								} else {
-									reserve3 = "2"; //邦达普货标签
-								}
-						    }	
+							String hawb1 = keywords.getBILL_NO() == null ? "" : keywords.getBILL_NO();
+							if (!hawb1.equals("")) {
+								hawb = hawb1.split("_"); //切割
+							} else {
+								hawb = new String[] { "", "" };
+							}
 							
-						if (template.isEmpty()) {// 无重复数据，执行插入操作
+							if (hawb[1].equals("")) {
+								reserve3 = "1"; //富士标签
+							} else {
+								reserve3 = "2"; //邦达普货标签
+							}
+							
+							if("0151".equals(DeptID)){//海程邦达重庆分公司部门id
+						    	reserve3="5"; //重庆标签绑定
+							}
+							
+						if ("0".equals(res)) {// 无重复数据，执行插入操作
 							String sql = "INSERT INTO label(mawb,hawb,destination,total,airport_departure,flight_date,reserve3,list_id,opid,opid_name,business_type) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
 							
 
@@ -190,13 +200,16 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 
 							// 入库失败，记录日志
 							if (temp <= 0) {
-								jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES(?,?,?,?,?,?,?)", new Object[] { newString, hawb[1], 1, "入库未抛异常，但结果返回小于1", "新增", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
+								//插入失败
+								jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { newString, hawb[1], 1, "入库未抛异常，但结果返回小于1", "新增", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
 							} else {
-								jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES(?,?,?,?,?,?,?)", new Object[] { newString, hawb[1], 0, "", "新增", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
+								//插入成功
+								jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { newString, hawb[1], 0, "", "新增", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
 							}
 							
 							//存在重复数据
 						} else {// 执行更新操作
+							//list-id
 							String sql = "update label set mawb=?,hawb=?,destination=?,total=?,airport_departure=?,flight_date=?,reserve3=?,opid=?,opid_name=? where list_id = ?";
 							
 							String s1 = keywords.getPARENT_BILL_NO();
@@ -205,41 +218,38 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 							String newString = s1.substring(0, i) + s2 + s1.substring(i, s1.length());
 
 							// 标签数据入库
-							Object args[] = { newString, hawb[1], keywords.getUNLOAD_CODE(), Math.round(keywords.getPACK_NO()), keywords.getLOAD_CODE(), keywords.getVOYAGE_DATE(), reserve3, keywords.getLIST_ID(), keywords.getGEN_ER(), keywords.getGEN_NAME() };
+							Object args[] = { newString, hawb[1], keywords.getUNLOAD_CODE(), Math.round(keywords.getPACK_NO()), keywords.getLOAD_CODE(), keywords.getVOYAGE_DATE(), reserve3, keywords.getGEN_ER(), keywords.getGEN_NAME(),keywords.getLIST_ID() };
 							int temp = jdbcTemplate.update(sql, args);
 							
 							if (temp <= 0) {
-								jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES(?,?,?,?,?,?,?)", new Object[] { newString, hawb[1], 1, "更新未抛异常，但结果返回小于1", "更新", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
+								//更新失败
+								jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { newString, hawb[1], 1, "更新未抛异常，但结果返回小于1", "更新", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
 							} else {
-								jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES(?,?,?,?,?,?,?)", new Object[] { newString, hawb[1], 0, "", "更新", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
+								//更新成功
+								jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { newString, hawb[1], 0, "", "更新", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
 							}
 						}
 					} else {
-						jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES(?,?,?,?,?,?,?)", new Object[] { keywords.getPARENT_BILL_NO(), "", 1, "该主单号非法", "主单号非法", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
+						jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { keywords.getPARENT_BILL_NO(), "", 1, "该主单号非法", "主单号非法", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
 						System.out.println("主单号为：" + keywords.getPARENT_BILL_NO() + "入库失败");
 					}
 				} else {
-					jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES(?,?,?,?,?,?,?)", new Object[] { keywords.getPARENT_BILL_NO(), "", 1, "必填数据存在空数据", "必填数据存在空数据", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
+					jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { keywords.getPARENT_BILL_NO(), "", 1, "必填数据存在空数据", "必填数据存在空数据", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
 				}
 			}
-		} catch (JsonSyntaxException e) {
+		} catch (JsonSyntaxException e) { //Gson转换异常
 			e.printStackTrace();
-			jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES(?,?,?,?,?,?,?)", new Object[] { "", "", 1, "报文json转换失败。入库数据已经回滚", "", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), "" });
+			jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { "", "", 1, "报文json转换失败。入库数据已经回滚", "", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), "" });
 		} catch (DataAccessException e) {
 			e.printStackTrace();
-			jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,update_data,json) VALUES(?,?,?,?,?,?,?)", new Object[] { "", "", 1, "代码块异常。入库数据已经回滚", "", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
+			jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { "", "", 1, "代码块异常。入库数据已经回滚", "", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
 		}
 	}
 
-	public String getUuid() {
-		return UUID.randomUUID().toString().replace("-", "");
-	}
 
 	@Override
 	public List<LabelAndTemplate> findByPage(String sql) {
-		//select * from label LEFT JOIN template t  on t.id = label.reserve3 where t.template_id in ('a357f19f-6a1f-4171-ab8e-1f1a2b77377a','988b4162-00af-4924-a6fe-6b310d161900','2b7eddea-d953-4186-bc3b-a642940d57ea','4e2b8f59-9858-4297-962f-6ee4862085aa')  and business_type = 0 and reserve1 = '0' and airport_departure = (SELECT load_code from load_code where region_parent_code = (select parent_code from region where region_id = (SELECT office_id from default_region where opid = '0001655' and type = 1))) ORDER BY is_print,CREATE_time desc limit 0,10
 		List<LabelAndTemplate> keyword = templateDataMapper.queryLabelAndTemplate(sql);
-//		List<LabelAndTemplate> keyword = jdbcTemplate.query(sql,new Object[] {}, new BeanPropertyRowMapper<LabelAndTemplate>(LabelAndTemplate.class));
 		return keyword;
 	}
 
@@ -251,14 +261,7 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 
 	@Override
 	public void update(Label label) {
-		/*
-		 * if (label.getHawb().equals("")) {
-		 * jdbcTemplate.update("UPDATE label SET hawb = ?,reserve3=? WHERE label_id = ?"
-		 * , new Object[] { label.getHawb(), label.getReserve3(), label.getLabel_id()
-		 * }); } else { jdbcTemplate.
-		 * update("UPDATE label SET hawb = ?,reserve3='2' WHERE label_id = ?", new
-		 * Object[] { label.getHawb(), label.getLabel_id() }); }
-		 */
+		
 		StringBuffer sql = new StringBuffer("UPDATE label SET hawb = ?,reserve3=?,destination=? ");
 		if (label.getTotal() != null && !label.getTotal().equals("")) {
 			sql.append(", total = '" + label.getTotal() + "' ");
@@ -306,19 +309,37 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 	 * 获取数据库中的模板信息
 	 */
 	@Override
-	public List<Template> getTemplate(Template template) {
-		String sql= "select * from template where 1=1";
+	public List<Template> getALLTemplate(Template template) {
+		String sql= "select * from template where 1=1 ";
+		
 		if(StringUtils.isNotBlank(template.getId())){
-			sql+="and id ="+template.getId();
+			sql+="and id = '"+template.getId()+"'";
 		}
 		if(StringUtils.isNotBlank(template.getTemplate_id())){
-			sql+="and template_id ="+template.getTemplate_id();
+			sql+="and template_id = '"+template.getTemplate_id()+"'";
 		}
 		if(StringUtils.isNotBlank(template.getTemplate_name())){
-			sql+="and template_name ="+template.getTemplate_name();
+			sql+="and template_name like '%"+template.getTemplate_name()+"%'";
 		}
-		List<Template> templates = jdbcTemplate.query(sql, new BeanPropertyRowMapper<Template>(Template.class));
+		if(StringUtils.isNotBlank(template.getStatus())){
+			sql+="and status ="+template.getStatus();
+		}
+		
+		List<Template> templates  = adminDataCurrentMapper.queryALLTemplate(sql);
 		return templates;
+	}
+
+	/**
+	 * 保存更新打印模板
+	 */
+	@Override
+	public void saveorupdateTempalte(Template template) {
+		
+		String sql="INSERT INTO template (template_id,template_name,width,height,status) VALUES (?,?,?,?,?)"	
+				    +"ON DUPLICATE KEY UPDATE "
+					+"template_id=VALUES(template_id),template_name=VALUES(template_name),width=VALUES(width),height=VALUES(height),status=VALUES(status)";
+		jdbcTemplate.update(sql,new Object[] {template.getTemplate_id(),template.getTemplate_name(),template.getWidth(),template.getHeight(),template.getStatus()});
+		
 	}
 
 }

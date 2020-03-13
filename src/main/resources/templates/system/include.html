@@ -8,7 +8,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
 	<title>${title!'标签打印'}</title>
-	<link rel="shortcut icon" type="image/x-icon" href="${request.contextPath}/adminlte/dist/img/favicon.ico">
+	<link rel="shortcut icon" type="image/x-icon" href="${request.contextPath}/img/printer.ico">
 	<!-- easyUi样式 -->
 	<link rel="stylesheet" href="${request.contextPath}/easyui/themes/material/easyui.css"/>
 	<link rel="stylesheet" href="http://www.jeasyui.com/demo/main/sidemenu_style.css"/>
@@ -75,6 +75,10 @@
 	<script src="${request.contextPath}/bootstrap-table-develop/dist/extensions/toolbar/bootstrap-table-toolbar.min.js"></script>
 	<script src="${request.contextPath}/bootstrap-table-develop/dist/extensions/columns/bootstrap-table-fixed-columns.js"></script>
 	<script src="${request.contextPath}/bootstrap-switch-master/dist/js/bootstrap-switch.min.js"></script>
+	
+	<!-- bootstrap-treetable  -->
+	<script src="${request.contextPath}/ajax/libs/bootstrap-treetable/bootstrap-treetable.js"></script>
+	
 	<!-- BootStrap-Select 下拉框 -->
 	<script src="${request.contextPath}/ajax/libs/bootstrap-select/bootstrap-select.min.js"></script>
 	
@@ -96,6 +100,8 @@
 	<!--jquery-confirm-->
 	<script src="https://cdn.bootcss.com/jquery-confirm/2.5.1/jquery-confirm.min.js" type="text/javascript"></script>
 	
+	<!-- 遮罩层 -->
+	<script src="${request.contextPath}/ajax/libs/blockUI/jquery.blockUI.js"></script>
 	<!-- layer插件 -->
 	<script src="${request.contextPath}/layer/layui/layui.all.js"></script>
 	<script src="${request.contextPath}/layer/layer.js"></script>
@@ -106,8 +112,15 @@
 	<!-- ruoyi-common.js -->
 	<script src="${request.contextPath}/js/ry-ui.js?v=4.1.0"></script>
 	<script src="${request.contextPath}/js/common.js?v=4.1.0"></script>
-
+	<script type="text/javascript"> var ctx = "/labelPrint"; </script>
 </#macro>
 	
+<!-- ztree树插件 -->
+<#macro ztreecss>
+    <link rel="stylesheet" href="${request.contextPath}/ajax/libs/jquery-ztree/3.5/css/metro/zTreeStyle.css" />
+</#macro>
 
+<#macro ztreejs>
+    <script src="${request.contextPath}/ajax/libs/jquery-ztree/3.5/js/jquery.ztree.all-3.5.js"></script>
+</#macro>
 

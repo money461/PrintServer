@@ -22,7 +22,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.bondex.common.Common;
 import com.bondex.common.enums.ResEnum;
-import com.bondex.entity.Datagrid;
+import com.bondex.entity.page.Datagrid;
 import com.bondex.res.MsgResult;
 import com.bondex.security.SecurityService;
 import com.bondex.security.entity.Opid;
@@ -69,7 +69,7 @@ public class LoginController {
 	@RequestMapping("/login")
 	@ResponseBody
 	public ModelAndView login(HttpServletRequest request, ModelAndView modelAndView) {
-		modelAndView.setViewName("index2");//重定向至主页面
+		modelAndView.setViewName("index");//重定向至主页面
 		return modelAndView;
 	}
 

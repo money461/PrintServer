@@ -14,7 +14,6 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -51,20 +50,20 @@ public class WebLogAspect {
 	        HttpServletRequest request = attributes.getRequest();
 	        
 	        // 记录下请求内容
-	        logger.info("跳转URL-Referer: "+request.getHeader("Referer"));
-	        logger.info("请求URL : " + request.getRequestURL().toString());
-	        logger.info("HTTP_METHOD : " + request.getMethod());
-	        logger.info("CLIENT_IP : " + this.getRealIp(request));
-	        logger.info("User-Agent : "+request.getHeader("User-Agent"));
-	        logger.info("CLASS_METHOD : " + joinPoint.getSignature().getDeclaringTypeName() + "." + joinPoint.getSignature().getName());
-//	        logger.info("METHOD_PARAM_NAMES : " + Arrays.toString( ((CodeSignature)joinPoint.getStaticPart().getSignature()).getParameterNames()));
-	        logger.info("METHOD_PARAM_NAMES : " + Arrays.toString( ((MethodSignature)joinPoint.getSignature()).getParameterNames()));
-	        logger.info("PARAM_VALUES : " + Arrays.toString(joinPoint.getArgs()));
+	        logger.debug("跳转URL-Referer: "+request.getHeader("Referer"));
+	        logger.debug("请求URL : " + request.getRequestURL().toString());
+	        logger.debug("HTTP_METHOD : " + request.getMethod());
+	        logger.debug("CLIENT_IP : " + this.getRealIp(request));
+	        logger.debug("User-Agent : "+request.getHeader("User-Agent"));
+	        logger.debug("CLASS_METHOD : " + joinPoint.getSignature().getDeclaringTypeName() + "." + joinPoint.getSignature().getName());
+//	        logger.debug("METHOD_PARAM_NAMES : " + Arrays.toString( ((CodeSignature)joinPoint.getStaticPart().getSignature()).getParameterNames()));
+	        logger.debug("METHOD_PARAM_NAMES : " + Arrays.toString( ((MethodSignature)joinPoint.getSignature()).getParameterNames()));
+	        logger.debug("PARAM_VALUES : " + Arrays.toString(joinPoint.getArgs()));
 
 	        Enumeration<String> e = request.getParameterNames();
 	        while(e.hasMoreElements()){
 	        	String param = (String)e.nextElement();//调用nextElement方法获得元素
-	        	logger.info("{}={}",param,request.getParameter(param));
+	        	logger.debug("{}={}",param,request.getParameter(param));
 	        }
 	        
 	    }
@@ -72,9 +71,9 @@ public class WebLogAspect {
 	    @AfterReturning(returning = "ret", pointcut = "webLog()")
 	    public void doAfterReturning(Object ret) throws Throwable {
 	        // 处理完请求，返回内容
-	        logger.info("RESPONSE : " + ret);
-	        logger.info("SPEND TIME : " + (System.currentTimeMillis() - startTime.get()));
-	        logger.info("--------------------------响应分割线---------------------------------");
+	        logger.debug("RESPONSE : " + ret);
+	        logger.debug("SPEND TIME : " + (System.currentTimeMillis() - startTime.get()));
+	        logger.debug("--------------------------响应分割线---------------------------------");
 	    }
 	    
 	    @AfterThrowing(pointcut = "webLog()", throwing = "ex")

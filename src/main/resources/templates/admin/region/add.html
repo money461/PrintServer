@@ -1,0 +1,186 @@
+<#include "/system/include.html" encoding="UTF-8" parse=true/>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<!-- 引入样式css -->
+	<@commoncss title='添加办公室信息'/>
+</head>
+<body class="white-bg">
+	<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+		<form class="form-horizontal m" id="form-region-add">
+			<div class="form-group">
+				<label class="col-sm-3 control-label ">上级区域：</label>
+				<div class="col-sm-8">
+				    <div class="input-group">
+						<input class="form-control" type="text"  id="treeName"  name="parent_name" value="${region.region_name!}" >
+					    <span class="input-group-addon"><i class="fa fa-search"></i></span>
+				    </div>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label ">上级区域简码：</label>
+				<div class="col-sm-8">
+				    <div class="input-group">
+						<input class="form-control" type="text" id="treeId" name="parent_code"  value="${region.region_code!}"   />
+					    <span class="input-group-addon"><i class="fa fa-search"></i></span>
+				    </div>
+				</div>
+			</div>
+			
+			<div class="form-group">
+				<label class="col-sm-3 control-label">办公室名称：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="region_name" id="region_name" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">办公室简码：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="region_code" id="region_code" required>
+				</div>
+			</div>
+			
+		</form>
+	</div>
+		<!-- 引入通用js -->
+	<@commonjs/>
+	<script src="${request.contextPath}/js/admin/region.js"></script>
+	<script  type="text/javascript">
+	 
+		//判断父级节点是否可编辑
+		//var parent_name = '${region.region_name}'; 
+		var parent_name=$("#treeName").val();
+		if($.common.isNotEmpty(parent_name)){
+			//不可以编辑
+			$("#treeName").attr("readonly",true)//将input元素设置为readonly
+			$("#treeName").attr("onclick","selectregionTree();");//将input元素onclick="selectregionTree()"
+			$("#treeId").attr("readonly",true)//将input元素设置为readonly
+		}
+		var prefix = ctx + "/region";
+		
+		$("#form-region-add").validate({
+			onkeyup: false,
+			rules:{
+				region_code:{
+					remote: {
+		                url: prefix + "/checkregionCodeUnique", //校验字段唯一
+		                type: "post",
+		                dataType: "json",
+		                data: {
+		                	"region_code": function() {
+		                		//return $("input[name='region_code']").val(); //取出办公室简码
+		                		return $.common.trim($("#region_code").val())
+		                    }
+		                	
+		                },
+		                dataFilter: function(data, type) { //后台返回0 不存在    返回1 存在
+		                	return $.validate.unique(data); // 判断返回标识是否唯一 1->false 不存在   0->true 存在
+		                }
+		            }
+				},
+			  region_name:{
+				  remote: {
+		                url: prefix + "/checkregionCodeUnique", //校验字段唯一
+		                type: "post",
+		                dataType: "json",
+		                data: {
+		                	"parent_code": function() {
+		                		return $.common.trim($("#treeId").val()); //取出父级简码
+		                		
+		                    },
+		                	"region_name" : function() {
+		                        return $.common.trim($("#region_name").val()); //取出办公室名称
+		                    }
+		                },
+		                dataFilter: function(data, type) { //后台返回0 不存在    返回1 存在
+		                	return $.validate.unique(data); // 判断返回标识是否唯一 1->false 存在不通过     0->true 不存在通过
+		                }
+		            }
+			  },
+			    parent_name:{
+				  remote: {
+		                url: prefix + "/checkregionCodeUnique", //校验字段唯一
+		                type: "post",
+		                dataType: "json",
+		                data: {
+		                	"parent_code": function() {
+		                		return $.common.trim($("#treeId").val()); //取出父级简码
+		                    },
+		                	"parent_name" : function() {
+		                		return $.common.trim($("#treeName").val());; //取出父级简码
+		                    }
+		                },
+		                dataFilter: function(data, type) { //后台返回0 不存在    返回1 存在
+		                	return $.validate.unique(data); // 判断返回标识是否唯一 1->false 存在不通过     0->true 不存在通过
+		                }
+		            }
+			  },
+			  parent_code:{
+				  remote: {
+		                url: prefix + "/checkregionCodeUnique", //校验字段唯一
+		                type: "post",
+		                dataType: "json",
+		                data: {
+		                	"parent_code": function() {
+		                		return $.common.trim($("#treeId").val()); //取出父级简码
+		                    },
+		                	"parent_name" : function() {
+		                		return $.common.trim($("#treeName").val());; //取出父级简码
+		                    }
+		                },
+		                dataFilter: function(data, type) { //后台返回0 不存在    返回1 存在
+		                	return $.validate.unique(data); // 判断返回标识是否唯一 1->false 存在不通过     0->true 不存在通过
+		                }
+		            }
+			  },
+			  
+			},
+			messages: {
+		        "region_code": {
+		            remote: "办公室简码已经存在"
+		        },
+		        "region_name": {
+		            remote: $("#treeName").val()+"的办公室名称已经存在"
+		        },
+		        "parent_code": {
+		            remote: "区域简码或名称已存在"
+		        },
+		        "parent_name": {
+		            remote: "区域名称或简码已存在"
+		        }
+		    },
+		    focusCleanup: true
+		});
+		
+		//确定保存
+		function submitHandler() {
+	        if ($.validate.form()) {
+	        	region.saveOrUpdateRegion(prefix + "/saveOrUpdateRegion", $('#form-region-add').serialize());
+	        }
+	    }
+	
+		/*办公室管理-新增-选择父部门树*/
+		function selectregionTree() {
+			var options = {
+				title: '办公室选择',
+				width: "380",
+				url: prefix + "/selectregionTree/" + $("#treeId").val(),
+				callBack: doSubmit //树形回调
+			};
+			$.modal.openOptions(options); //弹出tree.html
+		}
+		
+		//选择树节点
+		function doSubmit(index, layero){
+			var tree = layero.find("iframe")[0].contentWindow.$._tree;
+			if ($.tree.notAllowLastLevel(tree)) { //判断不允许最后子节点选择
+				var body = layer.getChildFrame('body', index);
+	   			$("#treeId").val(body.find('#treeId').val());
+	   			$("#treeName").val(body.find('#treeName').val());
+	   			layer.close(index);
+			}
+		}
+		
+	</script>
+</body>
+</html>

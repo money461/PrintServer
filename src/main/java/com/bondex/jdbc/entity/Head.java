@@ -11,14 +11,14 @@ package com.bondex.jdbc.entity;
  */
 public class Head {
 
-    private String SeqNo;
-    private String SenderID;
-    private String SenderName;
-    private String ReciverID;
-    private String ReciverName;
-    private String DocTypeID;
-    private String DocTypeName;
-    private String CreateTime;
+    private String SeqNo; //消息标号
+    private String SenderID; //BOE
+    private String SenderName; //BOE系统
+    private String ReciverID; //TrackSystem
+    private String ReciverName; //追踪系统
+    private String DocTypeID; //BOE 系统
+    private String DocTypeName; //BOE追踪任务
+    private String CreateTime; //创建时间
     private String FinishTime;
     private String DataInterfaceID;
     private String DataInterfaceName;

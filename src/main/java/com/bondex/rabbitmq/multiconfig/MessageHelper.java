@@ -1,5 +1,6 @@
 package com.bondex.rabbitmq.multiconfig;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
 import org.springframework.amqp.core.Message;
@@ -12,12 +13,12 @@ import com.bondex.util.JsonUtil;
 public class MessageHelper {
 
 	//设置消息
-    public static Message objToMsg(Object obj) {
+    public static Message objToMsg(Object obj) throws UnsupportedEncodingException {
         if (null == obj) {
             return null;
         }
 
-        Message message = MessageBuilder.withBody(JsonUtil.objToStr(obj).getBytes()).build();
+        Message message = MessageBuilder.withBody(JsonUtil.objToStr(obj).getBytes("utf-8")).setContentEncoding("utf-8").build();
         message.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);// 消息持久化
         message.getMessageProperties().setContentType(MessageProperties.CONTENT_TYPE_JSON);
         message.getMessageProperties().setTimestamp(new Date()); //设置时间

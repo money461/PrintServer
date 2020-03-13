@@ -480,7 +480,7 @@ var table = {
                         return false;
                     }
                 });
-                return actions.join('');
+                return actions.join(''); 
             },
             // 显示表格指定列
             showColumn: function(column, tableId) {
@@ -505,7 +505,7 @@ var table = {
         		    ajaxParams: {},
         		    toolbar: "toolbar",
         		    striped: false,
-        		    expandColumn: 1,
+        		    expandColumn: 1, //默认第二列显示展开按钮
         		    showSearch: true,
         		    showRefresh: true,
         			showColumns: true,
@@ -714,7 +714,7 @@ var table = {
                 if ($.common.isEmpty(callback)) {
                     callback = function(index, layero) {
                         var iframeWin = layero.find('iframe')[0];
-                        iframeWin.contentWindow.submitHandler(index, layero);
+                        iframeWin.contentWindow.submitHandler(index, layero); //弹框确认
                     }
                 }
             	layer.open({
@@ -1155,7 +1155,7 @@ var table = {
         },
         // 校验封装处理
         validate: {
-        	// 判断返回标识是否唯一 false 不存在 true 存在
+        	// 判断返回标识是否唯一 false 不存在   true 存在
         	unique: function (value) {
             	if (value == "0") {
                     return true;
@@ -1214,14 +1214,14 @@ var table = {
     			};
         	    $.get(options.url, function(data) {
         			var treeId = $("#treeId").val();
-        			tree = $.fn.zTree.init($("#" + options.id), setting, data);
+        			tree = $.fn.zTree.init($("#" + options.id), setting, data); //初始化树
         			$._tree = tree;
         			var nodes = tree.getNodesByParam("level", options.expandLevel - 1);
         			for (var i = 0; i < nodes.length; i++) {
         				tree.expandNode(nodes[i], true, false, false);
         			}
         			var node = tree.getNodesByParam("id", treeId, null)[0];
-        			$.tree.selectByIdName(treeId, node);
+        			$.tree.selectByIdName(treeId, node); //节点被选中
         		});
         	},
         	// 搜索节点

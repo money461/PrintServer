@@ -20,7 +20,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.bondex.cas.SpringCasAutoconfig;
 import com.bondex.common.Common;
-import com.bondex.entity.Datagrid;
+import com.bondex.entity.page.Datagrid;
 import com.bondex.security.entity.Opid;
 import com.bondex.security.entity.TokenResult;
 import com.bondex.security.entity.UserInfo;
@@ -99,7 +99,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 		
 		//初始页面 的时候弹出 opids 提供用户选择
 		Datagrid<Opid> datagrid = new Datagrid<Opid>();
-		datagrid.setTotal(new Integer(userInfoList.size()).toString());
+		datagrid.setTotal((long)userInfoList.size());
 		datagrid.setRows(userInfo.getAllOpid());
 		
 		session.setAttribute(Common.Session_opids, datagrid);

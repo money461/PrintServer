@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
@@ -33,17 +35,15 @@ import com.bondex.client.dao.ClientDao;
 import com.bondex.client.entity.AreaBean;
 import com.bondex.client.entity.Client;
 import com.bondex.client.entity.ClientData;
-import com.bondex.client.entity.DefaultRegion;
 import com.bondex.client.entity.Region;
 import com.bondex.client.entity.Search;
+import com.bondex.client.entity.UserDefaultRegion;
 import com.bondex.client.entity.VwOrderAll;
-import com.bondex.client.entity.yml.RegionJDBC;
 import com.bondex.client.entity.yml.TreeBean;
 import com.bondex.client.service.ClientService;
 import com.bondex.common.enums.ResEnum;
 import com.bondex.config.exception.BusinessException;
-import com.bondex.entity.Datagrid;
-import com.bondex.entity.PageBean;
+import com.bondex.entity.page.Datagrid;
 import com.bondex.jdbc.entity.Label;
 import com.bondex.jdbc.entity.LabelAndTemplate;
 import com.bondex.jdbc.entity.Template;
@@ -61,6 +61,9 @@ import com.github.pagehelper.PageHelper;
 @Component
 @Transactional
 public class ClientServiceImpl implements ClientService {
+	
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	
 	@Autowired
 	@Qualifier("restTemplate")
 	private RestTemplate restTemplate;
@@ -120,31 +123,19 @@ public class ClientServiceImpl implements ClientService {
 		VwOrderAll vwOrderAll = new VwOrderAll();
 		List<Object> vwOrderAlls = new ArrayList<Object>();
 
-		/*
-		 * if (label2.getReserve3().equals("1")) {
-		 * client.setReportID("988b4162-00af-4924-a6fe-6b310d161900");// 报表id
-		 * client.setReportTplName("标签-富士康");// 标签名称（标签 目前定死） } else if
-		 * (label2.getReserve3().equals("2")) {
-		 * client.setReportID("a357f19f-6a1f-4171-ab8e-1f1a2b77377a");// 报表id
-		 * client.setReportTplName("标签-邦达普货");// 标签名称（标签 目前定死） } else { if
-		 * (label2.getHawb().trim().equals("")) {
-		 * client.setReportID("988b4162-00af-4924-a6fe-6b310d161900");// 报表id
-		 * client.setReportTplName("标签-富士康");// 标签名称（标签 目前定死） } else {
-		 * client.setReportID("a357f19f-6a1f-4171-ab8e-1f1a2b77377a");// 报表id
-		 * client.setReportTplName("标签-邦达普货");// 标签名称（标签 目前定死） } }
-		 */
-		List<Template> template = jdbcTemplate.query("select * from template where id = ? or template_name = ?",
-				new Object[] { label2.getReserve3(), label2.getReserve3() },
+		//查询数据库模板
+		List<Template> template = jdbcTemplate.query("select * from template where id = ?",
+				new Object[] { label2.getReserve3()},
 				new BeanPropertyRowMapper<Template>(Template.class));
+		
 		client.setReportID(template.get(0).getTemplate_id());// 报表id
 		client.setReportTplName(template.get(0).getTemplate_name());// 标签名称
-
 		client.setSenderName(userInfo.getOpname() + "/" + userInfo.getPsnname()); //此处改动 不清楚
 		client.setSendOPID(userInfo.getOpid());// 操作号
 		client.setNoToShow(label2.getMawb() + "_" + label2.getHawb());// 要显示的单号
 		client.setOtherToShow("");
-		client.setReportWidth("100");// 标签宽度，单位毫米（目前定死）
-		client.setReportHeight("70");// 标签高度，单位毫米（目前定死）
+		client.setReportWidth(template.get(0).getWidth());// 标签宽度，单位毫米（目前定死）
+		client.setReportHeight(template.get(0).getHeight());// 标签高度，单位毫米（目前定死）
 		// ClientData
 		vwOrderAll.setMblno(label2.getMawb());
 		vwOrderAll.setHblno(label2.getHawb());
@@ -163,39 +154,11 @@ public class ClientServiceImpl implements ClientService {
 	 * 根据用户opid获取办公室区域 并封装为tree
 	 */
 	@Override
-	public String getTreeRegionByOpid(String opid) {
+	public List<TreeBean> getTreeRegionByOpid(String opid) {
 		//查询办公室
-		List<RegionJDBC> regionJDBCs = clientDao.getRegionByOpid(opid);
+		List<Region> regionJDBCs = clientDao.getRegionByOpid(opid);
 		
-		List<TreeBean> treeBeans = new ArrayList<>();
-		List<TreeBean> prent = new ArrayList<>();
-		Set<String> set = new HashSet<>();
-		TreeBean treeBean = null;
-		for (RegionJDBC regionJDBC : regionJDBCs) {
-			set.add(regionJDBC.getParent_name());
-			treeBean = new TreeBean();
-			treeBean.setId(regionJDBC.getRegion_id());
-			treeBean.setText(regionJDBC.getRegion_name());
-			treeBean.setParent_code(regionJDBC.getParent_code());
-			treeBean.setRegion_code(regionJDBC.getRegion_code());
-			treeBean.setPname(regionJDBC.getParent_name());
-			treeBeans.add(treeBean);
-		}
-		// 设置父节点
-		for (String string : set) {
-			treeBean = new TreeBean();
-			treeBean.setText(string);
-			treeBean.setState("closed");
-			List<TreeBean> childrens = new ArrayList<>();
-			for (TreeBean treeBean1 : treeBeans) {
-				if (treeBean1.getPname().equals(string)) {
-					childrens.add(treeBean1);
-				}
-			}
-			treeBean.setChildren(childrens);
-			prent.add(treeBean);
-		}
-		return GsonUtil.GsonString(prent);
+		return transferTree(regionJDBCs);
 	}
 
 	/**
@@ -237,8 +200,14 @@ public class ClientServiceImpl implements ClientService {
 				throw new BusinessException(ResEnum.FORBIDDEN.CODE, "打印失败,未配置打印模板使用权限！");
 			}
 			
+			//为了防止前端传过来的数据有误
+			label.setTemplate_id(template.getTemplate_id());
+			label.setTemplate_name(template.getTemplate_name());
+			label.setWidth(template.getWidth());
+			label.setHeight(template.getHeight());
+			
 			if (businessType.equals("medicine")) {
-				clients = getClients(labelAndTemplates, userInfo, businessType);
+				clients = getPaiangClients(labelAndTemplates, userInfo, businessType);
 			} else {
 				String t[] = label.getTotal().split("\\.");
 				label.setTotal(t[0]);
@@ -273,15 +242,61 @@ public class ClientServiceImpl implements ClientService {
 
 	}
 
+
+	/**
+	 * 封装派昂标签
+	 * @param labelAndTemplates
+	 * @param userInfo
+	 * @param businessType
+	 * @return
+	 */
+	private List<Client> getPaiangClients(List<LabelAndTemplate> labelAndTemplates, UserInfo userInfo,String businessType) {
+		List<Client> clients = new ArrayList<>();
+		for (LabelAndTemplate label : labelAndTemplates) {
+			//克隆数据
+			String serialNo = label.getSerialNo(); //打印序号
+			String[] str = serialNo.split(";");
+			
+			for (String no : str) {
+					Client client = new Client();// 打印客户端数据结构
+					
+					String template_id =label.getTemplate_id();
+					client.setReportID(template_id);// 模板id
+					client.setReportTplName(label.getTemplate_name());// 标签名称
+		
+					client.setSenderName(userInfo.getOpname() + "/" + userInfo.getPsnname()); //此处改动不是很清楚
+					client.setSendOPID(userInfo.getOpid());// 操作号
+					client.setNoToShow(label.getMawb() + "_" + label.getHawb());// 要显示的单号
+					client.setOtherToShow("");
+					
+					client.setReportWidth(label.getWidth());// 标签宽度，单位毫米（目前定死）
+					client.setReportHeight(label.getHeight());// 标签高度，单位毫米（目前定死）
+					
+					client.setCopies("1");// 标签打印份数
+		
+					Label clone = CloneUtils.clone(label);
+					clone.setSerialNo(no);
+					
+					JSONArray array = new JSONArray();
+					array.add(clone);
+					
+					JSONObject jsonObject = new JSONObject();
+					jsonObject.put("vwOrderAll", array);
+					client.setData(jsonObject.toJSONString());
+					clients.add(client);
+			}
+			//派昂封装结束
+		}
+		
+		return clients;
+	}
+
 	//封装打印数据
 	private List<Client> getClients(List<LabelAndTemplate> LabelAndTemplates2, UserInfo userInfo, String businessType) {
 		List<Client> clients = new ArrayList<>();
 		Client client;
 		ClientData clientData;
 		List<Object> vwOrderAlls;
-		JSONArray array;
-		JSONObject jsonObject = new JSONObject();
-		
 		
 		//循环封装打印数据
 		for (LabelAndTemplate label : LabelAndTemplates2) {
@@ -290,7 +305,6 @@ public class ClientServiceImpl implements ClientService {
 			client = new Client();// 打印客户端数据结构
 			clientData = new ClientData();
 			vwOrderAlls = new ArrayList<Object>();
-			array = new JSONArray();
 			
 			String template_id =label.getTemplate_id();
 			client.setReportID(template_id);// 模板id
@@ -298,36 +312,15 @@ public class ClientServiceImpl implements ClientService {
 
 			client.setSenderName(userInfo.getOpname() + "/" + userInfo.getPsnname()); //此处改动不是很清楚
 			client.setSendOPID(userInfo.getOpid());// 操作号
+			client.setNoToShow(label.getMawb() + "_" + label.getHawb());// 要显示的单号
 			client.setOtherToShow("");
 			
-			// ClientData
-			if (businessType.equals("medicine")) {
-				client.setCopies("1");// 标签打印份数
-				client.setReportWidth("100");// 标签宽度，单位毫米（目前定死）
-				client.setReportHeight("100");// 标签高度，单位毫米（目前定死）
-				//克隆数据
-				String serialNo = label.getSerialNo();
-				String[] str = serialNo.split(";");
-				
-				for (String no : str) {
-					Label clone = CloneUtils.clone(label);
-					clone.setSerialNo(no);
-					array.add(clone);
-				}
-				
-				jsonObject.put("vwOrderAll", array);
-				client.setData(jsonObject.toJSONString());
-				
-				clients.add(client);
-				
-			} else {
-				client.setCopies(label.getTotal());// 标签打印份数
-				client.setNoToShow(label.getMawb() + "_" + label.getHawb());// 要显示的单号
-				client.setReportWidth("100");// 标签宽度，单位毫米（目前定死）
-				client.setReportHeight("70");// 标签高度，单位毫米（目前定死）
-
+			client.setReportWidth(label.getWidth());// 标签宽度，单位毫米（目前定死）
+			client.setReportHeight(label.getHeight());// 标签高度，单位毫米（目前定死）
+			
 				//封装空运标签数据打印格式 
 				if("2785d11a-e261-4c61-8096-8f9f21e2a3f0".equals(template_id)){
+					
 					String sql = "SELECT * FROM	( SELECT * FROM label WHERE mawb IN ( SELECT mawb FROM label WHERE hawb = '"+label.getHawb()+"' ) ) AS l WHERE	l.hawb = '"+label.getHawb()+"' OR l.hawb = ''";
 					List<LabelAndTemplate> labelList= templateDataMapper.queryLabelAndTemplate(sql);
 					
@@ -360,11 +353,10 @@ public class ClientServiceImpl implements ClientService {
 					vwOrderAlls.add(vwOrderAll);
 				}
 				
+				client.setCopies(label.getTotal());// 标签打印份数
 				clientData.setVwOrderAll(vwOrderAlls);
 				client.setData(GsonUtil.GsonString(clientData));
 				clients.add(client);
-			}
-			
 			
 		}
 		return clients;
@@ -372,8 +364,8 @@ public class ClientServiceImpl implements ClientService {
 
 	@Override
 	public String searchRegion(String q) {
-		List<RegionJDBC> regionJDBCs = clientDao.search(q);
-		Datagrid<RegionJDBC> datagrid = new Datagrid<RegionJDBC>();
+		List<Region> regionJDBCs = clientDao.search(q);
+		Datagrid<Region> datagrid = new Datagrid<Region>();
 		datagrid.setRows(regionJDBCs);
 		return GsonUtil.GsonString(datagrid);
 	}
@@ -384,14 +376,14 @@ public class ClientServiceImpl implements ClientService {
 	}
 
 	@Override
-	public DefaultRegion getDefaultRegionByOpid(String opid) {
-		return clientDao.getDefaultRegionByOpid(opid);
+	public List<UserDefaultRegion> selectUserDefaultRegion(UserDefaultRegion userDefaultRegion) {
+		return clientDao.selectUserDefaultRegion(userDefaultRegion);
 	}
 
 	//更新用户信息和办公室信息
 	@Override
-	public Object updateOrAddUserRegion(String regionid) {
-		return clientDao.updateOrAddUserRegion(regionid);
+	public Object updateOrAddUserRegion(UserDefaultRegion userDefaultRegion) {
+		return clientDao.updateOrAddUserRegion(userDefaultRegion);
 	}
 
 	/**
@@ -422,10 +414,10 @@ public class ClientServiceImpl implements ClientService {
 		if (search.getSuccess()) {
 			
 			// 转数据表格json
-			PageBean<AreaBean> pageBean = new PageBean<AreaBean>();
+			Datagrid<AreaBean> datagrid = new Datagrid<AreaBean>();
 			List<AreaBean> list = search.getList();
-			pageBean.setRows(list);
-			return pageBean; //Gson序列化
+			datagrid.setRows(list);
+			return datagrid; //Gson序列化
 		}
 		return "";
 	}
@@ -434,14 +426,14 @@ public class ClientServiceImpl implements ClientService {
 	 * 查询绑定或者临时的办公室信息
 	 */
 	@Override
-	public Region getDefaultBindRegionByOpid(String regionid, String opid) {
+	public Region getDefaultBindRegionByOpid(String default_region_code, String opid) {
 		Region region = null;
-		if (StringUtils.isBlank(regionid)) {
+		if (StringUtils.isBlank(default_region_code)) {
 			// 查询用户绑定的默认办公室
 			region = clientDao.getDefaultBindRegionByOpid(opid);
 		} else {
 			// 查询临时办公室
-			region = clientDao.getRegionById(regionid);
+			region = clientDao.getRegionById(default_region_code);
 		}
 		return region;
 	}
@@ -460,7 +452,45 @@ public class ClientServiceImpl implements ClientService {
 		//List<Opid> opids = jdbcTemplate.query(, new Object[] {},new BeanPropertyRowMapper<Opid>(Opid.class));
 		return opids;
 	}
+
 	
-	
+	/*
+	 * 树形转换
+	 */
+	private List<TreeBean> transferTree(List<Region> regionJDBCs){
+		List<TreeBean> treeBeans = new ArrayList<>();
+		List<TreeBean> prent = new ArrayList<>();
+		Set<String> set = new HashSet<>();
+		TreeBean treeBean = null;
+		for (Region regionJDBC : regionJDBCs) {
+			set.add(regionJDBC.getParent_name());
+			treeBean = new TreeBean();
+			treeBean.setId(regionJDBC.getRegion_code());
+			treeBean.setRegion_code(regionJDBC.getRegion_code());
+			treeBean.setText(regionJDBC.getRegion_name());
+			treeBean.setParent_code(regionJDBC.getParent_code());
+			treeBean.setPname(regionJDBC.getParent_name());
+			treeBeans.add(treeBean);
+		}
+		
+		// 设置父节点
+		for (String pname : set) {
+			treeBean = new TreeBean();
+			treeBean.setText(pname); 
+			treeBean.setState("closed");
+			List<TreeBean> childrens = new ArrayList<>();
+			
+			for (TreeBean treeBean1 : treeBeans) {
+				if (treeBean1.getPname().equals(pname)) {
+					childrens.add(treeBean1);
+				}
+			}
+			
+			treeBean.setChildren(childrens); //存入子节点
+			prent.add(treeBean); //存入所有的节点
+		}
+		logger.debug(GsonUtil.GsonString(prent));
+		return prent;
+	}
 
 }

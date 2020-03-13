@@ -1,0 +1,138 @@
+<#include "/system/include.html" encoding="UTF-8" parse=true/>
+<!DOCTYPE html>
+<head>
+	<!-- 引入样式css -->
+	<@commoncss title='新增用户'/>
+	
+</head>
+<body>
+    <div class="main-content">
+        <form id="form-user-add" class="form-horizontal">
+        <!-- 设定区域 办公室code-->
+            <input name="default_region_code" type="hidden" id="treeId"/>
+            <h4 class="form-header h4">基本信息</h4>
+            <div class="row">
+            	<div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label"><span style="color: red; ">*</span>用户名称：</label>
+                        <div class="col-sm-8">
+                            <input name="username" placeholder="请输入用户名称" class="form-control" type="text" maxlength="30" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label"><span style="color: red; ">*</span>打印办公室：</label>
+                        <div class="col-sm-8">
+                            <div class="input-group">
+                            	<input name="region_name" onclick="selectDeptTree()" id="treeName" type="text" placeholder="请选择打印办公室" class="form-control" required>
+                                <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label"><span style="color: red; ">*</span>操作ID：</label>
+                        <div class="col-sm-8">
+                            <input id="opid" name="opid" placeholder="请输入操作ID" class="form-control" type="text" maxlength="11" required>
+                        </div>
+                    </div>
+                </div>
+                
+                 <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">用户状态：</label>
+                        <div class="col-sm-8">
+                            <label class="toggle-switch switch-solid">
+	                            <input type="checkbox" id="type" checked>
+	                            <span></span>
+	                        </label>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+          
+        </form>
+    </div>
+      
+    <div class="row">
+        <div class="col-sm-offset-5 col-sm-10">
+            <button type="button" class="btn btn-sm btn-primary" onclick="submitHandler()"><i class="fa fa-check"></i>保 存</button>&nbsp;
+            <button type="button" class="btn btn-sm btn-danger" onclick="closeItem()"><i class="fa fa-reply-all"></i>关 闭 </button>
+        </div>
+    </div>
+	<!-- 引入通用js -->
+	<@commonjs/>
+	<script src="${request.contextPath}/js/admin/user.js"></script>
+	<script  type="text/javascript">
+	
+	    var prefix = ctx + "/user";
+	
+        $("#form-user-add").validate({
+        	onkeyup: false,
+        	rules:{
+        		opid:{
+                    remote: {
+                        url: prefix + "/checkOpidUnique",
+                        type: "post",
+                        dataType: "json",
+                        data: {
+                            "opid": function () {
+                                return $.common.trim($("#opid").val());
+                            }
+                        },
+                        dataFilter: function (data, type) {
+                        	return $.validate.unique(data); //判断返回标识是否唯一 1->false 存在不通过     0->true 不存在通过
+                        }
+                    }
+        		},
+        	},
+        	messages: {
+        		"opid":{
+                	remote: "操作ID已经存在"
+        		}
+            },
+            focusCleanup: true
+        });
+        
+        //确定添加
+        function submitHandler() {
+	        if ($.validate.form()) {
+	        	var data = $("#form-user-add").serializeArray();
+	        	var type = $("input[id='type']").is(':checked') == true ? 0 : 1;
+	        	data.push({"name": "type", "value": type});
+	        	user.saveOrupdateUser(prefix + "/saveOrupdateUser", data);
+	        }
+	    }
+         
+        /*用户管理-新增-选择办公室树*/
+        function selectDeptTree() {
+        	var treeId = $("#treeId").val();
+        	var region_code = $.common.isEmpty(treeId) ? "chengdu" : treeId;
+        	var url = ctx + "/region/selectregionTree/" + region_code;
+			var options = {
+				title: '选择部门',
+				width: "380",
+				url: url,
+				callBack: doSubmit
+			};
+			$.modal.openOptions(options);
+		}
+		//树形页面确定提交
+		function doSubmit(index, layero){
+			var tree = layero.find("iframe")[0].contentWindow.$._tree;
+			if ($.tree.notAllowParents(tree)) { //判断不允许父节点选择
+				var body = layer.getChildFrame('body', index);
+    			$("#treeId").val(body.find('#treeId').val());
+    			$("#treeName").val(body.find('#treeName').val());
+    			layer.close(index);
+			}
+		}
+
+    </script>
+</body>
+</html>

@@ -14,7 +14,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +23,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.bondex.client.entity.DefaultRegion;
 import com.bondex.client.entity.Region;
+import com.bondex.client.entity.UserDefaultRegion;
+import com.bondex.client.entity.yml.TreeBean;
 import com.bondex.client.service.ClientService;
 import com.bondex.common.Common;
 import com.bondex.common.enums.ResEnum;
@@ -38,6 +38,7 @@ import com.bondex.security.entity.Opid;
 import com.bondex.security.entity.UserInfo;
 import com.bondex.shiro.security.ShiroUtils;
 import com.bondex.util.GsonUtil;
+import com.bondex.util.StringUtils;
 import com.google.gson.reflect.TypeToken;
 
 @Controller
@@ -59,10 +60,15 @@ public class ClientController {
 	//校验是否是第一次打印(获取打印办公室)
 	@RequestMapping(value="getDefaultRegionByOpid",method=RequestMethod.POST)
 	@ResponseBody
-	public DefaultRegion getDefaultRegionByOpid() {
+	public UserDefaultRegion getDefaultRegionByOpid() {
 		UserInfo userInfo = ShiroUtils.getUserInfo();
-		DefaultRegion defaultRegion = clientService.getDefaultRegionByOpid(userInfo.getOpid());
-		return defaultRegion;
+		UserDefaultRegion userDefaultRegion = new UserDefaultRegion();
+		userDefaultRegion.setOpid(userInfo.getOpid());
+		List<UserDefaultRegion> selectUserDefaultRegion = clientService.selectUserDefaultRegion(userDefaultRegion);
+		if(StringUtils.isNotNull(selectUserDefaultRegion)){
+			userDefaultRegion = selectUserDefaultRegion.get(0);
+		}
+		return userDefaultRegion;
 	}
 
 
@@ -73,11 +79,13 @@ public class ClientController {
 	 */
 	@RequestMapping(value="getTreeRegionByOpid",method=RequestMethod.POST)
 	@ResponseBody
-	public String getTreeRegionByOpid() {
+	public Object getTreeRegionByOpid() {
 		UserInfo userInfo = ShiroUtils.getUserInfo();
-		String regions = clientService.getTreeRegionByOpid(userInfo.getOpid());
-		return regions;
+		List<TreeBean> treeRegion = clientService.getTreeRegionByOpid(userInfo.getOpid());
+		return treeRegion;
 	}
+	
+	
 
 	/**
 	 * 更新用户信息和办公室信息
@@ -87,9 +95,15 @@ public class ClientController {
 	 */
 	@RequestMapping(value="/updateOrAddUserRegion",method=RequestMethod.POST)
 	@ResponseBody
-	public Object updateOrAddUserRegion(String regionid,HttpServletRequest request) {
+	public Object updateOrAddUserRegion(UserDefaultRegion userDefaultRegion,HttpServletRequest request) {
 		try {
-			return clientService.updateOrAddUserRegion(regionid);
+			UserInfo userInfo = ShiroUtils.getUserInfo();
+			String opid = userInfo.getOpid();
+			userDefaultRegion.setOpid(opid);
+			userDefaultRegion.setUsername(userInfo.getOpname());
+			Integer i = (Integer)clientService.updateOrAddUserRegion(userDefaultRegion);
+			return MsgResult.nodata(ResEnum.SUCCESS.CODE, ResEnum.SUCCESS.MESSAGE);
+			
 		} catch (Exception e) {
 			return  MsgResult.nodata(ResEnum.FAIL.CODE, ResEnum.FAIL.MESSAGE);
 		}
@@ -103,7 +117,7 @@ public class ClientController {
 	 * @param mqaddress vpnnet 内网  outnet外网
 	 * @return
 	 */
-	@RequestMapping(value="printLabelSendClient",method=RequestMethod.POST)
+	@RequestMapping(value="printLabelSendClient",method=RequestMethod.POST,headers = {"content-type=application/x-www-form-urlencoded; charset=UTF-8"},produces={"application/json; charset=UTF-8"})
 	@ResponseBody
 	public AjaxResult printLabelSendClient(String labels, String regionid, String businessType,String mqaddress, HttpServletRequest request) {
 		HttpSession session = request.getSession();
@@ -246,12 +260,12 @@ public class ClientController {
 	 */
 	@RequestMapping(value="getDefaultBindRegionByOpid",method=RequestMethod.POST)
 	@ResponseBody
-	public Region getDefaultBindRegionByOpid(String regionid, String opid) {
+	public Region getDefaultBindRegionByOpid(String default_region_code, String opid) {
 		if (StringUtils.isBlank(opid) ){
 			opid =ShiroUtils.getUserInfo().getOpid();
 		}
 		
-		return clientService.getDefaultBindRegionByOpid(regionid, opid);
+		return clientService.getDefaultBindRegionByOpid(default_region_code, opid);
 	}
 
 }

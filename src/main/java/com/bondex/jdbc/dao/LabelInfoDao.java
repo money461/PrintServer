@@ -46,5 +46,8 @@ public interface LabelInfoDao {
 	 * @param template
 	 * @return
 	 */
-	public List<Template> getTemplate(Template template);
+	public List<Template> getALLTemplate(Template template);
+
+	
+	public void saveorupdateTempalte(Template template);
 }

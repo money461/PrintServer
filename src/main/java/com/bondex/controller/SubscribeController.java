@@ -17,12 +17,13 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.bondex.common.Common;
-import com.bondex.entity.Datagrid;
 import com.bondex.entity.Subscribe;
+import com.bondex.entity.page.Datagrid;
 import com.bondex.util.GsonUtil;
 import com.bondex.util.RandomUtil;
 
@@ -93,7 +94,7 @@ public class SubscribeController {
 	public String all(String page, String rows, HttpServletRequest request) {
 		HttpSession session = request.getSession();
 		List<Subscribe> subscribes = jdbcTemplate.query("select * from subscribe where sr_opid = ?   limit " + (Integer.valueOf(page) - 1) * Integer.valueOf(rows) + "," + rows + "", new Object[] { session.getAttribute("thisOpid") }, new BeanPropertyRowMapper<Subscribe>(Subscribe.class));
-		String total = jdbcTemplate.queryForObject("select count(1) from subscribe where sr_opid = ? ", new Object[] { session.getAttribute("thisOpid") }, String.class);
+		Long total = jdbcTemplate.queryForObject("select count(1) from subscribe where sr_opid = ? ", new Object[] { session.getAttribute("thisOpid") }, long.class);
 		Datagrid<Subscribe> datagrid = new Datagrid<>();
 		datagrid.setTotal(total);
 		datagrid.setRows(subscribes);

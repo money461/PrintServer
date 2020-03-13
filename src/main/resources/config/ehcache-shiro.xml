@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ehcache name="ruoyi" updateCheck="false">
+<ehcache name="bondex-labelPrint" updateCheck="false">
 
     <!-- 磁盘缓存位置 -->
     <diskStore path="java.io.tmpdir"/>
@@ -52,6 +52,14 @@
            diskPersistent="true"
            diskExpiryThreadIntervalSeconds="600">
     </cache>
+    
+    <cache name="PublicTokenCache" 
+              maxElementsInMemory="100" 
+              eternal="false"
+              timeToIdleSeconds="600" 
+              timeToLiveSeconds="8000" 
+              overflowToDisk="true" 
+              memoryStoreEvictionPolicy="LRU" />
 
 </ehcache>
 	

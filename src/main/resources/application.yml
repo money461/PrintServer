@@ -7,9 +7,20 @@ server:
     uri-encoding: utf-8
   applicationId: 827 
 logging:
+   #指定日志配置位置名称 spring官网默认日志配置名称logback-spring.xml
+  config: classpath:logback-spring.xml
   level:
     com.bondex: debug
+    ##mybatis 打印日志SQL
+    com.bondex.mapper: debug
     org.springframework.jdbc: debug
+  resources:
+    logdir: /bondex/labelPrint/labelPrintLogs
+    #应用名称
+    appname: 标签打印发送消息日志
+    #日志打印的基础扫描包
+    basepackage: com.bondex
+    
 filter: 
    stat: 
     log-slow-sql: true
@@ -25,6 +36,7 @@ spring:
        ###framework权限获取地址########
        HttpUrl: http://frameworkapi.bondex.com.cn:8000
   datasource:
+    name: mysql
     driver-class-name: com.mysql.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     initialSize: 5
@@ -40,6 +52,61 @@ spring:
     poolPreparedStatements: true
     maxPoolPreparedStatementPerConnectionSize: 20
     filters: stat,wall,slf4j
+    druid:
+      # 数据库访问配置, 使用druid数据源
+      type: com.alibaba.druid.pool.DruidDataSource
+      # 连接池配置
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      # 连接等待超时时间
+      max-wait: 30000
+      # 配置检测可以关闭的空闲连接间隔时间
+      time-between-eviction-runs-millis: 60000
+      # 配置连接在池中的最小生存时间
+      min-evictable-idle-time-millis: 300000
+      validation-query: select '1' from dual
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      # 打开PSCache，并且指定每个连接上PSCache的大小
+      pool-prepared-statements: true
+      max-open-prepared-statements: 20
+      max-pool-prepared-statement-per-connection-size: 20
+      # 配置监控统计拦截的filters, 去掉后监控界面sql无法统计, 'wall'用于防火墙
+      filters: stat,wall
+      # Spring监控AOP切入点，如x.y.z.service.*,配置多个英文逗号分隔
+      aop-patterns: com.bondex.*
+      
+    
+      # WebStatFilter配置
+      web-stat-filter:
+        enabled: true
+        # 添加过滤规则
+        url-pattern: /*
+        # 忽略过滤的格式
+        exclusions: '*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*'
+      
+      # StatViewServlet配置 
+      stat-view-servlet:
+        enabled: true
+        # 访问路径为/druid时，跳转到StatViewServlet
+        url-pattern: /druid/*
+        # 是否能够重置数据
+        reset-enable: false
+        # 需要账号密码才能访问控制台
+        login-username: admin
+        login-password: 123456
+        # IP白名单
+        # allow: 127.0.0.1
+        #　IP黑名单（共同存在时，deny优先于allow）
+        # deny: 192.168.1.218
+      
+      # 配置StatFilter
+      filter: 
+        stat: 
+          log-slow-sql: true
+    
   freemarker:
     content-type: text/html; charset=utf-8
     cache: false
@@ -87,6 +154,25 @@ spring:
       allow_unquoted_control_chars: true
       #允许出现单引号
       allow_single_quotes: true
+      
+#################MyBatis#######################
+mybatis:
+    # 搜索指定包别名
+    type-aliases-package: com.bondex.entity,com.bondex.jdbc.entity,com.bondex.client.entity
+    # 配置mapper的扫描，找到所有的mapper.xml映射文件
+    mapper-location: /mybatis/*.xml
+    # 驼峰命名规范 如：数据库字段是  order_id 那么 实体字段就要写成 orderId
+    configuration.map-underscore-to-camel-case: false
+    # 加载全局的配置文件
+    #configLocation:
+    property:
+       order: BEFORE
+# PageHelper分页插件
+pagehelper: 
+  helperDialect: mysql
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=countSql 
    
 restTemplate:
   connectionRequestTimeout: 1000

@@ -153,7 +153,7 @@ public class CasConfig {
 			 registration.addUrlPatterns("/*");
 		 }
 		registration.addInitParameter("casServerUrlPrefix", autoconfig.getCasServerUrlPrefix());
-		registration.addInitParameter("serverName", autoconfig.getLocalServerName());
+		registration.addInitParameter("serverName", autoconfig.getLocalServerName()); //本地项目地址
 		registration.addInitParameter("encoding", "UTF-8");
 		registration.addInitParameter("useSession",  autoconfig.isUseSession()?"true":"false");
 		registration.setEnabled(casEnabled);
