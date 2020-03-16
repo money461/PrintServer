@@ -15,9 +15,9 @@ import org.jasig.cas.client.validation.Assertion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.bondex.security.entity.TokenResult;
-import com.bondex.shiro.security.ShiroUtils;
+import com.bondex.shiro.security.entity.TokenResult;
 import com.bondex.util.GsonUtil;
+import com.bondex.util.shiro.ShiroUtils;
 /**
  * 自定义shiro认证过滤器
  * @author Qianli

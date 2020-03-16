@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import com.bondex.client.entity.Region;
+import com.bondex.entity.Region;
 import com.bondex.rabbitmq.multiconfig.MessageHelper;
 import com.bondex.util.RandomUtil;
 import com.rabbitmq.client.Channel;

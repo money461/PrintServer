@@ -553,7 +553,7 @@ paiang.prototype.tableprint = function() {
 				type : 'POST',
 				data : {
 					labels : JSON.stringify(rows),
-					default_region_code : default_region_code, //chengdu/jichang id=2
+					regionCode : default_region_code, //chengdu/jichang id=2
 					businessType : type,
 					mqaddress: vpn //内网还是外网
 				},
@@ -645,7 +645,7 @@ paiang.prototype.initdialog = function(title) {
 paiang.prototype.initTree = function(){
 	$('#cc').combotree({
 		required : true,
-		url : "/labelPrint/client/getTreeRegionByOpid",
+		url : "/labelPrint/region/getTreeRegionByOpid",
 		method : 'POST',
 		onBeforeSelect : function(node) {
 			return false

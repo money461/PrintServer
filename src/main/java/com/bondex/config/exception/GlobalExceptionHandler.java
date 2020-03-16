@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.bondex.common.enums.ResEnum;
-import com.bondex.res.AjaxResult;
-import com.bondex.res.ResultUtil;
+import com.bondex.entity.res.AjaxResult;
+import com.bondex.entity.res.ResultUtil;
 import com.bondex.util.ServletUtils;
 
 /**

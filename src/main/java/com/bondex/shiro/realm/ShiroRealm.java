@@ -18,10 +18,10 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.bondex.common.Common;
-import com.bondex.security.SecurityService;
-import com.bondex.security.entity.UserInfo;
-import com.bondex.shiro.security.ShiroUtils;
+import com.bondex.shiro.security.SecurityService;
+import com.bondex.shiro.security.entity.UserInfo;
 import com.bondex.util.GsonUtil;
+import com.bondex.util.shiro.ShiroUtils;
 
 public class ShiroRealm extends AuthorizingRealm {
 

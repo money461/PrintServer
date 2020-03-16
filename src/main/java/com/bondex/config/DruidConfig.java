@@ -16,12 +16,12 @@ import java.util.Map;
 
 @Configuration
 public class DruidConfig {
-    // @ConfigurationProperties() 将配置文件中的连接池配置添加到数据源
+/*    // @ConfigurationProperties() 将配置文件中的连接池配置添加到数据源
     @ConfigurationProperties(prefix = "spring.datasource")
     @Bean
     public DataSource druid(){
         return new DruidDataSource(); //druid注入dataSource
-    }
+    }*/
 
     // 配置Druid的监控     
     // 配置一个管理后台的Servlet

@@ -15,8 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import com.bondex.jdbc.entity.JsonRootBean;
-import com.bondex.jdbc.service.LabelInfoService;
+import com.bondex.entity.msg.JsonRootBean;
+import com.bondex.service.LabelInfoService;
 import com.bondex.util.GsonUtil;
 
 /**

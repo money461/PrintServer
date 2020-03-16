@@ -179,6 +179,4 @@ restTemplate:
   connectTimeout: 10000
   socketTimeout: 10000
   maxConnTotal: 10000
-region:
-  chengdu: xidun,jichang,xiqu
-  qingdao: futai
+

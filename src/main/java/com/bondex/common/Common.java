@@ -1,5 +1,7 @@
 package com.bondex.common;
 
+import net.sf.ehcache.Statistics;
+
 public class Common {
 
 	public final static String Session_UserInfo = "userInfo"; //Session 中的用户信息ID名称
@@ -26,6 +28,14 @@ public class Common {
 	public final static String UserSecurity_Button = "button"; //用户功能模块按钮权限 opid+后缀
  	
 	
-	
+	/**
+	 * 加密盐前缀
+	 */
+	public final static String SALT_PREFIX = "::SpringBootDemo::";
+
+	/**
+	 * 逗号分隔符
+	 */
+	public final static String SEPARATOR_COMMA = ",";
 	
 }

@@ -6,9 +6,9 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.SelectProvider;
 import org.springframework.stereotype.Repository;
 
-import com.bondex.client.entity.UserDefaultRegion;
-import com.bondex.jdbc.entity.Log;
-import com.bondex.jdbc.entity.Template;
+import com.bondex.entity.Template;
+import com.bondex.entity.UserDefaultRegion;
+import com.bondex.entity.log.Log;
 import com.bondex.mapper.provider.TemplateDataProvider;
 
 @Repository

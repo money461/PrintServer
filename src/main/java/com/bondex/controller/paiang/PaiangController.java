@@ -24,14 +24,14 @@ import org.springframework.web.servlet.ModelAndView;
 import com.bondex.common.Common;
 import com.bondex.common.enums.ResEnum;
 import com.bondex.config.exception.BusinessException;
+import com.bondex.entity.Label;
+import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.page.Datagrid;
-import com.bondex.jdbc.entity.Label;
-import com.bondex.jdbc.entity.LabelAndTemplate;
-import com.bondex.jdbc.service.LabelInfoService;
-import com.bondex.res.MsgResult;
-import com.bondex.security.entity.UserInfo;
-import com.bondex.shiro.security.ShiroUtils;
+import com.bondex.entity.res.MsgResult;
+import com.bondex.service.LabelInfoService;
+import com.bondex.shiro.security.entity.UserInfo;
 import com.bondex.util.StringUtils;
+import com.bondex.util.shiro.ShiroUtils;
 
 @Controller
 @RequestMapping("/paiang")

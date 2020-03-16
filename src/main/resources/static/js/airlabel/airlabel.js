@@ -450,7 +450,7 @@ label.prototype.initdialog = function(title) {
 label.prototype.initTree = function(){
 	$('#cc').combotree({
 		required : true,
-		url : "/labelPrint/client/getTreeRegionByOpid",
+		url : "/labelPrint/region/getTreeRegionByOpid",
 		method:'POST',
 		loadFilter : function(data,parent){
 			return data;
@@ -527,7 +527,7 @@ label.prototype.printLabelSendClient = function(default_region_code) {
 			type : 'POST',
 			data : {
 				labels : JSON.stringify(rows),
-				default_region_code : default_region_code, //chengdu/jichang id=2
+				regionCode : default_region_code, //chengdu/jichang id=2
 				businessType : type,
 				mqaddress: vpn //内网还是外网
 			},

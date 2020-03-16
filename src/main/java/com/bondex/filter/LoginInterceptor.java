@@ -21,12 +21,12 @@ import org.springframework.web.servlet.ModelAndView;
 import com.bondex.cas.SpringCasAutoconfig;
 import com.bondex.common.Common;
 import com.bondex.entity.page.Datagrid;
-import com.bondex.security.entity.Opid;
-import com.bondex.security.entity.TokenResult;
-import com.bondex.security.entity.UserInfo;
-import com.bondex.shiro.security.ShiroUtils;
+import com.bondex.shiro.security.entity.Opid;
+import com.bondex.shiro.security.entity.TokenResult;
+import com.bondex.shiro.security.entity.UserInfo;
 import com.bondex.util.GsonUtil;
 import com.bondex.util.HttpClient;
+import com.bondex.util.shiro.ShiroUtils;
 
 /**
  * preHandler -> Controller -> postHandler -> model渲染-> afterCompletion
