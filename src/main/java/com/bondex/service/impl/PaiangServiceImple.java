@@ -47,7 +47,7 @@ public class PaiangServiceImple implements LabelInfoService {
 	
 	
 	@Override
-	public boolean labelInfoSave(JsonRootBean jsonRootBean) {
+	public boolean labelInfoSave(String message) {
 		return false;
 	}
 

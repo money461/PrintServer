@@ -27,12 +27,12 @@ public class MessageHelper {
     }
 
     //取出消息转为实体
-    public static <T> T msgToObj(Message message, Class<T> clazz) {
+    public static <T> T msgToObj(Message message, Class<T> clazz) throws UnsupportedEncodingException {
         if (null == message || null == clazz) {
             return null;
         }
 
-        String str = new String(message.getBody());
+        String str = new String(message.getBody(),"utf-8");
         T obj = JsonUtil.strToObj(str, clazz);
 
         return obj;

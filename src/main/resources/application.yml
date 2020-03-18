@@ -53,6 +53,7 @@ spring:
     maxPoolPreparedStatementPerConnectionSize: 20
     filters: stat,wall,slf4j
     druid:
+      name: mysql
       # 数据库访问配置, 使用druid数据源
       type: com.alibaba.druid.pool.DruidDataSource
       # 连接池配置

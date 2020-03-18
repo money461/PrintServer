@@ -63,14 +63,20 @@
 	<div id="toolbar" style="width: 100%"  class="btn-group-sm"  role="group">
 	
 		<div class="btn-group" style="float: right; background-color: #F5F5F5; width: 100%;">
-		 
+		
+			
+		 	<@shiro.hasPermission  name="PaiangPrintLabel.label-search">
 			<button type="button" class="btn btn-default" onclick="paiang.search();">
 				<span class="glyphicon glyphicon-search"></span> 查询(ctrl+1)
 			</button>
-		  
+		  	</@shiro.hasPermission>
+		  	
+		  	
+		  	<@shiro.hasPermission  name="PaiangPrintLabel.label-print">
 			<button type="button" class="btn btn-default" onclick="paiang.tableprint()">
 				<span class="glyphicon glyphicon-print"></span> 打印
 			</button>
+			</@shiro.hasPermission>
 			
 			<button type="button" class="btn btn-default" onclick="paiang.labelExport()">
 				<span class="glyphicon glyphicon-share"></span> 导出标签

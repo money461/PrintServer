@@ -26,7 +26,7 @@ public class RabbitConfig {
 
 	/**
 	 * 死信队列跟交换机类型没有关系 不一定为directExchange 不影响该类型交换机的特性.
-	 *
+	 *DirectExchange 按照routingkey分发到指定队列    路由模式
 	 * @return the exchange
 	 */
 	@Bean("deadLetterExchange")
@@ -72,7 +72,7 @@ public class RabbitConfig {
 	}
 
 	/**
-	 * 死信路由通过 KEY_R 绑定键绑定到死信队列上.
+	 * 
 	 *
 	 * @return the binding
 	 */

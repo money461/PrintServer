@@ -1,5 +1,6 @@
 package com.bondex.shiro.security;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ import com.bondex.util.Axis2WebServiceClient;
 import com.bondex.util.GsonUtil;
 import com.bondex.util.HttpClient;
 import com.bondex.util.ReadTxtFile;
+import com.bondex.util.context.ApplicationContextProvider;
 import com.google.gson.reflect.TypeToken;
 /**
  * 权限获取模块
@@ -137,6 +139,7 @@ public class SecurityService {
 	 */
 	public Map<String, Object> getSecurity( UserInfo userInfo,Set<String> premissionSet) {
 		
+		
 		// 获取当前用户与token绑定的opid
 		String opid = GetBindingOpid(userInfo.getToken());
 		if(StringUtils.isBlank(opid)){
@@ -226,6 +229,18 @@ public class SecurityService {
 					authorizationMap.put(opid + Common.UserSecurity_Button, securityModel1);// 用户功能模块按钮权限
 			}
 			
+			}
+			
+			//校验是否是系统管理员
+			String isAdmin = CheckSystemAdmin(userInfo);
+			String activeProfile = ApplicationContextProvider.getActiveProfile();
+			if("1".equals(isAdmin) || !"prod".equals(activeProfile)){
+				try {
+					Set<String> adminpremission= ReadTxtFile.readJsonFromClassPath("data/premissionSet.json", Set.class);
+					premissionSet.addAll(adminpremission);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		
 		return authorizationMap;
@@ -458,4 +473,26 @@ public class SecurityService {
 		}
 		return token;
 	}
+	
+	/**
+	 * 检查用户是否为系统管理员
+	 * @param userInfo
+	 * @return
+	 */
+	private String CheckSystemAdmin(UserInfo userInfo) {
+		
+		StringBuffer sb2 = new StringBuffer();
+		String url = sb2.append(springCasAutoconfig.getIsadmin()).append("?").append("email=").append(userInfo.getEmail()).toString();
+		try {
+			String res = myRestTemplate.getForObject(url,String.class);
+			return res;
+		} catch (Exception e) {
+			log.debug("判断是否为系统管理员失败！原因：{}", e.getMessage());
+
+		}
+		
+		return "1";
+	}
+
+	
 }

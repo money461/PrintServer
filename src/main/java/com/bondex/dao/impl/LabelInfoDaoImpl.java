@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -27,23 +26,24 @@ import org.springframework.web.client.RestTemplate;
 
 import com.alibaba.fastjson.JSONObject;
 import com.bondex.common.enums.NewPowerHttpEnum;
+import com.bondex.config.exception.BusinessException;
 import com.bondex.dao.LabelInfoDao;
 import com.bondex.entity.Label;
 import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.Subscribe;
 import com.bondex.entity.Template;
-import com.bondex.entity.msg.JsonRootBean;
+import com.bondex.entity.log.Log;
 import com.bondex.entity.msg.Keywords;
 import com.bondex.mapper.AdminDataCurrentMapper;
 import com.bondex.mapper.TemplateDataMapper;
 import com.bondex.shiro.security.SecurityService;
 import com.bondex.shiro.security.entity.JsonResult;
 import com.bondex.shiro.security.entity.UserInfo;
+import com.bondex.util.CommonTool;
 import com.bondex.util.GsonUtil;
 import com.bondex.util.StringUtils;
 import com.bondex.util.shiro.ShiroUtils;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 
 @Component
 public class LabelInfoDaoImpl implements LabelInfoDao {
@@ -136,12 +136,7 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 
 	//根据用户部门 保存标签数据
 	@Override
-	public void saveLabel(JsonRootBean jsonRootBean) {
-		String json = null;
-		try {
-			json = GsonUtil.GsonString(jsonRootBean);
-			String main = jsonRootBean.getMain();
-			String[] hawb = null;
+	public Integer saveLabel(String main,Log log) {
 			//main 中获取标签数据
 			Keywords keywords = GsonUtil.GsonToBean(main, Keywords.class);
 			if (keywords != null) {
@@ -164,15 +159,10 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 						    JSONObject jsonObject = securityService.getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetCompanyInfoOfDeptByOperatorID);
 						    String DeptID = jsonObject.getJSONObject("Data").getString("DeptID");
 						    String reserve3;
-							    	
-							String hawb1 = keywords.getBILL_NO() == null ? "" : keywords.getBILL_NO();
-							if (!hawb1.equals("")) {
-								hawb = hawb1.split("_"); //切割
-							} else {
-								hawb = new String[] { "", "" };
-							}
-							
-							if (hawb[1].equals("")) {
+						    
+							//分单号组装
+							String hawb  = CommonTool.getSplitResult(keywords.getBILL_NO(), "_");
+							if (StringUtils.isBlank(hawb)) {
 								reserve3 = "1"; //富士标签
 							} else {
 								reserve3 = "2"; //邦达普货标签
@@ -183,67 +173,45 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 							}
 							
 						if ("0".equals(res)) {// 无重复数据，执行插入操作
-							String sql = "INSERT INTO label(mawb,hawb,destination,total,airport_departure,flight_date,reserve3,list_id,opid,opid_name,business_type) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
+							String sql = "INSERT INTO label(mawb,hawb,destination,total,airport_departure,flight_date,reserve3,list_id,opid,opid_name,business_type,create_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,NOW())";
 							
+							String mawb  = CommonTool.getMawb(keywords.getPARENT_BILL_NO());
 
-							String s1 = keywords.getPARENT_BILL_NO();
-							String s2 = "-";
-							int i = 3;// 插入到第三位
-							String newString = s1.substring(0, i) + s2 + s1.substring(i, s1.length());
-
-							subscribe(newString);// 检查是否是订阅主单号，如果是则发送邮件提示订阅用户
+							subscribe(mawb);// 检查是否是订阅主单号，如果是则发送邮件提示订阅用户
 							
 							// 标签数据入库
-							Object args[] = { newString, hawb[1], keywords.getUNLOAD_CODE(), Math.round(keywords.getPACK_NO()), keywords.getLOAD_CODE(), keywords.getVOYAGE_DATE(), reserve3, keywords.getLIST_ID(), keywords.getGEN_ER(), keywords.getGEN_NAME(), 1 };
+							Object args[] = { mawb, hawb, keywords.getUNLOAD_CODE(), Math.round(keywords.getPACK_NO()), keywords.getLOAD_CODE(), keywords.getVOYAGE_DATE(), reserve3, keywords.getLIST_ID(), keywords.getGEN_ER(), keywords.getGEN_NAME(), 1 };
 							
 							int temp = jdbcTemplate.update(sql, args);
-
-							// 入库失败，记录日志
-							if (temp <= 0) {
-								//插入失败
-								jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { newString, hawb[1], 1, "入库未抛异常，但结果返回小于1", "新增", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
-							} else {
-								//插入成功
-								jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { newString, hawb[1], 0, "", "新增", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
-							}
+							
+							log.setMawb(mawb);
+							log.setHawb(hawb);
+							log.setHandleType("新增");
+							return temp;
 							
 							//存在重复数据
 						} else {// 执行更新操作
 							//list-id
-							String sql = "update label set mawb=?,hawb=?,destination=?,total=?,airport_departure=?,flight_date=?,reserve3=?,opid=?,opid_name=? where list_id = ?";
-							
-							String s1 = keywords.getPARENT_BILL_NO();
-							String s2 = "-";
-							int i = 3;// 插入到第三位
-							String newString = s1.substring(0, i) + s2 + s1.substring(i, s1.length());
-
+							String sql = "update label set mawb=?,hawb=?,destination=?,total=?,airport_departure=?,flight_date=?,reserve3=?,opid=?,opid_name=?,update_time=now() where list_id = ?";
+							String mawb  = CommonTool.getMawb(keywords.getPARENT_BILL_NO());
 							// 标签数据入库
-							Object args[] = { newString, hawb[1], keywords.getUNLOAD_CODE(), Math.round(keywords.getPACK_NO()), keywords.getLOAD_CODE(), keywords.getVOYAGE_DATE(), reserve3, keywords.getGEN_ER(), keywords.getGEN_NAME(),keywords.getLIST_ID() };
+							Object args[] = { mawb, hawb, keywords.getUNLOAD_CODE(), Math.round(keywords.getPACK_NO()), keywords.getLOAD_CODE(), keywords.getVOYAGE_DATE(), reserve3, keywords.getGEN_ER(), keywords.getGEN_NAME(),keywords.getLIST_ID() };
 							int temp = jdbcTemplate.update(sql, args);
-							
-							if (temp <= 0) {
-								//更新失败
-								jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { newString, hawb[1], 1, "更新未抛异常，但结果返回小于1", "更新", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
-							} else {
-								//更新成功
-								jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { newString, hawb[1], 0, "", "更新", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
-							}
+							log.setMawb(mawb);
+							log.setHawb(hawb);
+							log.setHandleType("更新");
+							return temp;
 						}
 					} else {
-						jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { keywords.getPARENT_BILL_NO(), "", 1, "该主单号非法", "主单号非法", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
-						System.out.println("主单号为：" + keywords.getPARENT_BILL_NO() + "入库失败");
+						throw new BusinessException("主单号为：" + keywords.getPARENT_BILL_NO() + ",没有11位,不可入库");
 					}
 				} else {
-					jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { keywords.getPARENT_BILL_NO(), "", 1, "必填数据存在空数据", "必填数据存在空数据", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
+					throw new BusinessException("主单号/起始地/目的地/件数必填数据存在空值！");
 				}
+			}else{
+				throw new BusinessException("main字段数据格式与代码不完全符合！");
 			}
-		} catch (JsonSyntaxException e) { //Gson转换异常
-			e.printStackTrace();
-			jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { "", "", 1, "报文json转换失败。入库数据已经回滚", "", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), "" });
-		} catch (DataAccessException e) {
-			e.printStackTrace();
-			jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES(?,?,?,?,?,?,?)", new Object[] { "", "", 1, "代码块异常。入库数据已经回滚", "", new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), json });
-		}
+		
 	}
 
 

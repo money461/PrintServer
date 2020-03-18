@@ -51,6 +51,7 @@
 				    
             	</li>
             	
+            	 <@shiro.hasPermission  name="PrintLabel"> 
             	<li>
                 	<a href="#">
                 		<i class="fa fa-print"></i>
@@ -65,16 +66,16 @@
 							</li>
 						</@shiro.hasPermission>
 						
-						<!--  <@shiro.hasPermission  name="PaiangPrintLabel"> 
-						</@shiro.hasPermission> -->
+						 <@shiro.hasPermission  name="PaiangPrintLabel"> 
 						<li>
 							<a class="menuItem" href="paiang/viewdata"><i class="fa fa-print" style="width: 20px;"></i>派昂标签</a>
 						</li>
+						</@shiro.hasPermission>
 					</ul>
                 </li>
+                </@shiro.hasPermission>
                 
-                <!--  <@shiro.hasRole name="280602">   -->
-					<!-- </@shiro.hasRole> -->
+                 <@shiro.hasPermission  name="AdminLable"> 
                  
             	<li>
                 	<a href="#">
@@ -83,38 +84,53 @@
                     	<span class="fa arrow"></span>
                 	</a>
                     <ul class="nav nav-second-level collapse" aria-expanded="false" style="height: 0px;">
+                    
+                    	 <@shiro.hasPermission  name="AdminLable-user"> 
 						<li>
 							<a class="menuItem" href="admin/user"><i class="fa fa-gear" style="width: 20px;"></i>用户权限管理</a>
 						</li>
+						 </@shiro.hasPermission>
 						
+						 <@shiro.hasPermission  name="AdminLable-template"> 
 						<li>
 							<a class="menuItem" href="admin/labeltemplate"><i class="fa fa-gear" style="width: 20px;"></i>标签模板管理</a>
 						</li>
-						
+						 </@shiro.hasPermission>
+						 
+						 <@shiro.hasPermission  name="AdminLable-region"> 
 						<li>
 							<a class="menuItem" href="admin/region"><i class="fa fa-gear" style="width: 20px;"></i>区域办公室管理</a>
 						</li>
+						 </@shiro.hasPermission>
 						
+						 <@shiro.hasPermission  name="AdminLable-log"> 
 						<li>
 							<a class="menuItem" href="admin/log"><i class="fa fa-gear" style="width: 20px;"></i>标签日志</a>
 						</li>
+						 </@shiro.hasPermission>
 						
+						 <@shiro.hasPermission  name="swagger-ui"> 
 						<li>
 							<a class="menuItem" href="swagger-ui.html"><i class="fa fa-book" style="width: 20px;"></i>API文档</a>
 						</li>
+						 </@shiro.hasPermission>
 						
+						 <@shiro.hasPermission  name="druid"> 
 						<li>
 							<a class="menuItem" href="druid"><i class="fa fa-database" style="width: 20px;"></i>数据监控</a>
 						</li>
+						 </@shiro.hasPermission>
 						
+						 <@shiro.hasPermission  name="monitor-server"> 
 						<li>
 							<a class="menuItem" href="monitor/server"><i class="fa fa-gear" style="width: 20px;"></i>服务监控</a>
-							
 						</li>
-						
+						 </@shiro.hasPermission>
 						
 					</ul>
                 </li>
+                
+                 </@shiro.hasPermission>
                 
             </ul>
         </div>

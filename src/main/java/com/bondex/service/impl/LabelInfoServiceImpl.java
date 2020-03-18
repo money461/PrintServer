@@ -1,7 +1,10 @@
 package com.bondex.service.impl;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -12,14 +15,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.alibaba.fastjson.JSONObject;
 import com.bondex.common.enums.ResEnum;
 import com.bondex.config.exception.BusinessException;
 import com.bondex.controller.subscribe.SubscribeController;
 import com.bondex.dao.LabelInfoDao;
+import com.bondex.dao.LogInfoDao;
 import com.bondex.entity.Label;
 import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.Subscribe;
 import com.bondex.entity.Template;
+import com.bondex.entity.log.Log;
+import com.bondex.entity.msg.Head;
 import com.bondex.entity.msg.JsonRootBean;
 import com.bondex.entity.page.Datagrid;
 import com.bondex.service.LabelInfoService;
@@ -28,6 +35,7 @@ import com.bondex.util.GsonUtil;
 import com.bondex.util.shiro.ShiroUtils;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.gson.JsonSyntaxException;
 
 @Service(value="labelInfoServiceImpl")
 @Transactional(rollbackFor = Exception.class)
@@ -40,12 +48,59 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 	
 	@Autowired
 	private LabelInfoDao labelInfoDao;
+	
+	@Autowired
+	private LogInfoDao logInfoDao;
 
 	//保存标签数据
 	@Override
-	public boolean labelInfoSave(JsonRootBean jsonRootBean) {
-		labelInfoDao.saveLabel(jsonRootBean);
-		return true;
+	public boolean labelInfoSave(String messge) {
+		Log log = new Log();
+		Date date=  Date.from(LocalDateTime.now().toInstant(ZoneOffset.of("+8"))); //默认时区为东8区
+		log.setUpdateTime(date);
+		log.setCreateTime(date);
+		log.setJson(messge);
+		log.setStatus(1);
+		Integer i=0;
+		try {
+			
+			JsonRootBean jsonRootBean = GsonUtil.GsonToBean(messge, JsonRootBean.class);
+			Head head = jsonRootBean.getHead();
+			log.setSeqNo(head.getSeqNo());
+			log.setSenderName(head.getSenderName());
+			log.setReciverName(head.getReciverName());	
+			log.setDocTypeName(head.getDocTypeName());
+			log.setStatus(0); //成功
+			String main = jsonRootBean.getMain();
+			JSONObject parseObject = JSONObject.parseObject(main);
+			String mawb = parseObject.getString("PARENT_BILL_NO");
+			log.setMawb(mawb);
+			log.setHawb(parseObject.getString("BILL_NO"));
+			i =labelInfoDao.saveLabel(main,log);
+			if(i <= 0){
+				log.setDetail("入库未抛异常，但结果返回小于1");
+			}
+			
+		}catch (JsonSyntaxException e){
+			//JSON转换异常
+			log.setDetail("报文json转换失败。入库数据已经回滚");
+			
+		} catch (BusinessException e) { //自定义异常
+			log.setStatus(3);
+			log.setDetail(e.getMessage());
+			
+		} catch (Exception e) {
+			log.setDetail("数据入库未知异常！");
+			
+		}finally {
+			logInfoDao.insertLable(log); //日志入库
+		}
+		
+		if(1==i){
+			return true;
+		}
+		return false;
+		
 	}
 
 	@Override

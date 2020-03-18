@@ -1,33 +1,36 @@
 package com.bondex.entity.log;
 
 import java.io.Serializable;
-import java.util.Date;
 
-import org.springframework.format.annotation.DateTimeFormat;
-
+import com.bondex.annoation.dao.Column;
+import com.bondex.annoation.dao.Ignore;
+import com.bondex.annoation.dao.Pk;
+import com.bondex.annoation.dao.Table;
 import com.bondex.entity.BaseEntity;
 
+@Table(name="log")
 public class Log  extends BaseEntity implements Serializable{
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -8652955622061216441L;
-	
+	@Ignore //忽略字段
+	private static final long serialVersionUID = 1L;
+	/**
+	 * 主键
+	 */
+	@Pk
 	private Integer id;
 	private String seqNo; //消息ID
 	private String senderName; //消息来源
 	private String reciverName; //消息接受系统
-	private String rocTypeName; //消息类型声明
+	private String docTypeName; //消息类型声明
 	private String mawb; //主单号
 	private String hawb; //分单号
 	private int status;// 0-入库失败 1-入库成功
 	private String detail;// 失败原因
+	@Column(name="handleType")
 	private String handleType;// 处理类型。成功/失败
 	private String Json;
-	@DateTimeFormat(pattern = "yyyy-MM-dd hh:mm:ss")
-	private Date updateTime;
-	@DateTimeFormat(pattern = "yyyy-MM-dd hh:mm:ss")
-	private Date createTime; //消息创建时间
 	public Integer getId() {
 		return id;
 	}
@@ -52,11 +55,11 @@ public class Log  extends BaseEntity implements Serializable{
 	public void setReciverName(String reciverName) {
 		this.reciverName = reciverName;
 	}
-	public String getRocTypeName() {
-		return rocTypeName;
+	public String getDocTypeName() {
+		return docTypeName;
 	}
-	public void setRocTypeName(String rocTypeName) {
-		this.rocTypeName = rocTypeName;
+	public void setDocTypeName(String docTypeName) {
+		this.docTypeName = docTypeName;
 	}
 	public String getMawb() {
 		return mawb;
@@ -95,19 +98,6 @@ public class Log  extends BaseEntity implements Serializable{
 	}
 	public void setJson(String json) {
 		Json = json;
-	}
-	
-	public Date getUpdateTime() {
-		return updateTime;
-	}
-	public void setUpdateTime(Date updateTime) {
-		this.updateTime = updateTime;
-	}
-	public Date getCreateTime() {
-		return createTime;
-	}
-	public void setCreateTime(Date createTime) {
-		this.createTime = createTime;
 	}
 	
 	

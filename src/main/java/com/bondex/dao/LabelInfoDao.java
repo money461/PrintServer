@@ -5,15 +5,17 @@ import java.util.List;
 import com.bondex.entity.Label;
 import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.Template;
+import com.bondex.entity.log.Log;
 import com.bondex.entity.msg.JsonRootBean;
 
 public interface LabelInfoDao {
 	/**
 	 * 数据入库
 	 * 
-	 * @param jsonRootBean
+	 * @param messge
+	 * @param log 
 	 */
-	public void saveLabel(JsonRootBean jsonRootBean);
+	public Integer saveLabel(String messge, Log log);
 
 	/**
 	 * 分页查询

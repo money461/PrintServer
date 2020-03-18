@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import com.bondex.entity.Region;
 import com.bondex.rabbitmq.multiconfig.MessageHelper;
 import com.bondex.util.RandomUtil;
+import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -145,7 +146,7 @@ public class Producer {
 		// 将路由与队列信息绑定到频道
 		// 1.队列名2.是否持久化，3是否局限与链接，4不再使用是否删除，5其他的属性
 		channel.queueDeclare(QUEUE_NAME, true, false, false, null);
-//		channel.exchangeDeclare(EXCHANGES_NAME, "topic", true, false, null);
+//		channel.exchangeDeclare(EXCHANGES_NAME, BuiltinExchangeType.TOPIC, true, false, null);
 		// 第一参数空表示使用默认exchange，第二参数表示发送到的queue，第三参数是发送的消息是（字节数组）
 		channel.basicPublish("",QUEUE_NAME, null,message.getBytes("UTF-8"));
 		channel.close();// 关闭管道

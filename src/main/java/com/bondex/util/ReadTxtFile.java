@@ -1,15 +1,16 @@
 package com.bondex.util;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.lang.reflect.Type;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -22,10 +23,17 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.util.ResourceUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.parser.Feature;
+
 
 
 public class ReadTxtFile {
@@ -421,5 +429,45 @@ public class ReadTxtFile {
 		    return result.toString();
 		  }
 		  
+		  
+		  /**
+		   * / 读取项目路径下的文件 json/person.json
+              Person person = JsonUtils.readJsonFromClassPath("json/person.json", Person.class);
+		   * @param path
+		   * @param type
+		   * @return
+		   * @throws IOException
+		   */
 	   
+		  public static <T> T readJsonFromClassPath(String path, Type type) throws IOException {
+
+		        ClassPathResource resource = new ClassPathResource(path);
+		        if (resource.exists()) {
+		            return JSON.parseObject(resource.getInputStream(), StandardCharsets.UTF_8, type,
+		                    // 自动关闭流
+		                    Feature.AutoCloseSource,
+		                    // 允许注释
+		                    Feature.AllowComment,
+		                    // 允许单引号
+		                    Feature.AllowSingleQuotes,
+		                    // 使用 Big decimal
+		                    Feature.UseBigDecimal);
+		        } else {
+		            throw new IOException();
+		        }
+		    }
+		  
+		  
+		  /**
+		   * 读取Java项目中src/main/resources下的json文件
+		   * 
+		   * @param path = classpath:abc.json
+		   * @return
+		   * @throws Exception
+		   */
+		  public static String readResourcesFile(String path) throws Exception{
+			  File file = ResourceUtils.getFile(path);
+			  return FileUtils.readFileToString(file,Charset.defaultCharset());
+		  } 
+		  
 }

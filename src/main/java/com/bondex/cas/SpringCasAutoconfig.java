@@ -16,6 +16,11 @@ import com.bondex.util.IpUtil;
  * 
  * 2019年12月12日 下午3:13:46
  */
+/**
+ * @author Qianli
+ * 
+ * 2020年3月18日 上午10:46:53
+ */
 @Component
 @ConfigurationProperties(prefix = "spring.cas")
 @PropertySource(value="classpath:config/casconfig.properties",ignoreResourceNotFound=true,encoding="utf-8")
@@ -59,6 +64,8 @@ public class SpringCasAutoconfig {
 	private String casPublicUrl; // CAS 公共账户登陆地址
 	
 	private String loadMore; // 获取opids接口url
+	
+	private String isadmin; //是否为系统管理员
 
 	public List<String> getValidateFilters() {
 		return Arrays.asList(validateFilters.split(separator));
@@ -228,6 +235,14 @@ public class SpringCasAutoconfig {
 
 	public void setFrameworkapi(String frameworkapi) {
 		this.frameworkapi = frameworkapi;
+	}
+
+	public String getIsadmin() {
+		return isadmin;
+	}
+
+	public void setIsadmin(String isadmin) {
+		this.isadmin = isadmin;
 	}
 	
 	

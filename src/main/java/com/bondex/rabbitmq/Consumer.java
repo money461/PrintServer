@@ -10,14 +10,15 @@ import javax.annotation.Resource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import com.bondex.entity.msg.JsonRootBean;
+import com.bondex.rabbitmq.multiconfig.MessageHelper;
 import com.bondex.service.LabelInfoService;
-import com.bondex.util.GsonUtil;
+import com.rabbitmq.client.Channel;
 
 /**
  * @version 2018年5月14日 11:30:40
@@ -82,32 +83,16 @@ public class Consumer {
 	}
 
 	@RabbitListener(queues={"${spring.rabbitmq.airQueues}"},containerFactory ="vpnNetListenerContainerFactory")
-	public void flow1(byte[] msg) throws UnsupportedEncodingException {
+    public void ListenerLabel(Message msg, Channel channel){
 		String message = null;
 		try {
-			message = new String(msg, "utf-8");
+			message = MessageHelper.msgToObj(msg, String.class);
 			logger.debug("队列名称：[{}]监听到的消息：[{}]", "air_label_queue_o", message);
 			//保存标签数据
-			JsonRootBean gsonToBean = GsonUtil.GsonToBean(message, JsonRootBean.class);
-			labelInfoService.labelInfoSave(gsonToBean);
-			
-			jdbcTemplate
-					.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES('','',3,'','','"
-							+ new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()) + "','"
-							+ message.replaceAll("(')", "\\\\'") + "')"); //替换为标准的json数据
+			labelInfoService.labelInfoSave(message);
 			
 		} catch (Exception e) {
-			if (message == null) {
-				System.out.println("debug");
-			}
-			jdbcTemplate
-					.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES('','',3,'','','"
-							+ new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()) + "','" + msg + " 异常：" + e
-							+ "')");
-			jdbcTemplate
-					.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES('','',3,'','','"
-							+ new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()) + "','"
-							+ message.replaceAll("(')", "\\\\'") + " 异常：" + e + "')");
+			System.err.println(message);
 			e.printStackTrace();
 			
 		}
