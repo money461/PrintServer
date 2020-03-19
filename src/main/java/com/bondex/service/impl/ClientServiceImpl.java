@@ -120,7 +120,7 @@ public class ClientServiceImpl implements ClientService {
 		List<Object> vwOrderAlls = new ArrayList<Object>();
 
 		//查询数据库模板
-		List<Template> template = jdbcTemplate.query("select * from template where id = ?",
+		List<Template> template = jdbcTemplate.query("select  * from template where id = ?",
 				new Object[] { label2.getReserve3()},
 				new BeanPropertyRowMapper<Template>(Template.class));
 		
