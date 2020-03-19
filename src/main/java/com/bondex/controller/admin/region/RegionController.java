@@ -2,6 +2,7 @@ package com.bondex.controller.admin.region;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -13,12 +14,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.alibaba.fastjson.JSONObject;
 import com.bondex.controller.BaseController;
 import com.bondex.entity.Region;
 import com.bondex.entity.tree.TreeBean;
 import com.bondex.entity.tree.Ztree;
 import com.bondex.service.RegionService;
 import com.bondex.shiro.security.entity.UserInfo;
+import com.bondex.util.GsonUtil;
 import com.bondex.util.StringUtils;
 import com.bondex.util.shiro.ShiroUtils;
 
@@ -95,18 +98,23 @@ public class RegionController extends BaseController{
     
     
     /**
-     * 父级区域树形展示(暂时不使用了)
+     * 封装TreeSelect数据结构
      * @return
      */
-    @RequestMapping(value="/treeParentRegionData",method=RequestMethod.GET)
+    @RequestMapping(value="/treeSelectRegionData",method=RequestMethod.GET)
     @ResponseBody
-    public List<Ztree> getTreeParentRegionData(){
-    	List<Region> allParentRegion = regionService.getALLParentRegion(null); //获取所有的父类办公室
-    	//封装未tree类型结构
-    	List<Ztree> ztree = initZtree(allParentRegion);
-		return ztree;
+    public Object getTreeSelectRegionData(){
+    	//强制转换
+//    	List<Region> treeSelectRegionData = getAllRegion(null); //获取所有的父类办公室
+//    	List<Map<String,Object>> treeList  = RegionTreeUtil.treeSelectOptionMap(treeSelectRegionData);
     	
+    	//根据 Ztree递归
+    	List<Ztree> treeAllRegionData = getTreeAllRegionData();
+    	List<Ztree> treeList= RegionTreeUtil.ztreeOptionMap(treeAllRegionData);
+    	System.out.println(GsonUtil.GsonString(treeList));
+		return treeList;
     }
+    
     
     /**
      * 办公室树形展示

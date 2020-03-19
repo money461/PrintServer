@@ -4,9 +4,9 @@ import java.util.List;
 
 public class TreeBean {
 
-	private String id;
-	private String state;
-	private String text;
+	private String id; //id：绑定到节点的标识值。
+	private String state;  //state：节点状态，'open' 或 'closed'。
+	private String text; //text：要显示的文本。
 	private List<TreeBean> children;
 	private String pname;
 	private String region_code;

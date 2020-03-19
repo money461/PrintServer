@@ -4,6 +4,7 @@
 <head>
 	<!-- 引入样式css -->
 	<@commoncss title='添加办公室信息'/>
+	<link rel="stylesheet" href="${request.contextPath}/ajax/libs/jquery-ztree/3.5/css/metro/zTreeStyle.css" />
 </head>
 <body class="white-bg">
 	<div class="wrapper wrapper-content animated fadeInRight ibox-content">
@@ -12,7 +13,7 @@
 				<label class="col-sm-3 control-label ">上级区域：</label>
 				<div class="col-sm-8">
 				    <div class="input-group">
-						<input class="form-control" type="text"  id="treeName"  name="parent_name" value="${region.region_name!}" >
+						<input class="form-control" type="text"  id="treeName"  name="parent_name" value="${region.region_name!}" required>
 					    <span class="input-group-addon"><i class="fa fa-search"></i></span>
 				    </div>
 				</div>
@@ -21,7 +22,7 @@
 				<label class="col-sm-3 control-label ">上级区域简码：</label>
 				<div class="col-sm-8">
 				    <div class="input-group">
-						<input class="form-control" type="text" id="treeId" name="parent_code"  value="${region.region_code!}"   />
+						<input class="form-control" type="text" id="treeId" name="parent_code"  value="${region.region_code!}" required>
 					    <span class="input-group-addon"><i class="fa fa-search"></i></span>
 				    </div>
 				</div>
@@ -45,18 +46,24 @@
 		<!-- 引入通用js -->
 	<@commonjs/>
 	<script src="${request.contextPath}/js/admin/region.js"></script>
+	<script src="${request.contextPath}/ajax/libs/jquery-ztree/3.5/js/jquery.ztree.all-3.5.js"></script>
+	<script src="${request.contextPath}/ajax/libs/jquery-ztree/3.5/js/jquery.ztree.exhide-3.5.js"></script>
 	<script  type="text/javascript">
 	 
 		//判断父级节点是否可编辑
 		//var parent_name = '${region.region_name}'; 
+		var prefix = ctx + "/region";
 		var parent_name=$("#treeName").val();
 		if($.common.isNotEmpty(parent_name)){
 			//不可以编辑
 			$("#treeName").attr("readonly",true)//将input元素设置为readonly
 			$("#treeName").attr("onclick","selectregionTree();");//将input元素onclick="selectregionTree()"
 			$("#treeId").attr("readonly",true)//将input元素设置为readonly
+		}else{
+			$("#treeName").attr("lay-filter","tree");//将input元素onclick="selectregionTree()"
+			var url=prefix+"/treeSelectRegionData";
+			treeSelectClick('treeName',url,'get');
 		}
-		var prefix = ctx + "/region";
 		
 		$("#form-region-add").validate({
 			onkeyup: false,
@@ -180,6 +187,76 @@
 	   			layer.close(index);
 			}
 		}
+		
+	function treeSelectClick(id,url,type){
+		layui.use(["treeSelect",'form'], function () {
+		    var treeSelect = layui.treeSelect;
+		    var treeObj = undefined;
+		    treeSelect.render({
+		        // 选择器
+		        elem: '#'+id,
+		        // 数据
+		        //data: prefix+'/treeAllRegionData',
+		        data: url,
+		        // 异步加载方式：get/post，默认get
+		        type: type,
+		        // 占位符
+		        placeholder: '请输入或选择办公区域',
+		        // 是否开启搜索功能：true/false，默认false
+		        search: true,
+		        // 一些可定制的样式
+		        style: {
+		            folder: { // 父节点图标
+		                enable: true // 是否开启：true/false
+		            },
+		            line: { // 连接线
+		                enable: true // 是否开启：true/false
+		            }
+		        },
+		        // 点击回调
+		        click: function(d){
+		            console.log(d);
+		            console.log(d.treeId); // 得到组件的id "layui-treeSelect-1584582865735"
+		            console.log(d.current); // 得到点击节点的treeObj对象
+		            console.log(d.data); // 得到组成树的数据
+		            var res = $.common.split(d.treeId,'-');
+		            res
+		            var treeId = 'layui-treeSelect-body-'+res[2], //   layui-treeSelect-body-1584582865735
+		            treeObj = $.fn.zTree.getZTreeObj(treeId);
+		            
+		            if(notAllowLastLevel(treeObj)){
+			            $("#treeId").val(d.current.id);
+			   			$("#treeName").val(d.current.name);
+		            }
+		        },
+		        // 加载完成后的回调函数
+		        success: function (d) {
+		            console.log(d);
+//		                选中节点，根据id筛选
+		     // treeSelect.checkNode('tree', 'xidun');
+//		                获取zTree对象，可以调用zTree方法 该方法应保证在渲染完成后再执行
+		          // treeObj = treeSelect.zTree('tree');
+		           //console.log(treeObj);
+//		                刷新树结构
+		           //treeSelect.refresh('tree');
+		        }
+		    });
+		});
+		
+		function notAllowLastLevel (_tree) {
+		    var nodes = _tree.getSelectedNodes(); //获取所有选择的节点
+		    for (var i = 0; i < nodes.length; i++) {
+                if (nodes[i].children.length==0) {
+		    		$.modal.msgError("不能选择最后层级节点（" + nodes[i].name + "）");
+		            return false;
+		        }
+		    }
+    		return true;
+    	}
+		
+	}
+	
+		
 		
 	</script>
 </body>

@@ -29,6 +29,14 @@ region.prototype.saveOrUpdateRegion = function(url, data, callback) {
 	    $.ajax(config) //发送请求
 }
 
+//layui 引入treeSelect.js
+layui.config({
+    base: ctx+'/layer/layui/lay/'
+}).extend({
+    treeSelect: 'treeSelect/treeSelect',
+    treeSelect2: 'treeSelect2/treeSelect2'
+});
+
 var region = new region();
 
 $(document).ready(function(){

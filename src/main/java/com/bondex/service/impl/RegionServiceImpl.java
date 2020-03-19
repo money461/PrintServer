@@ -1,9 +1,10 @@
 package com.bondex.service.impl;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,40 +42,48 @@ public class RegionServiceImpl implements RegionService {
 	 * 树形转换
 	 */
 	private List<TreeBean> transferTree(List<Region> regionJDBCs){
+		List<TreeBean> result = new ArrayList<>();
+		
 		List<TreeBean> treeBeans = new ArrayList<>();
-		List<TreeBean> prent = new ArrayList<>();
-		Set<String> set = new HashSet<>();
-		TreeBean treeBean = null;
+		LinkedHashMap<String, String> parentMap = new LinkedHashMap<String,String>();
 		for (Region regionJDBC : regionJDBCs) {
-			set.add(regionJDBC.getParent_name());
-			treeBean = new TreeBean();
+			TreeBean treeBean = new TreeBean();
+			parentMap.put(regionJDBC.getParent_code(),regionJDBC.getParent_name());
 			treeBean.setId(regionJDBC.getRegion_code());
+			treeBean.setParent_code(regionJDBC.getParent_code());
 			treeBean.setRegion_code(regionJDBC.getRegion_code());
 			treeBean.setText(regionJDBC.getRegion_name());
-			treeBean.setParent_code(regionJDBC.getParent_code());
 			treeBean.setPname(regionJDBC.getParent_name());
 			treeBeans.add(treeBean);
 		}
 		
+		
 		// 设置父节点
-		for (String pname : set) {
-			treeBean = new TreeBean();
-			treeBean.setText(pname); 
-			treeBean.setState("closed");
+		Iterator<Entry<String, String>> iterator = parentMap.entrySet().iterator();
+		while(iterator.hasNext()){
+			Entry<String, String> next = iterator.next();
+			String parent_code = next.getKey();
+			String parent_name = next.getValue();
+			TreeBean treeBean = new TreeBean();
+			treeBean.setText(parent_name); 
+			treeBean.setState("closed"); //父节点不展示子节点
+			
 			List<TreeBean> childrens = new ArrayList<>();
 			
 			for (TreeBean treeBean1 : treeBeans) {
-				if (treeBean1.getPname().equals(pname)) {
+				if (treeBean1.getParent_code().equals(parent_code)) {
 					childrens.add(treeBean1);
 				}
 			}
 			
 			treeBean.setChildren(childrens); //存入子节点
-			prent.add(treeBean); //存入所有的节点
+			result.add(treeBean); //存入所有的节点
 		}
-		logger.debug(GsonUtil.GsonString(prent));
-		return prent;
+		logger.debug(GsonUtil.GsonString(result));
+		return result;
 	}
+	
+
 	
 	@Override
 	public List<Region> getALLParentRegion(Region region) {

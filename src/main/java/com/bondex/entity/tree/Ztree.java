@@ -1,6 +1,8 @@
 package com.bondex.entity.tree;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Ztree树结构实体类
@@ -32,6 +34,11 @@ public class Ztree implements Serializable
     /** 是否能勾选 */
     private boolean nocheck = false;
 
+    /**
+     * 子节点
+     */
+    private List<Ztree> children = new ArrayList<Ztree>();
+    
     public String getId()
     {
         return id;
@@ -101,4 +108,14 @@ public class Ztree implements Serializable
     {
         this.nocheck = nocheck;
     }
+
+	public List<Ztree> getChildren() {
+		return children;
+	}
+
+	public void setChildren(List<Ztree> children) {
+		this.children = children;
+	}
+    
+    
 }
