@@ -5,9 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.support.DefaultMessagePropertiesConverter;
+import org.springframework.amqp.rabbit.support.MessagePropertiesConverter;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -51,6 +52,7 @@ public class VPNNetRabbitConfiguration extends AbstractRabbitConfiguration {
             Logger log = LoggerFactory.getLogger(RabbitTemplate.class);
 //              使用jackson 消息转换器
             rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
+            rabbitTemplate.setMessagePropertiesConverter(defaultMessagePropertiesConverter());
             rabbitTemplate.setEncoding("UTF-8");
 //             开启returncallback     yml 需要 配置    publisher-returns: true
             rabbitTemplate.setMandatory(true);
@@ -130,6 +132,12 @@ public class VPNNetRabbitConfiguration extends AbstractRabbitConfiguration {
 		return new Jackson2JsonMessageConverter();
 	}
 	
+	@Bean
+	public MessagePropertiesConverter defaultMessagePropertiesConverter(){
+	   DefaultMessagePropertiesConverter messagePropertiesConverter=new DefaultMessagePropertiesConverter();
+	   messagePropertiesConverter.setCorrelationIdPolicy(DefaultMessagePropertiesConverter.CorrelationIdPolicy.STRING);
+	    return messagePropertiesConverter;
+	}
 
 
 }

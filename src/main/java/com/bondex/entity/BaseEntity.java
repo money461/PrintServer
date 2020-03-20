@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
+import com.bondex.annoation.dao.Column;
 import com.bondex.annoation.dao.Ignore;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -23,12 +24,14 @@ public class BaseEntity {
     /** 创建时间 */
     @DateTimeFormat(pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name="update_time")
     private Date createTime;
 
 
     /** 更新时间 */
     @DateTimeFormat(pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name="update_time")
     private Date updateTime;
 
     /** 备注 */

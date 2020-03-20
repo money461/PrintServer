@@ -9,6 +9,8 @@ import org.springframework.amqp.core.MessageDeliveryMode;
 import org.springframework.amqp.core.MessageProperties;
 
 import com.bondex.util.JsonUtil;
+import com.bondex.util.RandomUtil;
+
 
 public class MessageHelper {
 
@@ -21,6 +23,7 @@ public class MessageHelper {
         Message message = MessageBuilder.withBody(JsonUtil.objToStr(obj).getBytes("utf-8")).setContentEncoding("utf-8").build();
         message.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);// 消息持久化
         message.getMessageProperties().setContentType(MessageProperties.CONTENT_TYPE_JSON);
+        message.getMessageProperties().setCorrelationIdString(RandomUtil.UUID32());
         message.getMessageProperties().setTimestamp(new Date()); //设置时间
 
         return message;
