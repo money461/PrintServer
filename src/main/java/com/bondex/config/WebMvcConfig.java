@@ -74,8 +74,10 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
 		registry.addViewController("/label/addtemplate").setViewName("/admin/labeltemplate/add"); //渲染添加打印模板管理页面
 		registry.addViewController("/admin/region").setViewName("/admin/region/regionlist"); //渲染区域办公室管理页面
 		registry.addViewController("/user/adduser").setViewName("/admin/user/add"); //渲染添加用户页面
+		registry.addViewController("/currentlabel/currentlabel").setViewName("/current/currentLabel"); //渲染通用标签
 		
-		registry.addViewController("/admin/log").setViewName("/admin/log/detail"); //渲染标签日志管理页面
+		registry.addViewController("/admin/labelLog").setViewName("/admin/log/labelLog"); //渲染标签日志管理页面
+		registry.addViewController("/admin/printLog").setViewName("/admin/log/printLog"); //渲染标签日志管理页面
 		registry.setOrder(Ordered.HIGHEST_PRECEDENCE);
 		super.addViewControllers(registry);
 	}

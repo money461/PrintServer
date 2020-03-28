@@ -2,6 +2,7 @@ package com.bondex.controller;
 
 import java.util.List;
 
+import com.bondex.entity.page.PageBean;
 import com.bondex.entity.page.PageDomain;
 import com.bondex.entity.page.TableDataInfo;
 import com.bondex.entity.page.TableSupport;
@@ -20,16 +21,18 @@ public class BaseController
     
 
     /**
-     * 设置请求分页数据
+     * 设置请求分页数据 
+     * @param tableStyle 表格类型
+     * @param underScoreCase 排序字段是否驼峰命名
      */
-    protected void startPage()
+    protected void startPage(Boolean underScoreCase)
     {
         PageDomain pageDomain = TableSupport.buildPageRequest();
         Integer pageNum = pageDomain.getPageNum();
         Integer pageSize = pageDomain.getPageSize();
         if (StringUtils.isNotNull(pageNum) && StringUtils.isNotNull(pageSize))
         {
-            String orderBy = SqlUtil.escapeOrderBySql(pageDomain.getOrderBy());
+            String orderBy = SqlUtil.escapeOrderBySql(pageDomain.getOrderBy(underScoreCase));
             PageHelper.startPage(pageNum, pageSize, orderBy);
         }
     }
@@ -46,6 +49,19 @@ public class BaseController
         rspData.setRows(list);
         rspData.setTotal(new PageInfo(list).getTotal());
         return rspData;
+    }
+    
+    /**
+     * 响应请求分页数据
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected TableDataInfo getDataTable(PageBean<?> list)
+    {
+    	TableDataInfo rspData = new TableDataInfo();
+    	rspData.setCode(0);
+    	rspData.setRows(list.getList());
+    	rspData.setTotal(list.getTotal());
+    	return rspData;
     }
 
 }

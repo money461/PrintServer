@@ -50,8 +50,8 @@
 				</form>
 			</div>
 			
-			<div class="col-sm-12 select-table table-striped">
-				<table id="bootstrap-table"></table>
+			<div  class="col-sm-12 select-table table-striped table-responsive">
+						<table class="text-nowrap" id="bootstrap-table"  data-use-row-attr-func="true" data-reorderable-rows="true"  data-reorderable-columns="true" data-mobile-responsive="true" style="table-layout:fixed;"></table>
 			</div>
 		</div>
 	</div>
@@ -65,18 +65,23 @@
         $(function() {
             var options = {
                 url: prefix + "/logdetail",
-		        showSearch: false,
-		        showRefresh: false,
-		        showToggle: false,
-		        showColumns: false,
+                showSearch: true,
+		        showRefresh: true,
+		        showToggle: true,
+		        showColumns: true,
 		        detailView: true,
-		        detailFormatter: detailFormatter,
+		        detailFormatter:$.table.detailFormatter,
 		        sortName: "updateTime",
 		        pageSize:50,
 		        pageList: [20, 50, 100],
 		        modalName: "打印模板",
                 columns: [{
-		            checkbox: true
+		            checkbox: true,
+                },{
+                	field : 'id',
+                	title : '索引编号',
+		            visible: false
+		            
 		        },
 				{
 					field : 'seqNo', 
@@ -105,6 +110,14 @@
 				{
 				    field : 'handleType',
 				    title : '处理类型'
+				},{
+					field : 'detail',
+					title : '原因',
+					visible	: false
+				},{
+					field : 'json',
+					title : '消息报文',
+					visible	: false
 				},
 				{
                     field: 'status',
@@ -138,13 +151,6 @@
             $.table.init(options);
         });
         
-        function detailFormatter(index, row) {
-        	var html = [];
-        	$.each(row, function(key, value) {
-        		html.push('<p><b>' + key + ':</b> ' + value + '</p>');
-        	});
-        	return html.join('');
-       	}
     </script>
 </body>
 </html>

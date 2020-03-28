@@ -1,8 +1,5 @@
 package com.bondex.config.jdbc;
 
-import java.io.FileInputStream;
-import java.util.Properties;
-
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +9,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 import com.alibaba.druid.pool.DruidDataSource;
-import com.mysql.jdbc.Driver;
 
 @Configuration
 /**
@@ -68,6 +63,18 @@ public class DataSourceConfig {
     	JdbcTemplate template = new JdbcTemplate();
         template.setDataSource(dataSource());
         return template;
+    }
+    
+    /**
+     * NamedParameterJdbcTemplate类拓展了JdbcTemplate类，对JdbcTemplate类进行了封装从而支持命名参数特性。
+       NamedParameterJdbcTemplate主要提供以下三类方法：execute方法、query及queryForXXX方法、update及batchUpdate方法。
+     * 开发中尽量使用NamedParameterJdbcTemplate代替JdbcTemplate，如果想使用JdbcTemplate，也可以通过NamedParameterJdbcTemplate#getJdbcOperations()获取
+     * @return
+     */
+    @Bean
+    public NamedParameterJdbcTemplate namedParameterJdbcTemplate() {
+    	NamedParameterJdbcTemplate template = new NamedParameterJdbcTemplate(dataSource());
+    	return template;
     }
     
     /**

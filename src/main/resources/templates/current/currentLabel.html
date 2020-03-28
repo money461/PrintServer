@@ -1,0 +1,128 @@
+<#include "/system/include.html" encoding="UTF-8" parse=true/>
+<#include "/system/common.html" encoding="UTF-8" parse=true/>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<!-- 引入样式css -->
+<@commoncss title='通用打印数据展示'/>
+</head>
+<body class="gray-bg">
+	<div class="container-div">
+		<div class="row">
+		  <div class="col-sm-12 search-collapse">
+	       <!--form表单数据搜索条件筛选区域-->
+		   <form id='searchForm' class="form-horizontal center-vertical">
+		    
+			<!--派昂医药 查询条件筛选区域-->
+			<div class="select-list">
+			             <ul>
+							<li>
+								<label>展示单号：</label>
+								<textarea  type="textarea" rows="1" class="easyui-textbox"   data-options="multiline:true" name="showNum" id="showNum" ></textarea>
+							</li>
+							<li>
+								<label>数据来源：</label>
+								<input  type="text" name="docTypeName" id="docTypeName"></input>
+								<input  type="text"  style="display: none;" id="data" value=${data}></input>
+							</li>
+							<li>
+								<label>入库时间： </label>
+								<input type="text" id="start_time"  placeholder="开始时间"   name="params[beginTime]"/>
+								<span>-</span>
+								<input type="text" id="end_time"  placeholder="结束时间" name="params[endTime]"/>
+							</li>
+							<li>
+								<label>打印人：</label>
+								<input type="text" placeholder="请选择"  autocomplete="off"  id="printName"  name="printName"/>
+							</li>
+							<li>
+								<label>录入人：</label>
+								<input type="text" placeholder="请选择"  autocomplete="off" id="opidName"  name="opidName"/>
+							</li>
+							<li>
+								<label>是否打印：</label>
+								<select  type="select" id="printStatus" name="printStatus" style="width: 145px;">
+												<option value="0" selected="selected">未打印</option>
+												<option value="1">已打印</option>
+					             </select>
+							</li>
+							<!-- <li>
+								<button type="button"  class="btn btn-primary btn-rounded btn-sm" onclick="paiang.search();"><i class="fa fa-search"></i>&nbsp;搜索</button>
+							    <button type="button"  class="btn btn-warning btn-rounded btn-sm" onclick="paiang.securityReload();"><i class="fa fa-refresh"></i>&nbsp;重置</button>
+							</li> -->
+							 <@shiro.hasPermission  name="auth"><li><input type="text" style="display: none"/></li></@shiro.hasPermission>
+						</ul>
+				</div>
+			
+		</form>
+	 </div>
+	 
+	<!-- 数据展示 -->
+	<div class="col-sm-12 select-table table-striped">
+		 
+		<table id="currentlabel_tab"></table>
+	</div>
+	
+  </div>
+<!--引用公共按钮操作模块-->
+<!--datagrid引入操作按钮区域 -->
+<@currentlabeltoolbar/> 
+
+<!-- 引入修改办公室弹框 -->
+<@selectRegion/>
+ 
+</div>
+</body>
+	<!--引入include.js-->
+	<@commonjs/>
+	<script  type="text/javascript"> // 需要添加 th:inline 才能访问 model 中的属性
+	
+			
+			
+	        window.onload = function () {
+	        // 获取ModelAndView中的paiangmawb对象}
+	            console.log("---通用打印页面加载完成----");
+	            var data = $("#data").val();
+	            loaddateGridData(data)
+	            tableSelectclick('#opidName','/labelPrint/client/getOpidName');
+	            tableSelectclick('#printName','/labelPrint/client/getOpidName');
+	         }
+	         
+	         function loaddateGridData(data){
+	        	 if($.common.isNotEmpty(data)){
+		    		 $(currentlabel_tab).datagrid('loadData',JSON.parse(data)); //加载本地数据
+	        	 }else{
+		        	 var url = prefix + "/all";
+		    		 $(currentlabel_tab).datagrid('options').url=url;
+		    		 $(currentlabel_tab).datagrid('reload'); //加载网络数据
+	        	 }
+	         };
+	         
+	        function tableSelectclick(id,url){
+		         /* layer 选择下拉框表格展示 */
+		     	var tableSelect = layui.tableSelect;
+		     	tableSelect.render({
+		     		elem: id,	//定义输入框input对象 必填
+		     		checkedKey: 'opid', //表格的唯一建值，非常重要，影响到选中状态 必填
+		     		searchKey: 'opid_name',	//搜索输入框的name值 默认keyword
+		     		searchPlaceholder: '操作号/名称关键词搜索',	//搜索输入框的提示文字 默认关键词搜索
+		     		table: {	//定义表格参数，与LAYUI的TABLE模块一致，只是无需再定义表格elem
+				     		url: url,
+				     		cols: [[
+				     			{ type: 'radio' },
+				     			{ field: 'opid', title: '操作号' },
+				     			{ field: 'opid_name', title: '操作姓名' }
+				     		]]
+		     		},
+		     		done: function (elem, data) {
+		     			var NEWJSON = [];
+		     			layui.each(data.data, function (index, item) {
+		     				NEWJSON.push(item.opid_name)
+		     			})
+		     			elem.val(NEWJSON.join(","));
+		     		}
+		     	})
+	        }
+	</script>
+	<script type="text/javascript" src="${request.contextPath}/js/current/currentlabel.js"></script>
+</html>

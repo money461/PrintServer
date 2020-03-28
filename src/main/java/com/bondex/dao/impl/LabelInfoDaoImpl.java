@@ -26,6 +26,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.alibaba.fastjson.JSONObject;
 import com.bondex.common.enums.NewPowerHttpEnum;
+import com.bondex.common.enums.ResEnum;
 import com.bondex.config.exception.BusinessException;
 import com.bondex.dao.LabelInfoDao;
 import com.bondex.entity.Label;
@@ -180,7 +181,7 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 							subscribe(mawb);// 检查是否是订阅主单号，如果是则发送邮件提示订阅用户
 							
 							// 标签数据入库
-							Object args[] = { mawb, hawb, keywords.getUNLOAD_CODE(), Math.round(keywords.getPACK_NO()), keywords.getLOAD_CODE(), keywords.getVOYAGE_DATE(), reserve3, keywords.getLIST_ID(), keywords.getGEN_ER(), keywords.getGEN_NAME(), 1 };
+							Object args[] = { mawb, hawb, keywords.getUNLOAD_CODE(), Math.round(keywords.getPACK_NO()), keywords.getLOAD_CODE(), keywords.getVOYAGE_DATE(), reserve3, keywords.getLIST_ID(), keywords.getGEN_ER(), keywords.getGEN_NAME(), 1 }; //更新的数据默认 business_type=1
 							
 							int temp = jdbcTemplate.update(sql, args);
 							
@@ -216,7 +217,7 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 
 
 	@Override
-	public List<LabelAndTemplate> findByPage(String sql) {
+	public List<LabelAndTemplate> selectLabelByPage(String sql) {
 		List<LabelAndTemplate> keyword = templateDataMapper.queryLabelAndTemplate(sql);
 		return keyword;
 	}
@@ -307,6 +308,29 @@ public class LabelInfoDaoImpl implements LabelInfoDao {
 				    +"ON DUPLICATE KEY UPDATE "
 					+"template_id=VALUES(template_id),template_name=VALUES(template_name),width=VALUES(width),height=VALUES(height),status=VALUES(status)";
 		jdbcTemplate.update(sql,new Object[] {template.getTemplate_id(),template.getTemplate_name(),template.getWidth(),template.getHeight(),template.getStatus()});
+		
+	}
+
+	@Override
+	public Template checkUseTemplate(String templateId) {
+		List<Template> templatelist = jdbcTemplate.query("select * from template where id = ? or template_id=?",	new Object[] { templateId, templateId },new BeanPropertyRowMapper<Template>(Template.class));
+		if(null==templatelist || templatelist.size()==0){
+			throw new BusinessException(ResEnum.FAIL.CODE, "请指定打印模板！");
+		}
+		List<JsonResult> userPrintTemplateInfo = ShiroUtils.getUserPrintTemplateInfo();
+		Template template = templatelist.get(0);
+		if("1".equals(template.getStatus())){
+			throw new BusinessException(ResEnum.FAIL.CODE, "打印模板已被禁用,请联系管理员！");
+		}
+		
+		//判断是否有权限
+		JsonResult result = userPrintTemplateInfo.stream().filter(re ->re.getReportid().equals(template.getTemplate_id())).findFirst().orElse(null);
+		
+		if(null==result){
+			throw new BusinessException(ResEnum.FORBIDDEN.CODE, "未配置打印模板使用权限！");
+		}
+		return template;
+		
 		
 	}
 

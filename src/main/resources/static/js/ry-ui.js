@@ -57,6 +57,7 @@ var table = {
                     showColumns: true,
                     showToggle: true,
                     showExport: false,
+                    exportDataType:'basic',  //basic', 'all', 'selected'.
                     clickToSelect: false,
                     mobileResponsive: true,
                     rememberSelected: false,
@@ -100,6 +101,7 @@ var table = {
                     showColumns: options.showColumns,                   // 是否显示隐藏某列下拉框
                     showToggle: options.showToggle,                     // 是否显示详细视图和列表视图的切换按钮
                     showExport: options.showExport,                     // 是否支持导出文件
+                    exportDataType:options.exportDataType,              // 表示导出的模式是当前页、所有数据还是选中数据。 //basic', 'all', 'selected'.
                     uniqueId: options.uniqueId,                         // 唯 一的标识符
                     clickToSelect: options.clickToSelect,				// 是否启用点击选中行
                     mobileResponsive: options.mobileResponsive,         // 是否支持移动端适配
@@ -124,6 +126,16 @@ var table = {
                     exportOptions: options.exportOptions,               // 前端导出忽略列索引
                     detailFormatter: options.detailFormatter,           // 在行下面展示其他数据列表
                 });
+                
+                $('#' + options.id).colResizable({
+                    liveDrag: true,//实时显示滑动位置
+                    gripInnerHtml: "<div class='grip'></div>",
+                    //draggingClass: "dragging",
+                    postbackSafe: true,//刷新后保留之前的拖拽宽度
+                    headerOnly:true,
+                    resizeMode:'overflow'//允许溢出父容器
+                    //onResize: onSampleResized
+                });
             },
             // 获取实例ID，如存在多个返回#id1,#id2 delimeter分隔符
             getOptionsIds: function(separator) {
@@ -138,13 +150,14 @@ var table = {
             queryParams: function(params) {
             	var curParams = {
             			// 传递参数查询参数
-                        pageSize:       params.limit,
-                        pageNum:        params.offset / params.limit + 1,
-                        searchValue:    params.search,
-                        orderByColumn:  params.sort,
-                        isAsc:          params.order
+                        pageSize:       params.limit, //记录数
+                        pageNum:        params.offset / params.limit + 1, //页码
+                        searchValue:    params.search, //查询值
+                        orderByColumn:  params.sort, //排序字段
+                        isAsc:          params.order //排序 asc ,desc
             		};
             	var currentId = $.common.isEmpty(table.options.formId) ? $('form').attr('id') : table.options.formId;
+            	 //封装页面筛选区域form表单与 bootstrapTable 自带的分页排序参数
             	return $.extend(curParams, $.common.formToJSON(currentId)); 
             },
             // 请求获取数据后处理回调函数
@@ -323,6 +336,7 @@ var table = {
 	                        search[key] = data[key];
 	                    });
                     }
+                    //筛选form表单封装 bootstrapTable 自带的分页排序参数
                     search.pageSize = params.limit;
                     search.pageNum = params.offset / params.limit + 1;
                     search.searchValue = params.search;
@@ -491,6 +505,22 @@ var table = {
             hideColumn: function(column, tableId) {
             	var currentId = $.common.isEmpty(tableId) ? table.options.id : tableId;
             	$("#" + currentId).bootstrapTable('hideColumn', column);
+            },
+            //在行下面展示其他数据列表
+            detailFormatter:function detailFormatter(index, row) {
+            	var columns =$(this).bootstrapTable('getOptions')[0].columns[0];
+            	var html = [];
+            	$.each(row, function(key, value) {
+            		 for (var i = 0; i < columns.length; i++) {
+            			 var field = columns[i].field;
+            			 if(key==field){
+            				 key =  columns[i].title +"【"+key+"】";
+            				 break;
+            			 }
+            		 }
+            		 html.push('<p><b>' + key + ':</b> ' + value + '</p>');
+            	});
+            	return html.join('');
             }
         },
         // 表格树封装处理

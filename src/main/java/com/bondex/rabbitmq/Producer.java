@@ -2,7 +2,6 @@ package com.bondex.rabbitmq;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +22,7 @@ import org.springframework.stereotype.Component;
 import com.bondex.entity.Region;
 import com.bondex.rabbitmq.multiconfig.MessageHelper;
 import com.bondex.rabbitmq.util.ChannelUtils;
+import com.bondex.util.GsonUtil;
 import com.bondex.util.JsonUtil;
 import com.bondex.util.RandomUtil;
 import com.rabbitmq.client.AMQP;
@@ -77,8 +77,9 @@ public class Producer {
 	 * @throws Exception
 	 * 
 	 */
-	public void vpnNetPrint(String message, Region regionInfo) throws Exception {
+	public void vpnNetPrint(Object message, Region regionInfo) throws Exception {
 		 // 声明交换机 可以自动删除
+//		vpnNetRabbitAdmin.deleteExchange(SendExchanage);
 		vpnNetRabbitAdmin.declareExchange(new TopicExchange(SendExchanage, true, true, new HashMap<>()));
 		
 		String ROUNTING_KEY = "air_print_label_" + regionInfo.getParent_code() + "_" + regionInfo.getRegion_code() + "_queue_RootKey"; 
@@ -86,13 +87,14 @@ public class Producer {
 		
 		//定义队列，均为持久化
 		// 1.队列名2.是否持久化，3是否局限与链接，4不再使用是否删除，5其他的属性
+//		vpnNetRabbitAdmin.deleteQueue(QUEUE_NAME);
 		vpnNetRabbitAdmin.declareQueue(new Queue(QUEUE_NAME, true, false, true, null));
 		
 		//Binding 绑定
 		vpnNetRabbitAdmin.declareBinding(new Binding(QUEUE_NAME,Binding.DestinationType.QUEUE, SendExchanage,ROUNTING_KEY,new HashMap()));
 		
 		
-		logger.info("发送消息至内网交换机：【{}】,路由器：【{}】,队列名称：【{}】，消息体：【{}】",SendExchanage,ROUNTING_KEY,QUEUE_NAME,message);
+		logger.info("发送消息至内网交换机：【{}】,路由器：【{}】,队列名称：【{}】，消息体：【{}】",SendExchanage,ROUNTING_KEY,QUEUE_NAME,GsonUtil.GsonString(message));
 		
 		CorrelationData correlationId = new CorrelationData(RandomUtil.generateStr(32));
 		
@@ -105,8 +107,9 @@ public class Producer {
 	 * @param regionInfo
 	 * @throws Exception
 	 */
-	public void outNetPrint(String message, Region regionInfo) throws Exception {
+	public void outNetPrint(Object message, Region regionInfo) throws Exception {
 		// 声明交换机
+//		outNetRabbitAdmin.deleteExchange(SendExchanage);
 		outNetRabbitAdmin.declareExchange(new TopicExchange(SendExchanage, true, true, new HashMap<>()));
 		
 		String ROUNTING_KEY = "air_print_label_" + regionInfo.getParent_code() + "_" + regionInfo.getRegion_code() + "_queue_RootKey"; 
@@ -114,11 +117,12 @@ public class Producer {
 		
 		//定义队列，均为持久化
 		// 1.队列名2.是否持久化，3是否局限与链接，4不再使用是否删除，5其他的属性
+//		outNetRabbitAdmin.deleteQueue(QUEUE_NAME);
 		outNetRabbitAdmin.declareQueue(new Queue(QUEUE_NAME, true, false, true, null));
 		//Binding 绑定
 		outNetRabbitAdmin.declareBinding(new Binding(QUEUE_NAME,Binding.DestinationType.QUEUE, SendExchanage,ROUNTING_KEY,new HashMap()));
 		
-		logger.info("发送消息至外网交换机：【{}】,路由器：【{}】,队列名称：【{}】，消息体：【{}】",SendExchanage,ROUNTING_KEY,QUEUE_NAME,message);
+		logger.info("发送消息至外网交换机：【{}】,路由器：【{}】,队列名称：【{}】，消息体：【{}】",SendExchanage,ROUNTING_KEY,QUEUE_NAME,GsonUtil.GsonString(message));
 		
 		CorrelationData correlationId = new CorrelationData(RandomUtil.generateStr(32));
 		
@@ -133,7 +137,7 @@ public class Producer {
 	 * @param region
 	 * @throws Exception
 	 */
-	public void print(String message, Region regionInfo) throws Exception {
+	public void print(Object message, Region regionInfo) throws Exception {
 		
 		String ROUNTING_KEY = "air_print_label_" + regionInfo.getParent_code() + "_" + regionInfo.getRegion_code() + "_queue_RootKey"; 
 		String QUEUE_NAME = "air_print_label_" + regionInfo.getParent_code() + "_" + regionInfo.getRegion_code() + "_queue"; 
@@ -151,7 +155,7 @@ public class Producer {
 		channel.queueDeclare(QUEUE_NAME, true, false, true, null);
 //		channel.exchangeDeclare(EXCHANGES_NAME, BuiltinExchangeType.TOPIC, true, false, null);
 		// 第一参数空表示使用默认exchange，第二参数表示发送到的queue，第三参数是发送的消息是（字节数组）
-		channel.basicPublish("",QUEUE_NAME, null,message.getBytes("UTF-8"));
+		channel.basicPublish("",QUEUE_NAME, null,JsonUtil.objToStr(message).getBytes("utf-8"));
 		channel.close();// 关闭管道
 		connection.close();// 关闭连接
 	}
@@ -174,7 +178,7 @@ public class Producer {
 	        
 	        String correlationId = RandomUtil.UUID32(); //消息id
 	        //消息属性需要带上reply_to,correlation_id
-	        AMQP.BasicProperties basicProperties = new AMQP.BasicProperties().builder().deliveryMode(2).contentType("UTF-8").correlationId(correlationId).replyTo(replyTo).build();
+	        AMQP.BasicProperties basicProperties = new AMQP.BasicProperties().builder().contentType("text/plain").contentEncoding("utf-8").deliveryMode(2).contentType("UTF-8").correlationId(correlationId).replyTo(replyTo).build();
 	        
 	        byte[] body = JsonUtil.objToStr(object).getBytes("utf-8"); //发送的数据
 	       // 第一参数空表示使用默认exchange，第二参数表示发送到的queue，第三 true if the 'mandatory' flag is to be set 如果exchange根据自身类型和消息routeKey无法找到一个符合条件的queue，那么会调用basic.return方法将消息返还给生产者。false：出现上述情形broker会直接将消息扔掉; 第四参数是发送的消息是（字节数组）

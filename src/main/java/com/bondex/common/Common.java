@@ -38,4 +38,17 @@ public class Common {
 	 */
 	public final static String SEPARATOR_COMMA = ",";
 	
+	/**
+	 * 发送内网
+	 */
+	public final static String MQAddress_VPNNET = "vpnnet";
+	
+	/**
+	 * 发送外网
+	 */
+	public final static String MQAddress_OUTNET = "outnet";
+	
+	
+	
+	
 }

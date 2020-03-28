@@ -14,15 +14,19 @@ public class PageBean<T> implements Serializable {
 	    private int pageSize;    // 每页记录数
 	    private int pages;        // 总页数
 	    private int size;        // 当前页的数量 <= pageSize，该属性来自ArrayList的size属性
+	    /**
+	     * 排序
+	     */
+	    private String orderBy; //排序 order by
+	    /**
 	    
 	    public PageBean() {}
 	    /**
 	     * 包装Page对象，因为直接返回Page对象，在JSON处理以及其他情况下会被当成List来处理，
 	     * 而出现一些问题。
-	     * @param list          page结果
 	     * @param navigatePages 页码数量
 	     */
-	    public PageBean(List<T> list) {
+	    public PageBean() {
 	        if (list instanceof Page) {
 	            Page<T> page = (Page<T>) list;
 	            this.pageNum = page.getPageNum();
@@ -31,6 +35,7 @@ public class PageBean<T> implements Serializable {
 	            this.pages = page.getPages();
 	            this.list = page;
 	            this.size = page.size();
+	            this.orderBy = page.getOrderBy();
 	        }
 	    }
 
@@ -81,8 +86,17 @@ public class PageBean<T> implements Serializable {
 	    public void setSize(int size) {
 	        this.size = size;
 	    }
+
+		public String getOrderBy() {
+			return orderBy;
+		}
+
+		public void setOrderBy(String orderBy) {
+			this.orderBy = orderBy;
+		}
 	    
 	
+	    
 	
 
 }

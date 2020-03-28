@@ -3,6 +3,8 @@ package com.bondex.util;
 import org.apache.commons.lang3.StringUtils;
 
 public class CommonTool {
+	
+
 
 	/**
 	 * * StringUtils.substringAfter(null, *)      = null

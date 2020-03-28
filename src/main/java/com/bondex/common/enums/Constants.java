@@ -43,6 +43,12 @@ public class Constants
     public static final String AUTO_REOMVE_PRE = "true";
 
     /**
+     * bootstrap-table表格类型
+     */
+    public static final String Bootstrap_TableStyle =  "bootstrap-table";
+    
+    
+    /**
      * 当前记录起始索引
      */
     public static final String PAGE_NUM = "pageNum";
@@ -61,6 +67,31 @@ public class Constants
      * 排序的方向 "desc" 或者 "asc".
      */
     public static final String IS_ASC = "isAsc";
+    
+    /**
+     *easyui-table表格类型
+     */
+    public static final String EasyUI_TableStyle =  "easyui-table";
+    
+    /**
+     * 当前记录起始索引
+     */
+    public static final String PAGE = "page";
+
+    /**
+     * 每页显示记录数 
+     */
+    public static final String ROWS = "rows";
+
+    /**
+     * 排序列 输出要排序的字段名
+     */
+    public static final String SORT = "sort";
+
+    /**
+     * 排序的方向 "desc" 或者 "asc". 输出的字段名的排序属性,要么是"asc"(升序)要么是"desc"(降序)
+     */
+    public static final String ORDER = "order";
 
     /**
      * 资源映射路径 前缀

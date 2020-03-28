@@ -24,19 +24,19 @@ import org.springframework.web.servlet.ModelAndView;
 import com.bondex.common.Common;
 import com.bondex.common.enums.ResEnum;
 import com.bondex.config.exception.BusinessException;
+import com.bondex.controller.BaseController;
 import com.bondex.entity.Label;
 import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.page.Datagrid;
+import com.bondex.entity.page.TableDataInfo;
 import com.bondex.entity.res.MsgResult;
 import com.bondex.service.LabelInfoService;
-import com.bondex.shiro.security.entity.UserInfo;
 import com.bondex.util.StringUtils;
-import com.bondex.util.shiro.ShiroUtils;
 
 @Controller
 @RequestMapping("/paiang")
 @Validated
-public class PaiangController {
+public class PaiangController extends BaseController{
 
 
 	@Resource(name="paiangServiceImple")
@@ -69,16 +69,15 @@ public class PaiangController {
 	 */
 	@RequestMapping(value="/search",method = RequestMethod.POST,headers = {"content-type=application/x-www-form-urlencoded; charset=UTF-8"},produces={"application/json; charset=UTF-8"})
 	@ResponseBody
-	public Object search(String page, String rows,Label label,String start_time, String end_time, String sort, String order, String opid,HttpServletRequest request) throws Exception{
+	public Object search(Label label,HttpServletRequest request) throws Exception{
 		HttpSession session = request.getSession();
 		Map<String, Object> map = (Map<String, Object>) session.getAttribute(Common.Session_UserSecurity);
 		if(StringUtils.isNull(map)||map.size()==0){
 			throw new BusinessException(ResEnum.FORBIDDEN.CODE,"操作号没有配置任何操作权限,无法查看数据");
 		}
-		UserInfo userInfo = ShiroUtils.getUserInfo();
-		opid = userInfo.getOpid();
-		Datagrid datagrid = labelInfoService.findByPage(page, rows, label, start_time, end_time, sort, order, "medicine");
-		 return MsgResult.result(ResEnum.SUCCESS.CODE,ResEnum.SUCCESS.MESSAGE,datagrid);
+		List<LabelAndTemplate> list = labelInfoService.selectLabelByPage(label);
+		TableDataInfo dataTable = getDataTable(list);
+		 return MsgResult.result(ResEnum.SUCCESS.CODE,ResEnum.SUCCESS.MESSAGE,dataTable);
 	}
 	
 	@RequestMapping(value="/update",method=RequestMethod.POST,consumes={"application/json; charset=UTF-8"},produces={"application/json; charset=UTF-8"})

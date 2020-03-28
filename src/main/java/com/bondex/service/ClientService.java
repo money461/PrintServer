@@ -7,8 +7,6 @@ import java.util.List;
 import com.bondex.entity.Label;
 import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.Region;
-import com.bondex.entity.UserDefaultRegion;
-import com.bondex.entity.tree.TreeBean;
 import com.bondex.shiro.security.entity.Opid;
 import com.bondex.shiro.security.entity.UserInfo;
 
@@ -34,21 +32,21 @@ public interface ClientService {
 	 * @param opid
 	 * @param thisUsername
 	 * @param report
-	 * @param businessType
 	 * 
 	 * @return
 	 */
-	void sendLabel(List<LabelAndTemplate> labelList, String regionCode, UserInfo userInfo, String businessType,String mqaddress);
 
+	void sendLabel(List<LabelAndTemplate> labelAndTemplates, String regionCode, String mqaddress);
 
 	List<Label> getLabel(String labels);
-
 
 	Object postRegion(String code,Integer curPage,Integer pageSize);
 
 	Region getDefaultBindRegionByOpid(String regionid, String opid);
 
 	List<Opid> getOpidName(String param,Integer page,Integer limit);
+
+
 
 
 }

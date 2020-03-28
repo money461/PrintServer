@@ -11,9 +11,9 @@ import com.bondex.util.ServletUtils;
 public class TableSupport
 {
     /**
-     * 封装分页对象
+     * BootStrap-table封装分页对象
      */
-    public static PageDomain getPageDomain()
+    public static PageDomain getBootstrapTablePageDomain()
     {
         PageDomain pageDomain = new PageDomain();
         pageDomain.setPageNum(ServletUtils.getParameterToInt(Constants.PAGE_NUM));
@@ -25,7 +25,21 @@ public class TableSupport
 
     public static PageDomain buildPageRequest()
     {
-        return getPageDomain();
+	  return getBootstrapTablePageDomain();
     }
 
+
+    /*
+     * easyui 分页排序字段 暂不使用
+     */
+	public static PageDomain getEasyUITablePageDomain() {
+		 	PageDomain pageDomain = new PageDomain();
+	        pageDomain.setPageNum(ServletUtils.getParameterToInt(Constants.PAGE));
+	        pageDomain.setPageSize(ServletUtils.getParameterToInt(Constants.ROWS));
+	        pageDomain.setOrderByColumn(ServletUtils.getParameter(Constants.SORT));
+	        pageDomain.setIsAsc(ServletUtils.getParameter(Constants.ORDER));
+	        return pageDomain;
+	}
+
+	 
 }

@@ -22,7 +22,7 @@ public interface LabelInfoDao {
 	 * 
 	 * @return
 	 */
-	public List<LabelAndTemplate> findByPage(String sql);
+	public List<LabelAndTemplate> selectLabelByPage(String sql);
 
 	/**
 	 * 获取记录数
@@ -52,4 +52,10 @@ public interface LabelInfoDao {
 
 	
 	public void saveorupdateTempalte(Template template);
+	
+	/**
+	 * 校验用户是否可以使用打印模板
+	 * @param templateId
+	 */
+	public Template checkUseTemplate(String templateId);
 }

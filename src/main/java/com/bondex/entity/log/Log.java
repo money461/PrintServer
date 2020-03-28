@@ -20,15 +20,19 @@ public class Log  extends BaseEntity implements Serializable{
 	 */
 	@Pk
 	private Integer id;
+	@Column(name="seq_no")
 	private String seqNo; //消息ID
+	@Column(name="sender_name")
 	private String senderName; //消息来源
+	@Column(name="reciver_name")
 	private String reciverName; //消息接受系统
+	@Column(name="docType_name")
 	private String docTypeName; //消息类型声明
 	private String mawb; //主单号
 	private String hawb; //分单号
 	private int status;// 0-入库失败 1-入库成功
 	private String detail;// 失败原因
-	@Column(name="handleType")
+	@Column(name="handle_type")
 	private String handleType;// 处理类型。成功/失败
 	private String Json;
 	public Integer getId() {

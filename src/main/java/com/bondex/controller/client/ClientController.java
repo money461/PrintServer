@@ -31,7 +31,6 @@ import com.bondex.entity.Region;
 import com.bondex.entity.UserDefaultRegion;
 import com.bondex.entity.res.AjaxResult;
 import com.bondex.entity.res.MsgResult;
-import com.bondex.entity.tree.TreeBean;
 import com.bondex.service.ClientService;
 import com.bondex.service.UserDefaultRegionService;
 import com.bondex.shiro.security.entity.JsonResult;
@@ -97,19 +96,16 @@ public class ClientController {
 	 * 发送打印消息 多个标签
 	 * @param labels 多个标签
 	 * @param regionid 办公室区域
-	 * @param businessType air
 	 * @param mqaddress vpnnet 内网  outnet外网
 	 * @return
 	 */
 	@RequestMapping(value="printLabelSendClient",method=RequestMethod.POST,headers = {"content-type=application/x-www-form-urlencoded; charset=UTF-8"},produces={"application/json; charset=UTF-8"})
 	@ResponseBody
-	public AjaxResult printLabelSendClient(String labels, String regionCode, String businessType,String mqaddress, HttpServletRequest request) {
-		HttpSession session = request.getSession();
-		UserInfo userInfo = (UserInfo)session.getAttribute(Common.Session_UserInfo);
+	public AjaxResult printLabelSendClient(String labels, String regionCode,String mqaddress) {
 		List<LabelAndTemplate> labelList = GsonUtil.getGson().fromJson(labels, new TypeToken<List<LabelAndTemplate>>() {}.getType());
 		String gsonString = GsonUtil.GsonString(labelList);
 		logger.debug("提交准备打印的数据：{}",gsonString);
-		clientService.sendLabel(labelList, regionCode,userInfo, businessType,mqaddress);
+		clientService.sendLabel(labelList, regionCode,mqaddress);
 		return AjaxResult.success();
 	}
 

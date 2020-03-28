@@ -24,7 +24,7 @@ public class UserDefaultRegionController extends BaseController {
 	@RequestMapping("/list")
 	@ResponseBody
 	public Object getAllUserDefaultRegion(UserDefaultRegion defaultRegion){
-		startPage(); //分页插件
+		startPage(false); //分页插件
 		List<UserDefaultRegion> list = userDefaultRegionService.selectUserDefaultRegion(defaultRegion);
 		TableDataInfo info=  getDataTable(list); //数据转换
 		if(StringUtils.isEmpty(list)){

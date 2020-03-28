@@ -1,14 +1,13 @@
 package com.bondex.dao;
 
-import java.util.List;
-
 import com.bondex.entity.log.Log;
+import com.bondex.entity.page.PageBean;
 
 public interface LogInfoDao {
 
-	List<Log> getlogDetail(Log log);
+	PageBean<Log> getlogDetail(Log log);
 
 	//日志入库
-	void insertLable(Log log);
+	void insertLableLog(Log log);
 
 }

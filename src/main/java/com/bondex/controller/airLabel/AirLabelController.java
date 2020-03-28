@@ -1,8 +1,10 @@
 package com.bondex.controller.airLabel;
 
 import java.net.URLDecoder;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.alibaba.fastjson.JSON;
@@ -29,14 +32,12 @@ import com.bondex.controller.BaseController;
 import com.bondex.entity.Label;
 import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.Template;
-import com.bondex.entity.page.Datagrid;
+import com.bondex.entity.page.TableDataInfo;
 import com.bondex.entity.res.AjaxResult;
 import com.bondex.entity.res.MsgResult;
 import com.bondex.service.LabelInfoService;
-import com.bondex.shiro.security.entity.UserInfo;
 import com.bondex.util.GsonUtil;
 import com.bondex.util.StringUtils;
-import com.bondex.util.shiro.ShiroUtils;
 
 @Controller
 @RequestMapping(value="/label")
@@ -76,7 +77,7 @@ public class AirLabelController extends BaseController {
 	@RequestMapping(value="/getAlltemplate",method={RequestMethod.POST})
 	@ResponseBody
 	public Object getAlltemplate(Template template) {
-		startPage();//设置分页pagehelper
+		startPage(false);//设置分页pagehelper
 		List<Template> list = labelInfoService.getALLTemplate(template);
 		return getDataTable(list);
 	}
@@ -120,29 +121,29 @@ public class AirLabelController extends BaseController {
 	 * @param page 页码
 	 * @param rows 每页记录数
 	 * @param label
+	 * params key = start_time  end_time
 	 * @param start_time
 	 * @param end_time
 	 * @param sort desc 升序降序
 	 * @param order 按照该字段排序
 	 * @param opid
-	 * @param businessType 业务类型 air michine
 	 * @param request
 	 * @return
 	 * @throws Exception 
 	 */
-	@RequestMapping(value="/all",method=RequestMethod.POST)
+	@RequestMapping(value="/all",method={RequestMethod.POST,RequestMethod.GET})
 	@ResponseBody
-	public Object findByPage(String page, String rows, Label label, String start_time, String end_time, String sort, String order, String opid, String businessType, HttpServletRequest request) throws Exception {
+	public Object findByPage( Label label,HttpServletRequest request) throws Exception {
 		HttpSession session = request.getSession();
 		Map<String, Object> map = (Map<String, Object>) session.getAttribute(Common.Session_UserSecurity);
 		if(StringUtils.isNull(map)||map.size()==0){
 			throw new BusinessException(ResEnum.FORBIDDEN.CODE,"操作号没有配置任何操作权限,无法查看数据");
 		}
-		UserInfo userInfo = ShiroUtils.getUserInfo();
-		opid = userInfo.getOpid();
-		
-		Datagrid<?> datagrid = labelInfoService.findByPage(page, rows, JSON.parseObject(URLDecoder.decode(JSON.toJSONString(label), "utf-8"), Label.class), start_time, end_time, sort, order,businessType);
-		return MsgResult.result(ResEnum.SUCCESS.CODE, ResEnum.SUCCESS.MESSAGE, datagrid);
+		Label label2 = JSON.parseObject(URLDecoder.decode(JSON.toJSONString(label), "utf-8"), Label.class);
+		startPage(false);//分页
+		List<LabelAndTemplate> list= labelInfoService.selectLabelByPage(label2);
+		TableDataInfo dataTable = getDataTable(list); //pagehelper分页
+		return MsgResult.result(ResEnum.SUCCESS.CODE, ResEnum.SUCCESS.MESSAGE, dataTable);
 	}
 	
 	//更新打印标签数据

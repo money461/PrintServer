@@ -6,6 +6,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -28,13 +29,11 @@ import com.bondex.entity.Template;
 import com.bondex.entity.log.Log;
 import com.bondex.entity.msg.Head;
 import com.bondex.entity.msg.JsonRootBean;
-import com.bondex.entity.page.Datagrid;
 import com.bondex.service.LabelInfoService;
 import com.bondex.shiro.security.entity.UserInfo;
 import com.bondex.util.GsonUtil;
+import com.bondex.util.StringUtils;
 import com.bondex.util.shiro.ShiroUtils;
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import com.google.gson.JsonSyntaxException;
 
 @Service(value="labelInfoServiceImpl")
@@ -51,6 +50,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 	
 	@Autowired
 	private LogInfoDao logInfoDao;
+	
 
 	//保存标签数据
 	@Override
@@ -93,7 +93,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 			log.setDetail("数据入库未知异常！");
 			
 		}finally {
-			logInfoDao.insertLable(log); //日志入库
+			logInfoDao.insertLableLog(log); //日志入库
 		}
 		
 		if(1==i){
@@ -104,18 +104,14 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 	}
 
 	@Override
-	public Datagrid findByPage(String page, String rows, Label label, String start_time, String end_time, String sort, String order,String businessType) {
+	public List<LabelAndTemplate>  selectLabelByPage( Label label){
+		
 	 try {
 			
-
 		UserInfo userInfo = ShiroUtils.getUserInfo();
 		String opid = userInfo.getOpid();
 		List<String> opidData = userInfo.getOpidData();
 		String opids = opidData.stream().collect(Collectors.joining(",")); //获取用户部门所有的opid
-		page = null == page ? "1" : page;
-		rows = null == rows ? "20" : rows;
-		//分页
-		PageHelper.startPage(Integer.valueOf(page),Integer.valueOf(rows));
 
 		//拼接SQL语句
 		StringBuffer sql = new StringBuffer();
@@ -124,27 +120,18 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		sql.append(" and business_type <> 0 "); //不是派昂医药的数据
 		sql.append("and reserve1 = '0' "); //未删除
 		
-		if (start_time != null && !start_time.equals("undefined") && !start_time.equals("")) {
-			if (businessType.equals("medicine")) {
-				sql.append("and EDeparture >= '" + start_time + "' ");
-			} else {
-				sql.append("and create_time >= '" + start_time + "' ");
-			}
+		Map<String, Object> params = label.getParams();
+		if(StringUtils.isNotEmpty(params)&& StringUtils.isNotBlank((String)params.get("start_time"))){
+			sql.append(" AND date_format(create_time,'%y%m%d') >= date_format('"+params.get("start_time")+"','%y%m%d')");
 		}
-		if (end_time != null && !end_time.equals("undefined") && !end_time.equals("")) {
-			if (businessType.equals("medicine")) {
-				sql.append("and EDeparture <= '" + end_time + "' ");
-			} else {
-				sql.append("and create_time <= '" + end_time + "' ");
-			}
+		if(StringUtils.isNotEmpty(params) && StringUtils.isNotBlank((String)params.get("end_time"))){
+			sql.append(" AND date_format(create_time,'%y%m%d') <= date_format('"+params.get("end_time")+"','%y%m%d')");
 		}
-		
 		
 		//订阅信息
 		List<Subscribe> listSubscribe;
 		
 		if ((listSubscribe = SubscribeController.subscribeMap.get(opid)) != null) {
-			rows = "100";// 改为100，防止出现第二页
 			StringBuilder builder = new StringBuilder();
 			for (Subscribe subscribe : listSubscribe) {
 				builder.append("'" + subscribe.getSrMawb() + "',");
@@ -153,7 +140,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 			
 		} else if (label.getMawb() != null && !label.getMawb().equals("undefined") && !label.getMawb().trim().equals("")) {
 			if (label.getMawb().length() < 11) {
-				return new Datagrid<>(0l, new ArrayList<>());
+				return new ArrayList<>();
 			}
 
 			List<String> list = GsonUtil.GsonToList(label.getMawb(), String.class);
@@ -170,6 +157,9 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 			sql.append("and mawb in (" + mawb.substring(0, mawb.length() - 1) + ") ");
 		}
 		
+		if (label.getLabel_id() != null && !label.getLabel_id().equals("undefined") && !label.getLabel_id().equals("")) {
+			sql.append("and label_id = " + label.getLabel_id() + " ");
+		}
 		if (label.getHawb() != null && !label.getHawb().equals("undefined") && !label.getHawb().equals("")) {
 			sql.append("and hawb like '%" + label.getHawb() + "%' ");
 		}
@@ -191,32 +181,22 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		}
 		if (label.getIs_print() != null && !label.getIs_print().equals("undefined") && !label.getIs_print().equals("")) {
 			sql.append("and is_print = '" + label.getIs_print() + "' ");
-		} else if (label.getIs_print().equals("undefined")) {
+		} else {
 			sql.append("and is_print = '0' ");
 		}
 		
 		//**********根据用户办公室地址检索查询标签起始地址  考虑废除
 		//sql.append("and airport_departure = (SELECT load_code from load_code where region_parent_code = (select parent_code from region where region_id = (SELECT office_id from default_region where opid = '" + opid + "' and type = 1))) ");
-		
-		if (sort != null && order != null) {
-			sql.append("ORDER BY " + sort + " " + order + " ");
-		} else {
-			sql.append("ORDER BY is_print,create_time desc ");
-		}
-//		sql.append("limit " + (Integer.valueOf(page) - 1) * Integer.valueOf(rows) + "," + rows + "");
 		//查询模板及其数据
-		List<LabelAndTemplate> keywords = labelInfoDao.findByPage(sql.toString());
-		PageInfo<LabelAndTemplate> pageInfo = new PageInfo<LabelAndTemplate>(keywords);
+		List<LabelAndTemplate> list = labelInfoDao.selectLabelByPage(sql.toString());
+		
 		if (listSubscribe != null) {
 			SubscribeController.subscribeMap.remove(opid);// 查询完成后清除缓存
 		}
 		
-		Datagrid datagrid = new Datagrid();
-		datagrid.setRows(pageInfo.getList());
-		datagrid.setTotal(pageInfo.getTotal());
-		logger.debug(GsonUtil.GsonString(datagrid));
+		logger.debug(GsonUtil.GsonString(list));
 		
-		return datagrid;
+		return list;
 	 } catch (Exception e) {
 		 throw new BusinessException(ResEnum.FAIL.CODE, "查询数据异常,请正确写入参数!");
 	 }

@@ -22,8 +22,8 @@ import com.bondex.dao.LabelInfoDao;
 import com.bondex.entity.Label;
 import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.Template;
-import com.bondex.entity.msg.JsonRootBean;
-import com.bondex.entity.page.Datagrid;
+import com.bondex.entity.page.PageDomain;
+import com.bondex.entity.page.TableSupport;
 import com.bondex.service.LabelInfoService;
 import com.bondex.util.GsonUtil;
 import com.bondex.util.HttpClient;
@@ -54,9 +54,7 @@ public class PaiangServiceImple implements LabelInfoService {
 	//派昂调用接口获取数据
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Datagrid findByPage(String page, String rows, Label label, String start_time, String end_time, String sort,String order, String businessType) throws Exception {
-		if (businessType.equals("medicine")) {
-			
+	public List<LabelAndTemplate> selectLabelByPage(Label label) {
 			//查询指定的模板及其数据
 			Template template = new Template();
 			template.setId("4");
@@ -64,8 +62,11 @@ public class PaiangServiceImple implements LabelInfoService {
 			
 			//调用接口获取数据
 			 JSONObject jsonStu = (JSONObject)JSONObject.toJSON(label);
-			 jsonStu.put("page", page);
-			 jsonStu.put("rows", rows);
+			 PageDomain pageDomain = TableSupport.buildPageRequest();
+			 jsonStu.put("pageNum", pageDomain.getPageNum());
+			 jsonStu.put("pageSize", pageDomain.getPageSize());
+			 jsonStu.put("sort", pageDomain.getOrderBy(false));
+			 jsonStu.put("order", pageDomain.getIsAsc());
 			 
 			//map对象
 			StringBuilder sb = new StringBuilder();
@@ -154,13 +155,9 @@ public class PaiangServiceImple implements LabelInfoService {
 			 
 			 
 			 
-			 Datagrid<LabelAndTemplate> datagrid = new Datagrid<LabelAndTemplate>(total, datalist);
-			 String reString =  GsonUtil.GsonString(datagrid);
+			 String reString =  GsonUtil.GsonString(datalist);
 			 logger.debug(reString);
-			 return datagrid;
-		}
-		
-		return null;
+			 return datalist;
 	}
 
 

@@ -21,23 +21,29 @@ public class BaseEntity {
     private String searchValue;
 
 
+    /**
+     * 注解@JsonFormat主要是后台到前台的时间格式的转换
+     * 注解@DateTimeFormat主要是前后到后台的时间格式的转换
+     */
     /** 创建时间 */
     @DateTimeFormat(pattern = "yyyy-MM-dd hh:mm:ss")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Column(name="update_time")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",locale = "zh", timezone = "GMT+8")
+    @Column(name="create_time")
     private Date createTime;
 
 
     /** 更新时间 */
     @DateTimeFormat(pattern = "yyyy-MM-dd hh:mm:ss")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",locale = "zh", timezone = "GMT+8")
     @Column(name="update_time")
+    @Ignore
     private Date updateTime;
 
     /** 备注 */
     private String remark;
 
-    /** 请求参数 */
+    /** 请求参数 */ //params[endTime] params[beginTime]
+    @Ignore
     private Map<String, Object> params;
 
 }

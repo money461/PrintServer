@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import com.bondex.annoation.dao.Column;
@@ -16,6 +15,13 @@ import com.bondex.annoation.dao.Ignore;
 import com.bondex.annoation.dao.Pk;
 import com.bondex.annoation.dao.Table;
 import com.bondex.common.Common;
+import com.bondex.config.jdbc.JdbcTemplateSupport;
+import com.bondex.entity.page.PageBean;
+import com.bondex.entity.page.PageDomain;
+import com.bondex.entity.page.TableSupport;
+import com.bondex.util.sql.SqlUtil;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
@@ -37,11 +43,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BaseDao<T, P> {
 	
-	private JdbcTemplate jdbcTemplate;
+	private JdbcTemplateSupport jdbcTemplate;
 	private Class<T> clazz;
 
 	@SuppressWarnings(value = "unchecked")
-	public BaseDao(JdbcTemplate jdbcTemplate) {
+	public BaseDao(JdbcTemplateSupport jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 		clazz = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 	}
@@ -69,6 +75,17 @@ public class BaseDao<T, P> {
 		Object[] values = filterField.stream().map(field -> ReflectUtil.getFieldValue(t, field)).toArray();
 
 		String sql = StrUtil.format("INSERT INTO {table} ({columns}) VALUES ({params})", Dict.create().set("table", table).set("columns", columns).set("params", params));
+		
+		sql+= " ON DUPLICATE KEY UPDATE ";
+		
+		for (int i=0;i<columnList.size();i++) {
+			String column = columnList.get(i);
+			if(i==columnList.size()-1){
+				sql+= column +"=VALUES("+column+")";
+			}else{
+				sql+= column +"=VALUES("+column+"),";
+			}
+		}
 		log.debug("【执行SQL】SQL：{}", sql);
 		log.debug("【执行SQL】参数：{}", JSONUtil.toJsonStr(values));
 		return jdbcTemplate.update(sql, values);
@@ -158,7 +175,40 @@ public class BaseDao<T, P> {
 		maps.forEach(map -> ret.add(BeanUtil.fillBeanWithMap(map, ReflectUtil.newInstance(clazz), true, false)));
 		return ret;
 	}
+	/**
+	 * 根据对象分页查询
+	 * @param t
+	 * @return
+	 */
+	public  PageBean<T> findPageByExample(T t,RowMapper<T> rowMapper,Page<T> pagination) {
+		String tableName = getTableName(t);
+		List<Field> filterField = getField(t, true);
+		List<String> columnList = getColumns(filterField);
+		
+		List<String> columns = columnList.stream().map(s -> " and " + s + " = ? ").collect(Collectors.toList());
+		
+		String where = StrUtil.join(" ", columns);
+		// 构造值
+		Object[] values = filterField.stream().map(field -> ReflectUtil.getFieldValue(t, field)).toArray();
+		
+		String sql = StrUtil.format("SELECT * FROM {table} where 1=1 {where}", Dict.create().set("table", tableName).set("where", StrUtil.isBlank(where) ? "" : where));
+		log.debug("【执行SQL】SQL：{}", sql);
+		log.debug("【执行SQL】参数：{}", JSONUtil.toJsonStr(values));
+		PageBean<T> pageBean = jdbcTemplate.queryForPage(sql, pagination, values,rowMapper);
+		return pageBean;
+	}
+	
+	
+	public  PageBean<T> findPageBySQL(String sql,Object[] values,RowMapper<T> rowMapper,Page<T> pagination) {
+		log.debug("【执行SQL】SQL：{}", sql);
+		log.debug("【执行SQL】参数：{}", JSONUtil.toJsonStr(values));
+		PageBean<T> pageBean = jdbcTemplate.queryForPage(sql, pagination, values,rowMapper);
+		return pageBean;
+	}
 
+	
+	
+	
 	/**
 	 * 获取表名
 	 *
@@ -223,8 +273,11 @@ public class BaseDao<T, P> {
 		
 		// 过滤数据库中不存在的字段，以及自增列
 		List<Field> filterField;
+		
 		//不存在 Ignore和 PK注解的字段
-		Stream<Field> fieldStream = CollUtil.toList(fields).stream().filter(field -> ObjectUtil.isNull(field.getAnnotation(Ignore.class)) && ObjectUtil.isNull(field.getAnnotation(Pk.class)));
+//		Stream<Field> fieldStream = CollUtil.toList(fields).stream().filter(field -> ObjectUtil.isNull(field.getAnnotation(Ignore.class)) && ObjectUtil.isNull(field.getAnnotation(Pk.class)));
+		Stream<Field> fieldStream = CollUtil.toList(fields).stream().filter(field -> ObjectUtil.isNull(field.getAnnotation(Ignore.class)));
+		
 		// 是否过滤字段值为null的字段
 		if (ignoreNull) {
 			filterField = fieldStream.filter(field -> ObjectUtil.isNotNull(ReflectUtil.getFieldValue(t, field))).collect(Collectors.toList());
@@ -233,4 +286,23 @@ public class BaseDao<T, P> {
 		}
 		return filterField;
 	}
+	
+	 /**
+     * 设置请求分页数据 
+     * @param tableStyle 表格类型
+     * @param underScoreCase 排序字段是否驼峰命名
+     */
+	protected Page<T> startPage(Boolean underScoreCase)
+    {
+        PageDomain pageDomain = TableSupport.buildPageRequest();
+        Integer pageNum = pageDomain.getPageNum();
+        Integer pageSize = pageDomain.getPageSize();
+        if (com.bondex.util.StringUtils.isNotNull(pageNum) && com.bondex.util.StringUtils.isNotNull(pageSize))
+        {
+            String orderBy = SqlUtil.escapeOrderBySql(pageDomain.getOrderBy(underScoreCase));
+            return PageHelper.startPage(pageNum, pageSize, orderBy);
+        }
+		return  PageHelper.startPage(1,20,null);
+    }
+	
 }

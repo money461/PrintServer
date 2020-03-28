@@ -27,13 +27,14 @@ public class Client {
 	private String ReportWidth; //标签宽度 毫米
 	private String ReportHeight; //标签高度  毫米
 	private String data; //json数据
-	private String Copies;// 打印份数
+	private Integer Copies;// 打印份数
 
-	public String getCopies() {
+
+	public Integer getCopies() {
 		return Copies;
 	}
 
-	public void setCopies(String copies) {
+	public void setCopies(Integer copies) {
 		Copies = copies;
 	}
 

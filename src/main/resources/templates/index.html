@@ -71,6 +71,9 @@
 							<a class="menuItem" href="paiang/viewdata"><i class="fa fa-print" style="width: 20px;"></i>派昂标签</a>
 						</li>
 						</@shiro.hasPermission>
+						<li>
+							<a class="menuItem" href="currentlabel/currentlabel"><i class="fa fa-print" style="width: 20px;"></i>通用打印</a>
+						</li>
 					</ul>
                 </li>
                 </@shiro.hasPermission>
@@ -87,7 +90,7 @@
                     
                     	 <@shiro.hasPermission  name="AdminLable-user"> 
 						<li>
-							<a class="menuItem" href="admin/user"><i class="fa fa-gear" style="width: 20px;"></i>用户权限管理</a>
+							<a class="menuItem" href="admin/user"><i class="fa fa-user-circle-o" style="width: 20px;"></i>用户权限管理</a>
 						</li>
 						 </@shiro.hasPermission>
 						
@@ -99,15 +102,30 @@
 						 
 						 <@shiro.hasPermission  name="AdminLable-region"> 
 						<li>
-							<a class="menuItem" href="admin/region"><i class="fa fa-gear" style="width: 20px;"></i>区域办公室管理</a>
+							<a class="menuItem" href="admin/region"><i class="glyphicon glyphicon-map-marker" style="width: 20px;"></i>区域办公室管理</a>
 						</li>
 						 </@shiro.hasPermission>
 						
 						 <@shiro.hasPermission  name="AdminLable-log"> 
-						<li>
-							<a class="menuItem" href="admin/log"><i class="fa fa-gear" style="width: 20px;"></i>标签日志</a>
-						</li>
+						  <li>
+                                <a href="#">
+			                		<i class="fa fa-calendar"></i>
+			                    	<span class="nav-label">日志管理</span> 
+			                    	<span class="fa arrow"></span>
+			                	</a>	
+			                	
+                                <ul class="nav nav-third-level collapse" aria-expanded="false" style="height: 0px;">
+									<li>
+										<a class="menuItem" href="admin/labelLog"><i class="fa fa-calendar" style="width: 20px;"></i>标签入库日志</a>
+									</li>
+									<li>
+										<a class="menuItem" href="admin/printLog"><i class="fa fa-calendar" style="width: 20px;"></i>标签打印日志</a>
+									</li>
+                                </ul>
+	                       </li>
+						
 						 </@shiro.hasPermission>
+						 
 						
 						 <@shiro.hasPermission  name="swagger-ui"> 
 						<li>

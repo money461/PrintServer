@@ -78,6 +78,13 @@ public class ShiroRealm extends AuthorizingRealm {
 			//进行角色的添加
 			authorizationInfo.addRole(userInfo.getOpid());
 			
+			/*try {
+				Set<String> adminpremission= ReadTxtFile.readJsonFromClassPath("data/premissionSet.json", Set.class);
+				premissionSet.addAll(adminpremission);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			*/
 			//权限的添加
 			authorizationInfo.addStringPermissions(premissionSet);
 			System.out.println(GsonUtil.GsonString(premissionSet));

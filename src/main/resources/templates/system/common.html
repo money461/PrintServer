@@ -12,7 +12,7 @@
 		  </@shiro.hasPermission>
 		  
 		  <@shiro.hasPermission  name="AirPrintLabel.label-print"> 
-			<button type="button" class="btn btn-default" onclick="label.labelPrint()">
+			<button type="button" class="btn btn-default" onclick="label.labelPrint()" id='printButton'> 
 				<span class="glyphicon glyphicon-print"></span> 打印
 			</button>
 		  </@shiro.hasPermission>
@@ -73,7 +73,7 @@
 		  	
 		  	
 		  	<@shiro.hasPermission  name="PaiangPrintLabel.label-print">
-			<button type="button" class="btn btn-default" onclick="paiang.tableprint()">
+			<button type="button" class="btn btn-default" onclick="paiang.tableprint()" id='printButton'>
 				<span class="glyphicon glyphicon-print"></span> 打印
 			</button>
 			</@shiro.hasPermission>
@@ -105,6 +105,63 @@
 			</button>
 			
 			<button type="button" class="btn btn-default" onclick="paiang.alertprint()">
+				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: red; font-size: 14" id="quyu">设置打印/办公室</b>
+			</button>
+			
+		</div>
+	 </div>
+	
+</div>
+
+</#macro>
+
+<#macro currentlabeltoolbar>
+	<!--datagrid操作按钮区域 -->
+	<div id="toolbar" style="width: 100%"  class="btn-group-sm"  role="group">
+	
+		<div class="btn-group" style="float: right; background-color: #F5F5F5; width: 100%;">
+		
+			
+		 	<@shiro.hasPermission  name="PaiangPrintLabel.label-search">
+			<button type="button" class="btn btn-default" onclick="currentlabel.search();">
+				<span class="glyphicon glyphicon-search"></span> 查询(ctrl+1)
+			</button>
+		  	</@shiro.hasPermission>
+		  	
+		  	
+		  	<@shiro.hasPermission  name="PaiangPrintLabel.label-print">
+			<button type="button" class="btn btn-default" onclick="currentlabel.tableprint()" id='printButton'>
+				<span class="glyphicon glyphicon-print"></span> 打印
+			</button>
+			</@shiro.hasPermission>
+			
+			<button type="button" class="btn btn-default" onclick="currentlabel.labelExport()">
+				<span class="glyphicon glyphicon-share"></span> 导出标签
+			</button>
+			
+			<button type="button" class="btn btn-default" onclick="currentlabel.save();" id='saveButton'>
+				<span class="glyphicon glyphicon-floppy-disk"></span> 保存
+			</button>
+			
+			<button type="button" class="btn btn-default" onclick="currentlabel.rejectChange();" id='rejectButton'>
+				<span class="glyphicon glyphicon-share-alt"></span> 撤销
+			</button>
+			
+			<button type="button" class="btn btn-default" onclick="currentlabel.deletedata();">
+				<span class="glyphicon glyphicon-remove"></span> 删除
+			</button>
+			
+			<button type="button" class="btn btn-default" onclick="currentlabel.securityReload();">
+				<span class="glyphicon glyphicon-refresh"></span> 刷新表单
+			</button>
+			<button type="button" class="btn btn-default" onclick="subscribe.initWindow()">
+				<span class="glyphicon glyphicon-envelope"></span> 订阅
+			</button>
+			<button type="button" class="btn btn-default" onclick="alert('该功能暂未上线')">
+				<span class="glyphicon glyphicon-bell"></span> 帮助
+			</button>
+			
+			<button type="button" class="btn btn-default" onclick="currentlabel.alertprint()">
 				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: red; font-size: 14" id="quyu">设置打印/办公室</b>
 			</button>
 			

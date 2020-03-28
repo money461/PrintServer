@@ -5,7 +5,6 @@ function paiang(){
 //定义全局 表格对象
 var editRow = undefined;
 var paiang_tab;
-var type ="medicine"; //派昂标签类型
 var opid =null; //获取当前用户opid //全局变量引用
 
 var thisdefault_region_code=null; //打印当前现中的办公室id
@@ -63,6 +62,8 @@ paiang.prototype.initDataGridTable=function(){
 			striped : true,// 隔行换色
 			scrollbarSize : 0,// 去除右侧空白
 			fitColumns : true,
+			sortName:'EDeparture',//定义可以排序的列。
+			sortOrder:'desc',
 			remoteSort:false, //定义是否通过远程服务器对数据排序。
 			toolbar : '#toolbar', //该工具栏置于对话框的顶部，每个工具栏包含:text, iconCls, disabled, handler等属性。
 			showFooter : true,
@@ -97,13 +98,13 @@ paiang.prototype.initDataGridTable=function(){
 		    //当用户双击一个单元格时触发。
 		    onDblClickCell:function(rowIndex, field, value){
 		    	
-				if (field=="RecCustomerName"||field=="template_name"||field=="packages") {
+				if (field=="RecCustomerName"||field=="template_name"||field=="packages" ) {
 					
 					if (editRow !=rowIndex) {
 						$(this).datagrid('endEdit', editRow);
 					}
-			        var rows = $(this).datagrid('getRows');// 返回当前页的行。
-			        var row = rows[rowIndex];// 根据index获得其中一行。
+					var rows = $(this).datagrid('getRows');// 返回当前页的行。
+					var row = rows[rowIndex];// 根据index获得其中一行。
 					
 					$(this).datagrid('beginEdit', rowIndex); //开启编辑
 					$(this).datagrid('selectRow',rowIndex); //选中该行
@@ -122,7 +123,7 @@ paiang.prototype.initDataGridTable=function(){
 					    	row.reserve3=rec.id;//修改label外键id
 					    	row.template_id=rec.template_id;//修改模板id
 					    	row.width=rec.width; //修改宽度
-					    	row.width=rec.height; //修改高度
+					    	row.height=rec.height; //修改高度
 					    }
 						
 					});
@@ -150,7 +151,15 @@ paiang.prototype.initDataGridTable=function(){
 	        	layer.msg('警告!数据加载失败!',{icon:2});
 	        },
 	        onBeforeLoad: function(param){ // 在发出请求数据数据之前触发，如果返回false可终止载入数据操作
-				
+	        	var queryParams = $('#paiang_tab').datagrid('options').queryParams; //初始化datatGrid后才可以获取options所有相关数据
+				console.debug('请求发出前的自定义表单参数:');
+				console.info(queryParams);
+				console.debug('请求发出前的所有参数:');
+				param['pageNum']=param.page;
+				param['pageSize']=param.rows;
+				param['orderByColumn']=param.sort;
+				param['isAsc']=param.order;
+				console.info(param);
 	        	
 	        },
 	        onBeforeEdit:function(index,row){
@@ -209,6 +218,12 @@ function getQueryCondition(){
    mawb = $.trim(tMawb) == undefined?"":$.trim(tMawb);
    mawb = mawb.replace(/\s+/g, ',');
    formParm.mawb=mawb;
+   var is_print = formParm.status;
+   if('0'!=is_print){
+		$("#printButton").attr("disabled",true); //禁用打印
+  }else{
+	   $("#printButton").attr("disabled",false); //解除
+  }
     console.info(formParm);
   return formParm;
 }
@@ -282,6 +297,7 @@ paiang.prototype.securityReload=function() {
 		 $("#searchForm").find("select[name='status']").val("0").trigger('change'); //重置下拉
 		 //重新加载
 		 //$('#paiang_tab').datagrid('reload');
+		 $("#printButton").attr("disabled",false); //解除
 		 paiang.initDataGridTable();
 		 
 	 }
@@ -554,7 +570,6 @@ paiang.prototype.tableprint = function() {
 				data : {
 					labels : JSON.stringify(rows),
 					regionCode : default_region_code, //chengdu/jichang id=2
-					businessType : type,
 					mqaddress: vpn //内网还是外网
 				},
 				success : function(result) {
@@ -577,10 +592,10 @@ paiang.prototype.tableprint = function() {
 			});
 	  
 	//点击单选按钮radio后触发，即，我们  选择默认办公室/临时办公室时，触发一个事件，弹出选中的值
-	  $("#mqaddress input[name=mqaddress]").click(function(){
+	/*  $("#mqaddress input[name=mqaddress]").click(function(){
 	      mqaddress = $(this).val();
 	  });
-	  
+	  */
 	}
 
  /**

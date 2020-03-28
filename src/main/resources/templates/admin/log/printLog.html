@@ -1,0 +1,431 @@
+<#include "/system/include.html" encoding="UTF-8" parse=true/>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<!-- 引入样式css -->
+	<@commoncss title='标签打印日志列表'/>
+	<link rel="stylesheet" href="${request.contextPath}/ajax/libs/jquery-ztree/3.5/css/metro/zTreeStyle.css" />
+</head>
+<body class="gray-bg">
+     <div class="container-div">
+		<div class="row">
+			
+			<div class="col-sm-12 search-collapse">
+				<form id="post-form">
+					<div class="select-list">
+						<ul>
+							<li>
+								展示单号：<input type="text" name="showNum"/>
+							</li>
+							<li>
+							         打印人：<input type="text" id="opidName" name="opidName"/>
+							</li>
+							<li>
+									    	<input class="form-control" type="text" id='queueCode' style='display: none;' name="queueCode"/>
+									    	<input class="form-control" type="text" id='regionName' style='display: none;' name="regionName"/>
+						                     <input type="text"  id="treeSelect"></label> 
+								
+							</li>
+							<li>
+								处理情况：						
+								<select name="status">
+									<option value="0" check='checked'>成功</option>
+									<option value="1">失败</option>
+								</select>
+								
+							</li>
+							<li class="select-time">
+								<label>处理时间： </label>
+								<input type="text" class="time-input" id="startTime" placeholder="开始时间" name="params[beginTime]"/>
+								<span>-</span>
+								<input type="text" class="time-input" id="endTime" placeholder="结束时间" name="params[endTime]"/>
+							</li>
+							
+							<li>
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+							    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</li>
+						</ul>
+					</div>
+				</form>
+			</div>
+			
+			<div  class="col-sm-12 select-table table-striped table-responsive">
+				<!-- table-bordered 设置边框 -->
+				<table  class="table text-nowrap"  id="bootstrap-table"  data-use-row-attr-func="true" data-reorderable-rows="true"  data-reorderable-columns="true" data-mobile-responsive="true" style="table-layout:fixed;"></table>
+			</div>
+		</div>
+	</div>
+<!-- 引入通用js -->
+	<@commonjs/>
+	<!-- 模板js -->
+	<script src="${request.contextPath}/js/admin/printlog.js"></script>
+	<script src="${request.contextPath}/ajax/libs/jquery-ztree/3.5/js/jquery.ztree.all-3.5.js"></script>
+	<script src="${request.contextPath}/ajax/libs/jquery-ztree/3.5/js/jquery.ztree.exhide-3.5.js"></script>
+	<script  type="text/javascript">
+        var prefix = ctx + "/printlog";
+
+        $(function() {
+            var options = {
+                url: prefix + "/all",
+                search:true, //是否显示搜索框功能
+		        showSearch: true, //是否显示检索信息
+		        showRefresh: true, //是否显示刷新
+		        showToggle: true, //视图切换
+		        showColumns: true, //是否显示隐藏某列下拉框
+		        clickToSelect:true, //点击选中行
+		        striped: true, //隔行换色
+		        showExport:true, //是否显示导出
+		        exportDataType:'selected',
+		        fixedColumns: false, //开启左边冻结
+    		    fixedNumber: 3, //冻结左边3列
+    		    rightFixedColumns:false,
+    		    rightFixedNumber:0,
+		        detailView: true,
+		        onExpandRow : function(index, row, $detail) { //详细视图事件 添加表格
+					initChildTable(index, row, $detail); //index：父表当前行的行索引。row：父表当前行的Json数据对象。$detail：当前行下面创建的新行里面的td对象。
+				},
+		        sortName: "updateTime",
+		        pageSize:50,
+		        pageList: [20, 50, 100],
+		        modalName: "打印日志",
+		        rowStyle:function (row, index) {
+	                //这里有5个取值代表5中颜色['active', 'success', 'info', 'warning', 'danger'];
+	                var strclass = "";
+	                if (row.status == "0") {
+	                    strclass = '';//还有一个active
+	                }
+	                else if (row.status == "1") {
+	                    strclass = '';
+	                }
+	                else {
+	                    return {};
+	                }
+	                return { classes: strclass }
+	            },
+                columns: [
+				{
+				    checkbox: true,
+				    align: 'center',
+				    valign: 'middle',
+				    width:20,
+				},
+				{
+					field : 'showNum', 
+					title : '展示单号',
+					valign: 'middle',
+     			    align: 'left',
+     			    style:"table-layout:fixed;",
+     				visible:true,
+     				switchable: false,
+     			    //formatter:operateFormatter,
+     				//events:operateEvents,
+					width:158,
+					cellStyle:{
+						css:{
+							"overflow": "hidden",
+							"text-overflow": "ellipsis",
+							"white-space": "nowrap",
+							"max-width":"150px"
+							}
+					}
+				},
+				{
+				    field : 'regionName',
+				    title : '打印办公室'
+				},
+				{
+				    field : 'mqaddress',
+				    title : '发送网络',
+				    align: 'center',
+                    formatter: function(value, row, index) {
+                    	return printlog.sendmqaddress(value);
+                    }
+				},
+				{
+				    field : 'reason',
+				    title : '原因',
+				    width:200,
+				    cellStyle:{
+						css:{
+							"overflow": "hidden",
+							"text-overflow": "ellipsis",
+							"white-space": "nowrap",
+							"max-width":"150px"
+							}
+					}
+				},
+				{
+                    field: 'status',
+                    title: '成功/失败',
+                    align: 'center',
+                    formatter: function(value, row, index) {
+                    	return printlog.selectDictLabel(value);
+                    }
+                },
+                {
+				    field : 'opidName',
+				    title : '打印人'
+				},
+				{
+                    field: 'updateTime',
+                    title: '消息处理日期',
+                    sortable: true,
+                    order:'desc'                    
+                },
+				{
+                    field: 'createTime',
+                    title: '消息创建时间',
+                    sortable: true
+                }
+                /* ,
+		        {
+		            title: '操作',
+		            align: 'center',
+		            formatter: function(value, row, index) {
+		            	var actions = [];
+		            	actions.push('<a class="btn btn-success btn-xs" href="#"><i class="fa fa-edit"></i>编辑</a> ');
+                        actions.push('<a class="btn btn-danger btn-xs" href="#"><i class="fa fa-remove"></i>删除</a>');
+						return actions.join('');
+		            }
+		        } */
+                ]
+            };
+            $.table.init(options);
+            //初始化 
+            tableSelectclick('#opidName',ctx+'/client/getOpidName');
+            
+          //layui 引入treeSelect.js
+            layui.config({
+                base: ctx+'/layer/layui/lay/'
+            }).extend({
+                treeSelect: 'treeSelect/treeSelect',
+                treeSelect2: 'treeSelect2/treeSelect2'
+            });
+            
+        	var url=ctx+"/region/treeSelectRegionData";
+			treeSelectClick('treeSelect',url,'get');
+        });
+        
+        initChildTable = function(index, row, $detail) {
+        	//style="table-layout: fixed;" -->bootstrap table 固定列宽
+			var childTable = $detail.html('<table class="table text-nowrap" style="table-layout:fixed;"></table>').find('table');
+    	    $(childTable).bootstrapTable({
+    	        url: prefix + "/childview",
+    	        method: 'post',
+    	        sidePagination: "server",
+    	        detailView: true,
+		        detailFormatter: $.table.detailFormatter,
+    	        contentType: "application/x-www-form-urlencoded",
+    	        queryParams : {
+    	        	id : row.id,
+    	        	labelId : row.labelId,
+    	        	status : row.status
+				},
+    	        columns: currentlabelcolumns.columns
+    	    });
+    	    
+    	    $(childTable).colResizable({
+                liveDrag: true,//实时显示滑动位置
+                gripInnerHtml: "<div class='grip'></div>",
+                //draggingClass: "dragging",
+                postbackSafe: true,//刷新后保留之前的拖拽宽度
+                headerOnly:true,
+                resizeMode:'overflow'//允许溢出父容器
+                //onResize: onSampleResized
+            });
+		};
+        
+        var currentlabelcolumns={
+        		columns:[[
+        		    {
+        		    	field: 'id',
+        		    	title: '标签索引编号',
+        		    	visible: false
+        		    },{
+        		    	field:'regionName',
+        		    	title: '打印办公室',
+        		    	visible: false
+        		    },{
+        		    	field:'reason',
+        		    	title:'原因',
+        		    	visible: false
+        		    },{
+        		    	field:'message',
+        		    	title:'发送客户端内容',
+        		    	visible: false
+        		    },{
+        		    	field:'jsonData',
+        		    	title:'打印内容',
+        		    	visible: false
+        		    	
+        		    },{
+        		    	field:'labelId',
+        		    	title:'打印标签索引编号集合',
+        		    	visible: false
+        		    	
+        		    },{
+        		    	field:'queueCode',
+        		    	title:'接受客户端队列简码',
+        		    	visible: false
+        		    },{
+        		    	field:'mqaddress',
+        		    	title:'发送网络',
+        		    	visible: false
+        		    },
+        		    {
+        				field: 'showNum',
+        			    title: '打印单号',
+        			    width:100
+        			},{
+        				field:'templateId',
+        				title:'模板编号',
+        				visible: false
+        			},
+        			 {
+        				field:'templateName',
+        				title:'打印模板',
+        				width:10
+        				
+        			},{
+        				field:'docTypeId',
+        				title:'数据来源编号',
+        				visible: false
+        				
+        			},{
+        				field:'docTypeName',
+        				title:'数据来源',
+        				width:10
+        			       
+        			},{
+        				field:'copies',
+        				title: '打印份数',
+        				width:6
+        			},{
+        				field:'status',
+        				title:'打印情况',
+        				visible: false
+        			},{
+        				field : 'printStatus',
+        				width : 10,
+        				title : '标签状态',
+        				//sortable : true,
+        				//sortOrder:'asc',
+        				formatter : function(value, row, index) {
+        					if (row.printStatus == 1) {
+        						return "已打印";
+        					}else if (row.printStatus == 2) {
+        						return "已导出";
+        					} else {
+        						return "未打印";
+        					}
+        				}
+        			},{
+        				field:'opidName',
+        				title:'录入人',
+        				width:10
+        			       
+        			},{
+        				field:'opid',
+        				title:'操作编号',
+        				visible: false
+        			},{
+        				field:'printName',
+        				title:'打印人',
+        				width:4
+        			},{
+        				field:'updateTime',
+        				title:'更新日期',
+        				sortable:'true', //排序字段
+        				order:'desc',
+        				width:10
+        			}
+        			]]
+        	};
+        
+        function tableSelectclick(id,url){
+	         /* layer 选择下拉框表格展示 */
+	     	var tableSelect = layui.tableSelect;
+	     	tableSelect.render({
+	     		elem: id,	//定义输入框input对象 必填
+	     		checkedKey: 'opid', //表格的唯一建值，非常重要，影响到选中状态 必填
+	     		searchKey: 'opid_name',	//搜索输入框的name值 默认keyword
+	     		searchPlaceholder: '操作号/名称关键词搜索',	//搜索输入框的提示文字 默认关键词搜索
+	     		table: {	//定义表格参数，与LAYUI的TABLE模块一致，只是无需再定义表格elem
+			     		url: url,
+			     		cols: [[
+			     			{ type: 'radio' },
+			     			{ field: 'opid', title: '操作号' },
+			     			{ field: 'opid_name', title: '操作姓名' }
+			     		]]
+	     		},
+	     		done: function (elem, data) {
+	     			var NEWJSON = [];
+	     			layui.each(data.data, function (index, item) {
+	     				NEWJSON.push(item.opid_name)
+	     			})
+	     			elem.val(NEWJSON.join(","));
+	     		}
+	     	})
+       };
+       
+       function treeSelectClick(id,url,type){
+   		layui.use(["treeSelect",'form'], function () {
+   		    var treeSelect = layui.treeSelect;
+   		    var treeObj = undefined;
+   		    treeSelect.render({
+   		        // 选择器
+   		        elem: '#'+id,
+   		        // 数据
+   		        //data: prefix+'/treeAllRegionData',
+   		        data: url,
+   		        // 异步加载方式：get/post，默认get
+   		        type: type,
+   		        // 占位符
+   		        placeholder: '选择打印区域.............',
+   		        // 是否开启搜索功能：true/false，默认false
+   		        search: true,
+   		        // 一些可定制的样式
+   		        style: {
+   		            folder: { // 父节点图标
+   		                enable: true // 是否开启：true/false
+   		            },
+   		            line: { // 连接线
+   		                enable: true // 是否开启：true/false
+   		            }
+   		        },
+   		        // 点击回调
+   		        click: function(d){
+   		            console.log(d);
+   		            console.log(d.treeId); // 得到组件的id "layui-treeSelect-1584582865735"
+   		            console.log(d.current); // 得到点击节点的treeObj对象
+   		            console.log(d.data); // 得到组成树的数据
+   		            var res = $.common.split(d.treeId,'-');
+   		            res
+   		            var treeId = 'layui-treeSelect-body-'+res[2], //   layui-treeSelect-body-1584582865735
+   		            treeObj = $.fn.zTree.getZTreeObj(treeId);
+   		            
+	   		         var nodes = treeObj.getSelectedNodes(); //获取所有选择的节点
+			   	     $("#queueCode").val(d.current.id);
+			   	     $("#regionName").val(d.current.name);
+ 		            
+   		        },
+   		        // 加载完成后的回调函数
+   		        success: function (d) {
+   		            console.log(d);
+//   		                选中节点，根据id筛选
+   		     // treeSelect.checkNode('tree', 'xidun');
+//   		                获取zTree对象，可以调用zTree方法 该方法应保证在渲染完成后再执行
+   		          // treeObj = treeSelect.zTree('tree');
+   		           //console.log(treeObj);
+//   		                刷新树结构
+   		           //treeSelect.refresh('tree');
+   		        }
+   		    });
+   		});
+        
+      };
+        
+    </script>
+</body>
+</html>

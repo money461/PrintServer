@@ -18,13 +18,20 @@ public class PageDomain
     /** 排序的方向 "desc" 或者 "asc". */
     private String isAsc;
 
-    public String getOrderBy()
+    /**
+     * 排序字段是否驼峰命名
+     * @param underScoreCase
+     * @return
+     */
+    public String getOrderBy(Boolean underScoreCase)
     {
         if (StringUtils.isEmpty(orderByColumn))
         {
             return "";
         }
-//        return StringUtils.toUnderScoreCase(orderByColumn) + " " + isAsc; //下划线转驼峰命名
+        if(underScoreCase){
+        	return StringUtils.toUnderScoreCase(orderByColumn) + " " + isAsc; //下划线转驼峰命名
+        }
         return orderByColumn + " " + isAsc; //下划线转驼峰命名
     }
 

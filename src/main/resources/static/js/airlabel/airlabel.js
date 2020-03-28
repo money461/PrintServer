@@ -2,7 +2,6 @@ function label() {
 	
 }
 	var editRow = undefined;
-	var type ="air"; //空运标签模式
 	var mawb="";
 	var hawb="";
 	var destination="";// 目的地
@@ -201,41 +200,20 @@ label.prototype.refresh = function(isRefresh) {
 	    	flight_date= "";
 	    	label.select2(); //重置select2
 	    	opid_name= "";
+	    	$("#printButton").attr("disabled",false); //解除
 	    	if (isRefresh) {
 	    		label.initLabelDatagrid(); //重新加载数据
 	    	}
+	    	
 	    }
 	}
 
 	//查询事件
 label.prototype.search = function() {
 	    if(label.checksave()){
-	    	var mr;
-	    	if (!vda.startValidate()) {
-	    		return;
-	    	}
-	    	// $('#dd3').dialog('close');
-	    	var tMawb = $.trim($("#mawb").val()) == undefined?"":$.trim($("#mawb").val());
-	    	if (tMawb!="") {
-	    		mawb = JSON.stringify(tMawb.split("\n")); //多个主单号，数组形式的字符串
-	    	}else{
-	    		mawb = $("#mawb").val();
-	    	}
-	    	hawb = $("#hawb").val()== undefined?"":$("#hawb").val();
-	    	total = $("#total").val()== undefined?"":$("#total").val();
-	    	destination = $("#destination option:checked").val()== undefined?"":$("#destination option:checked").val();
-	    	airport_departure = $("#airport_departure option:checked").val()== undefined?"":$("#airport_departure option:checked").val();
-	    	start_time = $("#start_time").val();
-	    	end_time = $("#end_time").val();
-	    	flight_date = $("#flight_date").val()== undefined?"":$("#flight_date").val();
-	    	opid_name = $("#opid_name").val()== undefined?"":$("#opid_name").val();
-	    	MBLNo=$("#MBLNo").val()== undefined?"":$("#MBLNo").val()
-	    			TakeCargoNo=$("#TakeCargoNo").val()== undefined?"":$("#TakeCargoNo").val()
-	    					
-	    					is_print = $("#status").val()==null?"":$("#status").val();
-	    	
-	    	label.initLabelDatagrid(); //初始化表格
-	    	
+	    	var params = label.getQueryCondition();
+	    	$('#dg1').datagrid('load',params); //加载并显示第一页的行 指定 'param' 参数，它将替换 queryParams 属性。
+	    	//label.initLabelDatagrid(); //初始化表格
 	    }
 		
 }
@@ -243,22 +221,52 @@ label.prototype.search = function() {
 
 	//查询参数 
 label.prototype.getQueryCondition=function(){
-		var formParm={
+	
+			if (!vda.startValidate()) {
+				return;
+			}
+			// $('#dd3').dialog('close');
+			var tMawb = $.trim($("#mawb").val()) == undefined?"":$.trim($("#mawb").val());
+			if (tMawb!="") {
+				mawb = JSON.stringify(tMawb.split("\n")); //多个主单号，数组形式的字符串
+			}else{
+				mawb = $("#mawb").val();
+			}
+			hawb = $("#hawb").val()== undefined?"":$("#hawb").val();
+			total = $("#total").val()== undefined?"":$("#total").val();
+			destination = $("#destination option:checked").val()== undefined?"":$("#destination option:checked").val();
+			airport_departure = $("#airport_departure option:checked").val()== undefined?"":$("#airport_departure option:checked").val();
+			start_time = $("#start_time").val();
+			end_time = $("#end_time").val();
+			flight_date = $("#flight_date").val()== undefined?"":$("#flight_date").val();
+			opid_name = $("#opid_name").val()== undefined?"":$("#opid_name").val();
+			MBLNo=$("#MBLNo").val()== undefined?"":$("#MBLNo").val()
+			TakeCargoNo=$("#TakeCargoNo").val()== undefined?"":$("#TakeCargoNo").val()
+							
+			is_print = $("#status").val()==null?"":$("#status").val();
+			
+		   if('0'!=is_print){
+				$("#printButton").attr("disabled",true); //禁用打印
+		   }else{
+			    $("#printButton").attr("disabled",false); //解除
+		   }
+		   
+		var formParm = {
 				mawb:mawb,
 				hawb:hawb,
 				destination:destination,
 				total:total,
 				airport_departure:airport_departure,
 				is_print:is_print,
-				start_time:start_time,
-				end_time:end_time,
 				opid:opid, //当前操作id
 				opid_name:opid_name,
 				flight_date:flight_date,
-				businessType:type,
 				MBLNo:MBLNo,
-				TakeCargoNo:TakeCargoNo
-		}
+				TakeCargoNo:TakeCargoNo,
+				'params[start_time]':start_time,
+				'params[end_time]':end_time
+		};
+		
 		
 		  return formParm;
 	}
@@ -528,7 +536,6 @@ label.prototype.printLabelSendClient = function(default_region_code) {
 			data : {
 				labels : JSON.stringify(rows),
 				regionCode : default_region_code, //chengdu/jichang id=2
-				businessType : type,
 				mqaddress: vpn //内网还是外网
 			},
 			success : function(result) {
@@ -553,9 +560,9 @@ label.prototype.printLabelSendClient = function(default_region_code) {
 		});
   
 //点击单选按钮radio后触发，即，我们  选择默认办公室/临时办公室时，触发一个事件，弹出选中的值
-  $("#mqaddress input[name=mqaddress]").click(function(){
+/*  $("#mqaddress input[name=mqaddress]").click(function(){
       mqaddress = $(this).val();
-  });
+  });*/
   
 }
 	
@@ -590,11 +597,10 @@ function dialogExport() {
 	
 
 //表格展示字段
-label.prototype.columns = function(is_print2) {
-		var columns;
-		if (type =="air") {
-			columns = [ [ {
+label.prototype.columns = function() {
+		var columns = [ [ {
 				field : 'label_id',
+				title : '索引编号',
 				checkbox : true,
 				width : 50
 			}, {
@@ -685,7 +691,7 @@ label.prototype.columns = function(is_print2) {
 				field : 'update_time', 
 				width : 50, 
 				sortable : true,
-				sortOrder:'asc',
+				sortOrder:'desc',
 				title : '录入时间', 
 				formatter : function(value, row, index) { 
 					return formatDate(value); 
@@ -693,8 +699,6 @@ label.prototype.columns = function(is_print2) {
 			},{ 
 				field : 'opid_name', 
 				width : 50, 
-				sortable : true,
-				sortOrder:'asc',
 				title : '录入人'
 			},{
 				field : 'print_user',
@@ -703,7 +707,6 @@ label.prototype.columns = function(is_print2) {
 				//sortOrder:'asc',
 				title : '打印人'
 			}] ];	
-		}
 		return columns;
 	}
 	
@@ -723,6 +726,8 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 			striped:true,
 			scrollbarSize : 0,// 去除右侧空白
 			fitColumns : true,
+			sortName:'update_time',//定义可以排序的列。
+			sortOrder:'desc',
 			pageList : [ 5, 10, 15, 20, 50 ],
 			toolbar:'#toolbar',
 			width: 'auto', //默认10
@@ -749,6 +754,20 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 					
 				}
 			},
+			onLoadError: function () {
+		        	layer.msg('警告!数据加载失败!',{icon:2});
+		     },
+	        onBeforeLoad: function(param){ // 在发出请求数据数据之前触发，如果返回false可终止载入数据操作
+				var queryParams = $('#dg1').datagrid('options').queryParams; //初始化datatGrid后才可以获取options所有相关数据
+				console.debug('请求发出前的自定义表单参数:');
+				console.info(queryParams);
+				console.debug('请求发出前的所有参数:');
+				param['pageNum']=param.page;
+				param['pageSize']=param.rows;
+				param['orderByColumn']=param.sort;
+				param['isAsc']=param.order;
+				console.info(param);
+	        },
 			/*onUnselect:function(rowIndex, rowData){
 				$("#dg1").datagrid('endEdit', editRow); //未选择该行的时候，结束编辑
 			},*/
@@ -761,15 +780,15 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 			},
 			//当用户双击一个单元格时触发。
 			onDblClickCell:function(rowIndex, field, value){
-				 	 
+				var rows = $('#dg1').datagrid('getRows');// 获得所有行
+				var row = rows[rowIndex];// 根据index获得其中一行。
+				var status = row.is_print;
+				if(0!=status){return};
 				if (field=="hawb"||field=="template_name"||field=="destination"||(field=="total"&&type=="air")) {
 					
 					 if (editRow !=rowIndex) {
 						 $(this).datagrid('endEdit', editRow);
 					 }
-					
-			        var rows = $('#dg1').datagrid('getRows');// 获得所有行
-			        var row = rows[rowIndex];// 根据index获得其中一行。
 					
 						$(this).datagrid('beginEdit', rowIndex);
 						$(this).datagrid('selectRow',rowIndex); //选中该行
@@ -788,7 +807,7 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 						    	row.reserve3=rec.id;//修改label外键id
 						    	row.template_id=rec.template_id;//修改模板id
 						    	row.width=rec.width; //修改宽度
-						    	row.width=rec.height; //修改高度
+						    	row.height=rec.height; //修改高度
 						    }
 							
 						});
@@ -820,9 +839,24 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 				   }
 					   
 			},
-	        onLoadError: function () {
-	        	layer.msg('警告!数据加载失败!',{	icon:2});
-	        },
+	        view: detailview,
+	    	detailFormatter:function(index,row){ //在行下面展示其他数据列表
+	    		//return '<div class="ddv" style="padding:5px 0"></div>';
+	    		var columns = $(this).datagrid('options').columns[0];
+	    		return detailFormatter(index,row,columns);
+	    	},
+	    	/*onExpandRow: function(index,row){
+	    		var ddv = $(this).datagrid('getRowDetail',index).find('div.ddv');
+	    		ddv.panel({
+	    			border:false,
+	    			cache:false,
+	    			href:url+'?label_id='+row.label_id,
+	    			onLoad:function(){
+	    				$('#dg1').datagrid('fixDetailRowHeight',index);
+	    			}
+	    		});
+	    		$('#dg1').datagrid('fixDetailRowHeight',index);
+	    	},*/
 			
 		});
 		
@@ -852,6 +886,22 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 			}
 		});*/
 	}
+
+//在行下面展示其他数据列表
+function detailFormatter(index, row, columns) {
+	var html = [];
+	$.each(row, function(key, value) {
+		 for (var i = 0; i < columns.length; i++) {
+			 var field = columns[i].field;
+			 if(key==field){
+				 key =  columns[i].title +"【"+key+"】";
+				 break;
+			 }
+		 }
+		 html.push('<p><b>' + key + ':</b> ' + value + '</p>');
+	});
+	return html.join('');
+}
 
 
 /**初始化Select2 表单下拉框**/

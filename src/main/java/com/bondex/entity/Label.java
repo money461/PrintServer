@@ -3,6 +3,7 @@ package com.bondex.entity;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -75,6 +76,9 @@ public class Label implements Serializable {
 	@SerializedName(value="RecCustomerName",alternate="receivingCustomer")
 	@JSONField(name="RecCustomerName")
 	private String RecCustomerName;//收货人
+
+    /** 请求参数 */ //params[endTime] params[beginTime]
+    private Map<String, Object> params;
 	
 	@JsonProperty(value="MBLNo")
 	public String getMBLNo() {
@@ -309,6 +313,15 @@ public class Label implements Serializable {
 	public void setPackages(BigDecimal packages) {
 		this.packages = packages;
 	}
+
+	public Map<String, Object> getParams() {
+		return params;
+	}
+
+	public void setParams(Map<String, Object> params) {
+		this.params = params;
+	}
+	
 	
 	
 	

@@ -77,8 +77,8 @@
 			        </a>
 		        </div>
 		        
-		        <div class="col-sm-12 select-table table-striped">
-				    <table id="bootstrap-table"></table>
+		        <div  class="col-sm-12 select-table table-striped table-responsive">
+						<table class="text-nowrap" id="bootstrap-table"  data-use-row-attr-func="true" data-reorderable-rows="true"  data-reorderable-columns="true" data-mobile-responsive="true" style="table-layout:fixed;"></table>
 				</div>
 			</div>
 		</div>
@@ -127,16 +127,21 @@
 		        },
 		        {
 		            field: 'username',
-		            title: '操作名称'
+		            title: '操作名称',
+		            width:100
 		        },
 		        {
 		            field: 'region_name',
-		            title: '打印办公室'
+		            title: '打印办公室',
+		            width:100
 		        },
 		        {
 		            field: 'parent_name',
 		            title: '办公室区域',
-		            visible: false
+		            valign: 'middle',
+		            align: 'middle',
+		            visible: true,
+		            width:100
 		        },
 		        {
 		        	visible: editFlag == 'hidden' ? false : true,

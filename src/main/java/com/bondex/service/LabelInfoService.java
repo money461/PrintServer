@@ -1,18 +1,19 @@
 package com.bondex.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.bondex.entity.Label;
+import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.Template;
-import com.bondex.entity.msg.JsonRootBean;
-import com.bondex.entity.page.Datagrid;
 
 public interface LabelInfoService {
 	
 	//监听消息保存标签数据
 	public boolean labelInfoSave(String message);
 
-	public Datagrid findByPage(String page, String rows, Label label, String start_time, String end_time, String sort, String order, String businessType) throws Exception;
+	//分页查询标签
+	public List<LabelAndTemplate>  selectLabelByPage( Label label);
 
 	public void updateLabel(Label label);
 

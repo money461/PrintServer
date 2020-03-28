@@ -29,9 +29,10 @@ import org.springframework.web.client.RestTemplate;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.bondex.common.enums.ResEnum;
+import com.bondex.common.Common;
 import com.bondex.config.exception.BusinessException;
 import com.bondex.dao.ClientDao;
+import com.bondex.dao.LabelInfoDao;
 import com.bondex.entity.Label;
 import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.Region;
@@ -45,7 +46,6 @@ import com.bondex.entity.page.Datagrid;
 import com.bondex.mapper.TemplateDataMapper;
 import com.bondex.rabbitmq.Producer;
 import com.bondex.service.ClientService;
-import com.bondex.shiro.security.entity.JsonResult;
 import com.bondex.shiro.security.entity.Opid;
 import com.bondex.shiro.security.entity.UserInfo;
 import com.bondex.util.CloneUtils;
@@ -67,11 +67,13 @@ public class ClientServiceImpl implements ClientService {
 	private ClientDao clientDao;
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
-	
 	@Autowired
 	private TemplateDataMapper templateDataMapper;
 	@Autowired
 	private Producer producer;
+	
+	@Autowired
+	private LabelInfoDao labelInfoDao;
 
 	public final static String SPLITSTRTAG = "\\(/\\)";
 
@@ -155,49 +157,40 @@ public class ClientServiceImpl implements ClientService {
 	 * @param labels 多个标签
 	 * @param regionCode 办公室Code
 	 * @param report 打印人 标识 第一次 有值，第二次 没有值
-	 * @param businessType air
 	 * @param mqaddress vpnnet 内网  outnet外网
 	 * @param labelAndTemplate 
 	 * @return
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public void sendLabel(List<LabelAndTemplate> labelAndTemplates, String regionCode, UserInfo userInfo,String businessType,String mqaddress) {
+	public void sendLabel(List<LabelAndTemplate> labelAndTemplates, String regionCode,String mqaddress) {
 		
+		UserInfo userInfo = ShiroUtils.getUserInfo();
 		// 获取打印区域
 		// 获取打印区域 从数据库中获取
 		Region defaultRegion = clientDao.getRegionByRegioncode(regionCode);
 		
-		List<JsonResult> userPrintTemplateInfo = ShiroUtils.getUserPrintTemplateInfo();
 		List<Client> clients = new ArrayList<>();
 		//判断是否拥有权限
 		for (LabelAndTemplate label : labelAndTemplates) {
 			String reserve3 = label.getReserve3();
-			String template_name = label.getTemplate_name();
-			List<Template> templatelist = jdbcTemplate.query("select * from template where id = ? or template_name=?",	new Object[] { reserve3, template_name },	new BeanPropertyRowMapper<Template>(Template.class));
-			if(null==templatelist || templatelist.size()==0){
-				throw new BusinessException(ResEnum.FAIL.CODE, "请指定打印模板！");
-			}
-			Template template = templatelist.get(0);
-			//判断是否有权限
-			JsonResult result = userPrintTemplateInfo.stream().filter(re ->re.getReportid().equals(template.getTemplate_id())).findFirst().orElse(null);
-			
-			if(null==result){
-				throw new BusinessException(ResEnum.FORBIDDEN.CODE, "打印失败,未配置打印模板使用权限！");
-			}
-			
+			Template template = labelInfoDao.checkUseTemplate(reserve3);
 			//为了防止前端传过来的数据有误
-			label.setTemplate_id(template.getTemplate_id());
+			String template_id = template.getTemplate_id();
+			label.setTemplate_id(template_id);
 			label.setTemplate_name(template.getTemplate_name());
 			label.setWidth(template.getWidth());
 			label.setHeight(template.getHeight());
 			
-			if (businessType.equals("medicine")) {
-				clients = getPaiangClients(labelAndTemplates, userInfo, businessType);
+			//根据打印模板 封装打印客户端数据
+			if ("4e2b8f59-9858-4297-962f-6ee4862085aa".equals(template_id)) { 
+				List<Client> list = getPaiangClients(label, userInfo);
+				clients.addAll(list);
 			} else {
 				String t[] = label.getTotal().split("\\.");
 				label.setTotal(t[0]);
-				clients = getClients(labelAndTemplates, userInfo, businessType);
+				Client client = getClients(label, userInfo);
+				clients.add(client);
 			}
 			
 			// 发送消息 并且 更新所有打印数据状态为"已打印"
@@ -212,14 +205,13 @@ public class ClientServiceImpl implements ClientService {
 		
 		for (Client client : clients) {
 			// 发送MQ 执行打印
-			String message = GsonUtil.GsonString(client);
 			try {
-				if("vpnnet".equals(mqaddress)){
-					producer.vpnNetPrint(message, defaultRegion); //发送内网
-				}else if("outnet".equals(mqaddress)){
-					producer.outNetPrint(message, defaultRegion); //发送外网
+				if(Common.MQAddress_VPNNET.equals(mqaddress)){
+					producer.vpnNetPrint(client, defaultRegion); //发送内网
+				}else if(Common.MQAddress_OUTNET.equals(mqaddress)){
+					producer.outNetPrint(client, defaultRegion); //发送外网
 				}else{
-					producer.print(message, defaultRegion); //封装打印信息 携带打印区域
+					producer.print(client, defaultRegion); //封装打印信息 携带打印区域
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -231,18 +223,16 @@ public class ClientServiceImpl implements ClientService {
 
 	/**
 	 * 封装派昂标签
-	 * @param labelAndTemplates
+	 * @param label
 	 * @param userInfo
-	 * @param businessType
 	 * @return
 	 */
-	private List<Client> getPaiangClients(List<LabelAndTemplate> labelAndTemplates, UserInfo userInfo,String businessType) {
-		List<Client> clients = new ArrayList<>();
-		for (LabelAndTemplate label : labelAndTemplates) {
+	private List<Client> getPaiangClients(LabelAndTemplate label, UserInfo userInfo) {
 			//克隆数据
+			
 			String serialNo = label.getSerialNo(); //打印序号
 			String[] str = serialNo.split(";");
-			
+			List<Client> list = new ArrayList<Client>(str.length);
 			for (String no : str) {
 					Client client = new Client();// 打印客户端数据结构
 					
@@ -258,7 +248,7 @@ public class ClientServiceImpl implements ClientService {
 					client.setReportWidth(label.getWidth());// 标签宽度，单位毫米（目前定死）
 					client.setReportHeight(label.getHeight());// 标签高度，单位毫米（目前定死）
 					
-					client.setCopies("1");// 标签打印份数
+					client.setCopies(1);// 标签打印份数
 		
 					Label clone = CloneUtils.clone(label);
 					clone.setSerialNo(no);
@@ -269,28 +259,19 @@ public class ClientServiceImpl implements ClientService {
 					JSONObject jsonObject = new JSONObject();
 					jsonObject.put("vwOrderAll", array);
 					client.setData(jsonObject.toJSONString());
-					clients.add(client);
-			}
-			//派昂封装结束
+			       //派昂封装结束
+					list.add(client);
 		}
+			return list;
 		
-		return clients;
 	}
 
 	//封装打印数据
-	private List<Client> getClients(List<LabelAndTemplate> LabelAndTemplates2, UserInfo userInfo, String businessType) {
-		List<Client> clients = new ArrayList<>();
-		Client client;
-		ClientData clientData;
-		List<Object> vwOrderAlls;
-		
-		//循环封装打印数据
-		for (LabelAndTemplate label : LabelAndTemplates2) {
-			
-			
-			client = new Client();// 打印客户端数据结构
-			clientData = new ClientData();
-			vwOrderAlls = new ArrayList<Object>();
+	private Client getClients(LabelAndTemplate label, UserInfo userInfo) {
+			//循环封装打印数据
+			Client client = new Client();// 打印客户端数据结构
+			ClientData clientData = new ClientData();
+			List<Object> vwOrderAlls = new ArrayList<Object>();
 			
 			String template_id =label.getTemplate_id();
 			client.setReportID(template_id);// 模板id
@@ -306,6 +287,10 @@ public class ClientServiceImpl implements ClientService {
 			
 				//封装空运标签数据打印格式 
 				if("2785d11a-e261-4c61-8096-8f9f21e2a3f0".equals(template_id)){
+					
+					if(StringUtils.isBlank(label.getHawb())){
+						throw new BusinessException("重庆模板标签数据分单号不能为空！");
+					}
 					
 					String sql = "SELECT * FROM	( SELECT * FROM label WHERE mawb IN ( SELECT mawb FROM label WHERE hawb = '"+label.getHawb()+"' ) ) AS l WHERE	l.hawb = '"+label.getHawb()+"' OR l.hawb = ''";
 					List<LabelAndTemplate> labelList= templateDataMapper.queryLabelAndTemplate(sql);
@@ -339,13 +324,11 @@ public class ClientServiceImpl implements ClientService {
 					vwOrderAlls.add(vwOrderAll);
 				}
 				
-				client.setCopies(label.getTotal());// 标签打印份数
+				client.setCopies(Integer.valueOf(label.getTotal()));// 标签打印份数
+				System.out.println("标签核心展示内容==>"+GsonUtil.GsonString(vwOrderAlls));
 				clientData.setVwOrderAll(vwOrderAlls);
 				client.setData(GsonUtil.GsonString(clientData));
-				clients.add(client);
-			
-		}
-		return clients;
+				return client;
 	}
 
 
