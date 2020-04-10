@@ -122,7 +122,7 @@
     <springProfile name="prod">
         <root level="ERROR">
             <appender-ref ref="consoleLog"/>
-            <appender-ref ref="fileLog"/>
+            <!-- <appender-ref ref="fileLog"/> -->
         </root>
     </springProfile>
 </configuration>

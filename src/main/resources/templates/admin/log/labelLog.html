@@ -14,13 +14,13 @@
 					<div class="select-list">
 						<ul>
 							<li>
-								消息ID：<input type="text" name="seqNo"/>
+								打印标签：<input class="select2 form-control" href="/labelPrint/template/getAllCode" inputMessage="请输入选择打印标签" id='code' name="code"></input>
 							</li>
 							<li>
 							          消息来源：<input type="text" name="senderName"/>
 							</li>
 							<li>
-							          主单：<input type="text" name="mawb"/>
+							          单据号：<input type="text" name="mawb"/>
 							</li>
 							<li>
 							          分单：<input type="text" name="hawb"/>
@@ -42,9 +42,14 @@
 							</li>
 							
 							<li>
+								<@shiro.hasAnyPermissions name="${code}.btn-search">
 								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								</@shiro.hasAnyPermissions>
+								<@shiro.hasAnyPermissions name="${code}.btn-realod">
 							    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+								</@shiro.hasAnyPermissions>
 							</li>
+							
 						</ul>
 					</div>
 				</form>
@@ -62,7 +67,14 @@
 	<script  type="text/javascript">
         var prefix = ctx + "/log";
 
+        function selected(data){
+			$("#code").val(data.id);
+		}
+        
         $(function() {
+        	
+        	log.select2(null,selected);
+        	
             var options = {
                 url: prefix + "/logdetail",
                 showSearch: true,
@@ -70,11 +82,14 @@
 		        showToggle: true,
 		        showColumns: true,
 		        detailView: true,
+		        showExport:true, //是否显示导出
+		        exportDataType:'selected',
 		        detailFormatter:$.table.detailFormatter,
-		        sortName: "updateTime",
+		        sortName: "updateTime", //默认排序字段
+		        sortOrder: "desc",
 		        pageSize:50,
 		        pageList: [20, 50, 100],
-		        modalName: "打印模板",
+		        modalName: "标签入库日志",
                 columns: [{
 		            checkbox: true,
                 },{
@@ -85,39 +100,80 @@
 		        },
 				{
 					field : 'seqNo', 
-					title : '消息ID'
+					title : '消息ID',
+					visible: false
 				},
 				{
 					field : 'senderName', 
-					title : '消息来源'
+					title : '消息来源',
+					visible: false
 				},
 				{
 					field : 'reciverName', 
-					title : '消息接受系统'
+					title : '消息接受系统',
+					visible: false
 				},
 				{
-					field : 'rocTypeName', 
-					title : '消息类型声明'
+					field : 'doctypeName', 
+					title : '消息类型声明',
+					align: 'center'
+					
+				},{
+					field : 'code', 
+					title : '打印标签code',
+					align: 'center',
+					visible	: false
+				},{
+					field : 'codeName', 
+					title : '打印标签',
+					align: 'center'
 				},
 				{
 					field : 'mawb', 
-					title : '主单号'
+					title : '单据号',
+					align: 'center',
 				},
 				{
 				    field : 'hawb',
-				    title : '分单号'
+				    title : '分单号',
+				    visible	: false
 				},
 				{
 				    field : 'handleType',
-				    title : '处理类型'
+				    title : '处理类型',
+				    visible	: false
 				},{
 					field : 'detail',
-					title : '原因',
-					visible	: false
+					title : '结果描述',
+					switchable: false,
+     			    //formatter:operateFormatter,
+     				//events:operateEvents,
+					width:158,
+					cellStyle:{
+						css:{
+							"overflow": "hidden",
+							"text-overflow": "ellipsis",
+							"white-space": "nowrap",
+							"max-width":"150px"
+							}
+					}
 				},{
 					field : 'json',
 					title : '消息报文',
-					visible	: false
+					align: 'center',
+					visible	: true,
+					switchable: false,
+     			    //formatter:operateFormatter,
+     				//events:operateEvents,
+					width:158,
+					cellStyle:{
+						css:{
+							"overflow": "hidden",
+							"text-overflow": "ellipsis",
+							"white-space": "nowrap",
+							"max-width":"150px"
+							}
+					}
 				},
 				{
                     field: 'status',
@@ -130,14 +186,17 @@
 				{
                     field: 'updateTime',
                     title: '消息处理日期',
+                    align: 'center',
                     sortable: true
                 },
 				{
                     field: 'createTime',
                     title: '消息创建时间',
-                    sortable: true
-                },
-		        {
+                    sortable: true,
+                    visible: false
+                }
+                
+		       /*  {
 		            title: '操作',
 		            align: 'center',
 		            formatter: function(value, row, index) {
@@ -146,7 +205,8 @@
                         actions.push('<a class="btn btn-danger btn-xs" href="#"><i class="fa fa-remove"></i>删除</a>');
 						return actions.join('');
 		            }
-		        }]
+		        } */
+		        ]
             };
             $.table.init(options);
         });

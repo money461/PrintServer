@@ -2,20 +2,8 @@ function label() {
 	
 }
 	var editRow = undefined;
-	var mawb="";
-	var hawb="";
-	var destination="";// 目的地
-	var total="";// 件数
-	var airport_departure="";// 起始地
-	var is_print="";// 是否打印
-	var start_time;// 开始时间
-	var end_time;// 结束时间
-	var flight_date="";// 结束时间
-	var opid_name="";// 录入人
-	var MBLNo="";//
-	var TakeCargoNo="";// 
 	var opid; //当前操作的id
-	var thisdefault_region_code=null; //打印当前现中的办公室id
+	var thisdefaultRegion=null; //打印当前现中的办公室id
 	
 	//js初始化调用的接口
 	//获取操作opid
@@ -38,21 +26,21 @@ $(function(){
 //修改办公室
 function setRegionByOpid(){
 	
-		//初始化页面 获取打印区域 opid 当前操作号   default_region_code办公司id
+		//初始化页面 获取打印区域 opid 当前操作号   defaultRegion办公司id
 		$.ajax({
 			url : "/labelPrint/client/getDefaultBindRegionByOpid",
 			type : 'POST',
-			data: {opid:opid,default_region_code:storage.get('default_region_code')},//chengdu/jichang id=2
+			data: {opid:opid,defaultRegion:storage.get('defaultRegion')},//chengdu/jichang id=2
 			async:false,
 			success : function(result) {
 				if($.common.isEmpty(result)){
 					return;
 				}else{
-					$("#quyu").text(result.parent_name+'/'+result.region_name); //修改区域标签
+					$("#quyu").text(result.parentName+'/'+result.regionName); //修改区域标签
 					var bgs = storage.get('bgs');
 					bgs = bgs!=null?bgs:'mr'; 
 					storage.set('bgs',bgs);
-					storage.set('default_region_code',result.region_code); //初始化获取用户绑定的办公室id
+					storage.set('defaultRegion',result.regionCode); //初始化获取用户绑定的办公室id
 				}
 			}
 		});
@@ -93,19 +81,23 @@ label.prototype.update = function() {
 	
 //标签删除一行或者多行 事件
 label.prototype.labelDelete = function() {
-		var rows = $('#dg1').datagrid('getSelections');
+		var rows = $('#easyui-datagrid').datagrid('getSelections');
 		if (rows.length > 0) {
 			if(window.confirm('确定要删除？')){
 				$.ajax({
 					url : "/labelPrint/label/delete",
+					contentType:"application/json",
+					dataType:"json",      
 					type : 'POST',
-					data : {
-						label : JSON.stringify(rows)
-					},
+					data : JSON.stringify(rows),
+				    beforeSend: function () {
+			        	$.modal.loading("正在处理中，请稍后...");
+			        },
 					success : function(result) {
+						$.modal.closeLoading();
 						if("200"==result.status){
         					layer.msg("删除成功！",{icon:1,time:1000});
-        					$('#dg1').datagrid('reload');
+        					$('#easyui-datagrid').datagrid('reload');
         				}else{
         					layer.msg(result.message,{icon:2,time:1000});
         				}
@@ -138,11 +130,11 @@ label.prototype.save = function(){
            if (data) {
         	   //点保存后无法点击撤销
         	    $("#rejectButton").attr("disabled",true); //禁用撤销
-        		$("#dg1").datagrid('endEdit', editRow);
+        		$("#easyui-datagrid").datagrid('endEdit', editRow);
         		editRow = undefined; //重置编辑行
         		
         		//使用JSON序列化datarow对象，发送到后台。
-                var rows = $("#dg1").datagrid('getChanges');
+                var rows = $("#easyui-datagrid").datagrid('getChanges');
 
                 var rowstr = JSON.stringify(rows);
                 
@@ -155,7 +147,7 @@ label.prototype.save = function(){
         			data:rowstr,
         			success : function(result) {
         				// 更新完成后，刷新当前行
-        				//$("#dg1").datagrid('refreshRow', rowIndex);
+        				//$("#easyui-datagrid").datagrid('refreshRow', rowIndex);
         				if("200"==result.status){
         					layer.msg(result.message,{icon:1,time:1000});
         				}else{
@@ -176,8 +168,8 @@ label.prototype.save = function(){
 //撤销被修改的行
 label.prototype.rejectChange = function(){
 		editRow = undefined;
-        $("#dg1").datagrid('rejectChanges');
-        $("#dg1").datagrid('unselectAll'); //取消选中的所有行
+        $("#easyui-datagrid").datagrid('rejectChanges');
+        $("#easyui-datagrid").datagrid('unselectAll'); //取消选中的所有行
         $("#saveButton").attr("disabled",true); //禁用保存
 	}
 	
@@ -189,17 +181,7 @@ label.prototype.refresh = function(isRefresh) {
 	    	$('#searchForm')[0].reset();
 	    	//$(':input','#searchForm').not(':button, :submit, :reset, :hidden').val('').removeAttr('checked').removeAttr('selected');
 	    	$("#searchForm").find("select[name=status]").val("0").trigger('change'); //重置下拉
-	    	mawb = "";
-	    	hawb = "";
-	    	destination = "";// 目的地
-	    	total = "";// 件数
-	    	airport_departure = "";// 起始地
-	    	is_print = "";
-	    	start_time = "";
-	    	end_time = "";
-	    	flight_date= "";
 	    	label.select2(); //重置select2
-	    	opid_name= "";
 	    	$("#printButton").attr("disabled",false); //解除
 	    	if (isRefresh) {
 	    		label.initLabelDatagrid(); //重新加载数据
@@ -212,7 +194,7 @@ label.prototype.refresh = function(isRefresh) {
 label.prototype.search = function() {
 	    if(label.checksave()){
 	    	var params = label.getQueryCondition();
-	    	$('#dg1').datagrid('load',params); //加载并显示第一页的行 指定 'param' 参数，它将替换 queryParams 属性。
+	    	$('#easyui-datagrid').datagrid('load',params); //加载并显示第一页的行 指定 'param' 参数，它将替换 queryParams 属性。
 	    	//label.initLabelDatagrid(); //初始化表格
 	    }
 		
@@ -222,59 +204,27 @@ label.prototype.search = function() {
 	//查询参数 
 label.prototype.getQueryCondition=function(){
 	
-			if (!vda.startValidate()) {
-				return;
-			}
-			// $('#dd3').dialog('close');
-			var tMawb = $.trim($("#mawb").val()) == undefined?"":$.trim($("#mawb").val());
-			if (tMawb!="") {
-				mawb = JSON.stringify(tMawb.split("\n")); //多个主单号，数组形式的字符串
-			}else{
-				mawb = $("#mawb").val();
-			}
-			hawb = $("#hawb").val()== undefined?"":$("#hawb").val();
-			total = $("#total").val()== undefined?"":$("#total").val();
-			destination = $("#destination option:checked").val()== undefined?"":$("#destination option:checked").val();
-			airport_departure = $("#airport_departure option:checked").val()== undefined?"":$("#airport_departure option:checked").val();
-			start_time = $("#start_time").val();
-			end_time = $("#end_time").val();
-			flight_date = $("#flight_date").val()== undefined?"":$("#flight_date").val();
-			opid_name = $("#opid_name").val()== undefined?"":$("#opid_name").val();
-			MBLNo=$("#MBLNo").val()== undefined?"":$("#MBLNo").val()
-			TakeCargoNo=$("#TakeCargoNo").val()== undefined?"":$("#TakeCargoNo").val()
-							
-			is_print = $("#status").val()==null?"":$("#status").val();
-			
-		   if('0'!=is_print){
-				$("#printButton").attr("disabled",true); //禁用打印
-		   }else{
-			    $("#printButton").attr("disabled",false); //解除
-		   }
-		   
-		var formParm = {
-				mawb:mawb,
-				hawb:hawb,
-				destination:destination,
-				total:total,
-				airport_departure:airport_departure,
-				is_print:is_print,
-				opid:opid, //当前操作id
-				opid_name:opid_name,
-				flight_date:flight_date,
-				MBLNo:MBLNo,
-				TakeCargoNo:TakeCargoNo,
-				'params[start_time]':start_time,
-				'params[end_time]':end_time
-		};
-		
-		
-		  return formParm;
-	}
+	 var formParm  = $.common.formToJSON("searchForm");
+	 var mawb = formParm.mawb;
+	 mawb = $.trim(mawb) == undefined?"":$.trim(mawb);
+	 mawb = mawb.replace(/\s+/g, ',');
+     formParm.mawb=mawb;
+	 if('0'!= formParm.isPrint){
+		$("#printButton").attr("disabled",true); //禁用打印
+	  }else{
+		    $("#printButton").attr("disabled",false); //解除
+	  }
+	 
+	  console.log('查询参数');
+	  console.log(formParm);
+	 
+	  return formParm;
+}
 	
 //点击打印按钮事件 进入打印程序
 label.prototype.labelPrint = function() {
 	    if(label.checksave()){
-	    	var rows = $('#dg1').datagrid('getSelections');// 获取所有选中行的数据
+	    	var rows = $('#easyui-datagrid').datagrid('getSelections');// 获取所有选中行的数据
 	    	// 获取用户选择的区域
 	    	if (rows.length ==0) {
 	    		layer.msg("请至少选择一条打印标签！",{icon:2,time:2000});
@@ -289,8 +239,8 @@ label.prototype.labelPrint = function() {
 	    	//判断是否需要打印提示
 	    	var xunwenprint = storage.get('xunwenprint'); //********全局询问打印设置
 	    	xunwenprint = xunwenprint!=null?xunwenprint:'yes';
-	    	var default_region_code = storage.get('default_region_code'); //打印办公室id
-	    	if($.common.equalsIgnoreCase('yes',xunwenprint) || $.common.isEmpty(default_region_code)){
+	    	var defaultRegion = storage.get('defaultRegion'); //打印办公室id
+	    	if($.common.equalsIgnoreCase('yes',xunwenprint) || $.common.isEmpty(defaultRegion)){
 	    		//弹出对话框
 	    		$("#dyan").css("display", "block");// 显示打印按钮
 	    		label.initdialog('打印提示框'); //显示打印会话框 不展示默认办公室选项
@@ -318,15 +268,15 @@ label.prototype.alertprint = function() {
 label.prototype.labelExport = function() {
 	//校验保存
     if(label.checksave()){
-    	var rows = $('#dg1').datagrid('getSelections');// 获取所有选中行的数据
+    	var rows = $('#easyui-datagrid').datagrid('getSelections');// 获取所有选中行的数据
     	
     	if (rows.length > 0) {
     		var ids = "";
     		for (var i = 0; i < rows.length; i++) {
     			if (i == (rows.length - 1)) {
-    				ids += "'" + rows[i].label_id + "'";
+    				ids += "'" + rows[i].labelId + "'";
     			} else {
-    				ids += "'" + rows[i].label_id + "',";
+    				ids += "'" + rows[i].labelId + "',";
     			}
     		}
     		window.location.href = "/labelPrint/client/exportLabel?labels=" + ids;
@@ -357,9 +307,9 @@ function dialogUpdateOrAddRegion (){
 	  var bgs = $("input[name='bgs']:checked").val();
 		//获取办公室id
 		if(bgs=="mr" ){
-			if($.common.isEmpty(thisdefault_region_code)){
-				thisdefault_region_code = storage.get('default_region_code');
-				if($.common.isEmpty(thisdefault_region_code)){
+			if($.common.isEmpty(thisdefaultRegion)){
+				thisdefaultRegion = storage.get('defaultRegion');
+				if($.common.isEmpty(thisdefaultRegion)){
 					layer.msg("选择默认办公室必须选择绑定指定办公室",{icon:2,time:1000});
 					return;
 				}
@@ -369,7 +319,7 @@ function dialogUpdateOrAddRegion (){
 					$.ajax({
 						url : "/labelPrint/client/updateOrAddUserRegion", //修改办公室区域 chengdu/jichang
 						type : 'POST',
-						data :{default_region_code:thisdefault_region_code},
+						data :{defaultRegion:thisdefaultRegion},
 					    success : function(result) {
 						if (result.status=="200") {
 							layer.msg("更改配置成功！",{icon:1,time:1000});
@@ -400,8 +350,8 @@ label.prototype.dialogRegion =function(){
 	var vpn = $("input[name='mqaddress']:checked").val();
 	storage.set('vpn',vpn);
 	
-	if($.common.isNotEmpty(thisdefault_region_code)){
-		storage.set('default_region_code',thisdefault_region_code); //****************设置全局办公室id*************************
+	if($.common.isNotEmpty(thisdefaultRegion)){
+		storage.set('defaultRegion',thisdefaultRegion); //****************设置全局办公室id*************************
 	}
 	setRegionByOpid(bgs);//修改办公室
 	//关闭会话
@@ -428,7 +378,7 @@ label.prototype.initdialog = function(title) {
 				$("#bgs").css("display", "none");//隐藏办公室radio
 				$("#xunwen").css("display", "none");//隐藏询问设置
 				
-				thisdefault_region_code=null;//清除当前选中的地址
+				thisdefaultRegion=null;//清除当前选中的地址
 			} catch (e) {
 				console.info("初始化单选框失败");
 			}
@@ -465,11 +415,11 @@ label.prototype.initTree = function(){
 		},
 		onLoadSuccess : function(node,data) {
 			//combotree 设置默认值
-			var default_region_code = storage.get('default_region_code');
-			if($.common.isNotEmpty(default_region_code)){
+			var defaultRegion = storage.get('defaultRegion');
+			if($.common.isNotEmpty(defaultRegion)){
 				 var trees = $('#cc').combotree('tree');
 				 
-				var nodedata = trees.tree('find',default_region_code);
+				var nodedata = trees.tree('find',defaultRegion);
 				var text = nodedata.pname + "/" + nodedata.text;
 				$('#cc').combotree('setValue',text); 
 				trees.tree('select', nodedata.target); 
@@ -484,8 +434,8 @@ label.prototype.initTree = function(){
 			if ($('#cc').tree('isLeaf', node.target)) {// 判断是否是叶子节点
 				//子节点即选择该节点
 				$('#cc').combotree('setValue', node.pname + "/" + node.text); //设置值
-//				storage.set("default_region_code",node.id); //设置区域办公室id
-				thisdefault_region_code=node.id;
+//				storage.set("defaultRegion",node.id); //设置区域办公室id
+				thisdefaultRegion=node.id;
 			} else {
 				// 如果是父节点，实现点击展开/关闭节点
 				if (node.state == "closed") {
@@ -511,31 +461,31 @@ function dialogClose(){
 //弹出会话框后点击打印
 function dialogPrint() {
 	   //立即执行打印
-	   label.printLabelSendClient(thisdefault_region_code);
+	   label.printLabelSendClient(thisdefaultRegion);
 }
 	//发送打印客户端 打印人 /区域
-label.prototype.printLabelSendClient = function(default_region_code) {
+label.prototype.printLabelSendClient = function(defaultRegion) {
   
-  var default_region_code_storage = storage.get('default_region_code'); //打印办公室id
+  var defaultRegion_storage = storage.get('defaultRegion'); //打印办公室id
   
-  if($.common.isEmpty(default_region_code)){
-	  default_region_code = default_region_code_storage;
+  if($.common.isEmpty(defaultRegion)){
+	  defaultRegion = defaultRegion_storage;
   }
   
-  if($.common.isEmpty(default_region_code)){
+  if($.common.isEmpty(defaultRegion)){
 	  layer.msg("请选择打印办公室",{icon:2,time:1000});
 	  return;
   }
   		window.parent.$.modal.loading("打印数据发送中，请稍后...");
         var vpn=storage.get('vpn');//获取内网外网
         var url = "/labelPrint/client/printLabelSendClient";
-		var rows = $('#dg1').datagrid('getSelections');
+		var rows = $('#easyui-datagrid').datagrid('getSelections');
 		$.ajax({
 			url : url,
 			type : 'POST',
 			data : {
 				labels : JSON.stringify(rows),
-				regionCode : default_region_code, //chengdu/jichang id=2
+				regionCode : defaultRegion, //chengdu/jichang id=2
 				mqaddress: vpn //内网还是外网
 			},
 			success : function(result) {
@@ -550,7 +500,7 @@ label.prototype.printLabelSendClient = function(default_region_code) {
    					});
    					dialogClose();//关闭会话
    					//刷新表格
-   					$('#dg1').datagrid('reload');
+   					$('#easyui-datagrid').datagrid('reload');
    				}else{
    					layer.msg(result.message,{icon:2,time:1000});
    				}
@@ -568,13 +518,13 @@ label.prototype.printLabelSendClient = function(default_region_code) {
 	
 //弹出会话框后导出数据
 function dialogExport() {
-		var rows = $('#dg1').datagrid('getSelections');// 获取所有选中行的数据
+		var rows = $('#easyui-datagrid').datagrid('getSelections');// 获取所有选中行的数据
 		var ids = "";
 		for (var i = 0; i < rows.length; i++) {
 			if (i == (rows.length - 1)) {
-				ids += "'" + rows[i].label_id + "'";
+				ids += "'" + rows[i].labelId + "'";
 			} else {
-				ids += "'" + rows[i].label_id + "',";
+				ids += "'" + rows[i].labelId + "',";
 			}
 		}
 		//导出所有的标签数据
@@ -599,7 +549,7 @@ function dialogExport() {
 //表格展示字段
 label.prototype.columns = function() {
 		var columns = [ [ {
-				field : 'label_id',
+				field : 'labelId',
 				title : '索引编号',
 				checkbox : true,
 				width : 50
@@ -617,7 +567,7 @@ label.prototype.columns = function() {
 				editor:'text',
 				title : 'HAWB'
 			}, {
-				field : 'airport_departure',
+				field : 'airportDeparture',
 				width : 50,
 				//sortable : true,
 				//sortOrder:'asc',
@@ -636,25 +586,32 @@ label.prototype.columns = function() {
 				//sortOrder:'asc',
 				title : '件数'
 			},{
-				field : 'template_name',
+				field : 'templateName',
 				width : 50,
 				//sortable : true,
 				//sortOrder:'asc',
-				editor:'combobox',
 				title : '当前模版',
-				styler: function(value, row, index) {
-			    	if (value == "未配置打印模板") {
+				editor:{
+			        type:'combobox',
+			        options:{
+			            valueField:'templateName',
+			            required:true
+			        }
+			    },
+			    styler: function(value, row, index) {
+			    	if ($.common.isEmpty(value)) {
 			    		return 'color:red;';
 			    	}
 			    },
-				formatter : function(value, row, index) {
-					// 用户没有申请模版权限
-					return value;
-			
-				}
+			   formatter : function(value, row, index) {
+				   if($.common.isEmpty(row.templateName)){
+					   value="未配置打印模板";
+				   }
+				   return value;
+			   }
 			
 			},{
-				field : 'flight_date',
+				field : 'flightDate',
 				width : 50,
 				sortable : true,
 				sortOrder:'asc',
@@ -667,28 +624,28 @@ label.prototype.columns = function() {
 					}
 				}
 			}, {
-				field : 'is_print',
+				field : 'isPrint',
 				width : 50,
 				title : '状态',
 				//sortable : true,
 				//sortOrder:'asc',
 				formatter : function(value, row, index) {
-					if (row.is_print == 1) {
+					if (row.isPrint == 1) {
 						return "已打印";
-					}else if (row.is_print == 2) {
+					}else if (row.isPrint == 2) {
 						return "已导出";
 					} else {
 						return "未打印";
 					}
 				}
 			},{
-				field : 'reserve2',
+				field : 'printTime',
 				width : 50,
 				//sortable : true,
 				//sortOrder:'asc',
 				title : '打印时间'
 			},{ 
-				field : 'update_time', 
+				field : 'updateTime', 
 				width : 50, 
 				sortable : true,
 				sortOrder:'desc',
@@ -697,11 +654,11 @@ label.prototype.columns = function() {
 					return formatDate(value); 
 				} 
 			},{ 
-				field : 'opid_name', 
+				field : 'opidName', 
 				width : 50, 
 				title : '录入人'
 			},{
-				field : 'print_user',
+				field : 'printUser',
 				width : 50,
 				//sortable : true,
 				//sortOrder:'asc',
@@ -711,13 +668,13 @@ label.prototype.columns = function() {
 	}
 	
 	//初始化标签表格
-label.prototype.initLabelDatagrid = function(is_print2) {
-		if (is_print2 != undefined) {
-			is_print = is_print2;
+label.prototype.initLabelDatagrid = function(isPrint2) {
+		if (isPrint2 != undefined) {
+			isPrint = isPrint2;
 		}
 		var url="/labelPrint/label/all";
 
-		$('#dg1').datagrid({
+		$('#easyui-datagrid').datagrid({
 			url : url,
 			method : 'POST',
 			iconCls : 'fa fa-truck',
@@ -726,7 +683,7 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 			striped:true,
 			scrollbarSize : 0,// 去除右侧空白
 			fitColumns : true,
-			sortName:'update_time',//定义可以排序的列。
+			sortName:'updateTime',//定义可以排序的列。
 			sortOrder:'desc',
 			pageList : [ 5, 10, 15, 20, 50 ],
 			toolbar:'#toolbar',
@@ -736,7 +693,7 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 			queryParams: label.getQueryCondition(),
 			columns : label.columns(),
 			rowStyler : function(index, row) {
-				if (row.is_print == 1||row.is_print == 2) {//打印状体修改展示颜色
+				if (row.isPrint == 1||row.isPrint == 2) {//打印状体修改展示颜色
 					return 'background-color:#5cb85c';
 				}
 			},
@@ -758,7 +715,7 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 		        	layer.msg('警告!数据加载失败!',{icon:2});
 		     },
 	        onBeforeLoad: function(param){ // 在发出请求数据数据之前触发，如果返回false可终止载入数据操作
-				var queryParams = $('#dg1').datagrid('options').queryParams; //初始化datatGrid后才可以获取options所有相关数据
+				var queryParams = $('#easyui-datagrid').datagrid('options').queryParams; //初始化datatGrid后才可以获取options所有相关数据
 				console.debug('请求发出前的自定义表单参数:');
 				console.info(queryParams);
 				console.debug('请求发出前的所有参数:');
@@ -769,7 +726,7 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 				console.info(param);
 	        },
 			/*onUnselect:function(rowIndex, rowData){
-				$("#dg1").datagrid('endEdit', editRow); //未选择该行的时候，结束编辑
+				$("#easyui-datagrid").datagrid('endEdit', editRow); //未选择该行的时候，结束编辑
 			},*/
 			//当用户单击一个单元格时触发。
 			onClickCell:function(index,field,value){
@@ -780,11 +737,11 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 			},
 			//当用户双击一个单元格时触发。
 			onDblClickCell:function(rowIndex, field, value){
-				var rows = $('#dg1').datagrid('getRows');// 获得所有行
+				var rows = $('#easyui-datagrid').datagrid('getRows');// 获得所有行
 				var row = rows[rowIndex];// 根据index获得其中一行。
-				var status = row.is_print;
+				var status = row.isPrint;
 				if(0!=status){return};
-				if (field=="hawb"||field=="template_name"||field=="destination"||(field=="total"&&type=="air")) {
+				if (field=="hawb"||field=="templateName"||field=="destination"||(field=="total"&&type=="air")) {
 					
 					 if (editRow !=rowIndex) {
 						 $(this).datagrid('endEdit', editRow);
@@ -796,13 +753,15 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 						$("#saveButton").attr("disabled",false); //启用保存
 						editRow = rowIndex; //记录当前编辑行索引
 			        
-						var ed = $(this).datagrid('getEditor', {index:rowIndex,field:'template_name'});
+						var ed = $(this).datagrid('getEditor', {index:rowIndex,field:'templateName'});
+						
+						var code  = sessionstorage.get('code');
 						
 						$(ed.target[0]).combobox({
-							url:"/labelPrint/label/getUserAuthtemplate",
+							url:"/labelPrint/label/getUserAuthtemplate?code="+code,
 							method:'GET',
-							textField:'template_name',
-						    valueField:'template_name',
+							textField:'templateName',
+						    valueField:'templateName',
 						    onSelect: function(rec){
 						    	row.reserve3=rec.id;//修改label外键id
 						    	row.template_id=rec.template_id;//修改模板id
@@ -811,13 +770,13 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 						    }
 							
 						});
-						$(ed.target[0]).combobox("select",row.template_name); //设置默认的初始值
+						$(ed.target[0]).combobox("select",row.templateName); //设置默认的初始值
 				}
 			},
 			// 结束编辑事件 当用户完成编辑一行时触发，参数包括：
 			onAfterEdit:function(rowIndex, rowData, changes){
 				//更新完成后，刷新当前行
-				$("#dg1").datagrid('refreshRow', rowIndex);
+				$("#easyui-datagrid").datagrid('refreshRow', rowIndex);
 				//editRow = undefined;
 			},
 			// 取消编辑事件
@@ -826,13 +785,13 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 			},
 			onLoadSuccess: function (data) {
 				   if (data.total == 0) {
-					   $('#dg1').datagrid('appendRow',{
+					   $('#easyui-datagrid').datagrid('appendRow',{
 						   mawb: '无数据！请更改查询条件，或<a href="#"  onclick="subscribe.initWindow()" style="color:red;"><b>订阅</b></a>主单号...',
 					   }).datagrid('mergeCells',{
 						   index: 0,
 						   field: 'mawb',
 						   colspan: 12
-					   }).datagrid('hideColumn','label_id');
+					   }).datagrid('hideColumn','labelId');
 					   
 				   }else{
 					   layer.msg('数据已刷新!',{icon:1});
@@ -850,12 +809,12 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 	    		ddv.panel({
 	    			border:false,
 	    			cache:false,
-	    			href:url+'?label_id='+row.label_id,
+	    			href:url+'?labelId='+row.labelId,
 	    			onLoad:function(){
-	    				$('#dg1').datagrid('fixDetailRowHeight',index);
+	    				$('#easyui-datagrid').datagrid('fixDetailRowHeight',index);
 	    			}
 	    		});
-	    		$('#dg1').datagrid('fixDetailRowHeight',index);
+	    		$('#easyui-datagrid').datagrid('fixDetailRowHeight',index);
 	    	},*/
 			
 		});
@@ -879,7 +838,7 @@ label.prototype.initLabelDatagrid = function(is_print2) {
 				console.info(result);
 				if (result.status=="200") {
 					console.info(result.data);
-					$("#dg1").datagrid('loadData', result.data); //JSON字符串转换为对象
+					$("#easyui-datagrid").datagrid('loadData', result.data); //JSON字符串转换为对象
 				}else {
 					layer.msg(result.message,{icon:2});
 				}

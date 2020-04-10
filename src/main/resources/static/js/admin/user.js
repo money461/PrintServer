@@ -18,7 +18,7 @@ user.prototype.saveOrupdateUser = function(url, data, callback) {
     	            var currentId = $('.page-tabs-content', topWindow).find('.active').attr('data-panel');
     	            var $contentWindow = $('.RuoYi_iframe[data-id="' + currentId + '"]', topWindow)[0].contentWindow;
     	            $.modal.close();
-    	            $contentWindow.$.modal.msgSuccess(result.msg);
+    	            $contentWindow.$.modal.msgSuccess(result.message);
     	            $contentWindow.$(".layui-layer-padding").removeAttr("style");
     	            if ($contentWindow.table.options.type == table_type.bootstrapTable) {
     	        		$contentWindow.$.table.refresh();

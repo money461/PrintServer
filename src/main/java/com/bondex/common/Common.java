@@ -1,7 +1,5 @@
 package com.bondex.common;
 
-import net.sf.ehcache.Statistics;
-
 public class Common {
 
 	public final static String Session_UserInfo = "userInfo"; //Session 中的用户信息ID名称
@@ -49,6 +47,7 @@ public class Common {
 	public final static String MQAddress_OUTNET = "outnet";
 	
 	
+	public final static String PAIANNGKEY = "PAIANGData";
 	
 	
 }

@@ -65,10 +65,16 @@ public class ShiroRealm extends AuthorizingRealm {
 		SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
 		UserInfo userInfo = (UserInfo)principals.getPrimaryPrincipal();
 		Set<String> premissionSet = Collections.synchronizedSet(new LinkedHashSet<String>());
+		
 		//获取到当前opid的权限
 		Map<String, Object> security = SecurityService.getSecurity(userInfo,premissionSet);
 		
-//		JSONObject security  = JSONObject.parseObject(ReadTxtFile.readTxtFile("C:\\Users\\admin\\Desktop\\标签打印\\AuthData.json"));
+	/*	JSONObject security=null;
+		try {
+			security = JSONObject.parseObject(ReadTxtFile.readJsonFromClassPath("data/AuthData.json",String.class));
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}*/
 		
 		if(null!=security){
 			System.out.println(GsonUtil.GsonString(security));

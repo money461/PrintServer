@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSONObject;
+import com.bondex.common.ComEnum;
 import com.bondex.common.enums.ResEnum;
 import com.bondex.config.exception.BusinessException;
 import com.bondex.controller.subscribe.SubscribeController;
@@ -61,6 +62,8 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		log.setCreateTime(date);
 		log.setJson(messge);
 		log.setStatus(1);
+		log.setCode(ComEnum.AirLabel.code); //监听业务固定 所以标签固定写死 
+		log.setCodeName(ComEnum.AirLabel.codeName);
 		Integer i=0;
 		try {
 			
@@ -69,7 +72,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 			log.setSeqNo(head.getSeqNo());
 			log.setSenderName(head.getSenderName());
 			log.setReciverName(head.getReciverName());	
-			log.setDocTypeName(head.getDocTypeName());
+			log.setDoctypeName(head.getDocTypeName());
 			log.setStatus(0); //成功
 			String main = jsonRootBean.getMain();
 			JSONObject parseObject = JSONObject.parseObject(main);
@@ -111,21 +114,20 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		UserInfo userInfo = ShiroUtils.getUserInfo();
 		String opid = userInfo.getOpid();
 		List<String> opidData = userInfo.getOpidData();
-		String opids = opidData.stream().collect(Collectors.joining(",")); //获取用户部门所有的opid
-
+		String opids = opidData.stream().collect(Collectors.joining("','")); //获取用户部门所有的opid
 		//拼接SQL语句
 		StringBuffer sql = new StringBuffer();
-		sql.append("select * from label LEFT JOIN template t  on t.id = label.reserve3 where label.opid in (" + opids + ") ");
-//		sql.append("select * from label LEFT JOIN template t  on t.id = label.reserve3 where t.template_id in (" + rt + ") ");
-		sql.append(" and business_type <> 0 "); //不是派昂医药的数据
-		sql.append("and reserve1 = '0' "); //未删除
+		sql.append("select 	label.*, t.template_id,	t.template_name from label LEFT JOIN template t  on t.id = label.reserve3 where label.opid in ('" + opids + "') ");
+		sql.append(" and label.business_type <> 0 "); //不是派昂医药的数据
+		sql.append(" and label.reserve1 = '0' "); //未删除
+		sql.append(" and label.code = '"+label.getCode()+"' "); 
 		
 		Map<String, Object> params = label.getParams();
-		if(StringUtils.isNotEmpty(params)&& StringUtils.isNotBlank((String)params.get("start_time"))){
-			sql.append(" AND date_format(create_time,'%y%m%d') >= date_format('"+params.get("start_time")+"','%y%m%d')");
+		if(StringUtils.isNotEmpty(params)&& StringUtils.isNotBlank((String)params.get("startTime"))){
+			sql.append(" AND date_format(label.create_time,'%y%m%d') >= date_format('"+params.get("startTime")+"','%y%m%d')");
 		}
-		if(StringUtils.isNotEmpty(params) && StringUtils.isNotBlank((String)params.get("end_time"))){
-			sql.append(" AND date_format(create_time,'%y%m%d') <= date_format('"+params.get("end_time")+"','%y%m%d')");
+		if(StringUtils.isNotEmpty(params) && StringUtils.isNotBlank((String)params.get("startTime"))){
+			sql.append(" AND date_format(label.create_time,'%y%m%d') <= date_format('"+params.get("startTime")+"','%y%m%d')");
 		}
 		
 		//订阅信息
@@ -136,7 +138,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 			for (Subscribe subscribe : listSubscribe) {
 				builder.append("'" + subscribe.getSrMawb() + "',");
 			}
-			sql.append("and mawb in (" + builder.substring(0, builder.length() - 1).toString() + ") ");
+			sql.append("and label.mawb in (" + builder.substring(0, builder.length() - 1).toString() + ") ");
 			
 		} else if (label.getMawb() != null && !label.getMawb().equals("undefined") && !label.getMawb().trim().equals("")) {
 			if (label.getMawb().length() < 11) {
@@ -154,35 +156,35 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 					mawb += "'" + head + "-" + body + "',";
 				}
 			}
-			sql.append("and mawb in (" + mawb.substring(0, mawb.length() - 1) + ") ");
+			sql.append("and label.mawb in (" + mawb.substring(0, mawb.length() - 1) + ") ");
 		}
 		
-		if (label.getLabel_id() != null && !label.getLabel_id().equals("undefined") && !label.getLabel_id().equals("")) {
-			sql.append("and label_id = " + label.getLabel_id() + " ");
+		if (label.getLabelId() != null && !label.getLabelId().equals("undefined") && !label.getLabelId().equals("")) {
+			sql.append("and label.label_id = " + label.getLabelId() + " ");
 		}
 		if (label.getHawb() != null && !label.getHawb().equals("undefined") && !label.getHawb().equals("")) {
-			sql.append("and hawb like '%" + label.getHawb() + "%' ");
+			sql.append("and label.hawb like '%" + label.getHawb() + "%' ");
 		}
-		if (label.getOpid_name() != null && !label.getOpid_name().equals("undefined") && !label.getOpid_name().equals("") && !label.getOpid_name().equals("全部")) {
-			sql.append("and opid_name like '%" + label.getOpid_name() + "%' ");
+		if (label.getOpidName() != null && !label.getOpidName().equals("undefined") && !label.getOpidName().equals("") && !label.getOpidName().equals("全部")) {
+			sql.append("and label.opid_name like '%" + label.getOpidName() + "%' ");
 		}
 		if (label.getTotal() != null && !label.getTotal().equals("undefined") && !label.getTotal().equals("")) {
-			sql.append("and total = '" + label.getTotal() + "' ");
+			sql.append("and label.total = '" + label.getTotal() + "' ");
 		}
-		if (label.getFlight_date() != null) {
+		if (label.getFlightDate() != null) {
 			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-			sql.append("and flight_date = '" + dateFormat.format(label.getFlight_date()) + "' ");
+			sql.append("and label.flight_date = '" + dateFormat.format(label.getFlightDate()) + "' ");
 		}
-		if (label.getAirport_departure() != null && !label.getAirport_departure().equals("undefined") && !label.getAirport_departure().equals("") && !label.getAirport_departure().equals("全部")) {
-			sql.append("and airport_departure like '%" + label.getAirport_departure() + "%' ");
+		if (label.getAirportDeparture() != null && !label.getAirportDeparture().equals("undefined") && !label.getAirportDeparture().equals("") && !label.getAirportDeparture().equals("全部")) {
+			sql.append("and label.airport_departure like '%" + label.getAirportDeparture() + "%' ");
 		}
 		if (label.getDestination() != null && !label.getDestination().equals("undefined") && !label.getDestination().equals("") && !label.getDestination().equals("全部")) {
-			sql.append("and destination like '%" + label.getDestination() + "%' ");
+			sql.append("and label.destination like '%" + label.getDestination() + "%' ");
 		}
-		if (label.getIs_print() != null && !label.getIs_print().equals("undefined") && !label.getIs_print().equals("")) {
-			sql.append("and is_print = '" + label.getIs_print() + "' ");
+		if (label.getIsPrint() != null && !label.getIsPrint().equals("undefined") && !label.getIsPrint().equals("")) {
+			sql.append("and label.is_print = '" + label.getIsPrint() + "' ");
 		} else {
-			sql.append("and is_print = '0' ");
+			sql.append("and label.is_print = '0' ");
 		}
 		
 		//**********根据用户办公室地址检索查询标签起始地址  考虑废除
@@ -198,6 +200,7 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		
 		return list;
 	 } catch (Exception e) {
+		 e.printStackTrace();
 		 throw new BusinessException(ResEnum.FAIL.CODE, "查询数据异常,请正确写入参数!");
 	 }
 	}
@@ -218,14 +221,5 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		return labelInfoDao.getUserAuthtemplate(template);
 	}
 
-	@Override
-	public List<Template> getALLTemplate(Template template) {
-		return labelInfoDao.getALLTemplate(template);
-	}
-
-	@Override
-	public void saveorupdateTempalte(Template template) {
-		labelInfoDao.saveorupdateTempalte(template);
-	}
 
 }

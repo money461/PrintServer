@@ -48,12 +48,12 @@ public class RegionServiceImpl implements RegionService {
 		LinkedHashMap<String, String> parentMap = new LinkedHashMap<String,String>();
 		for (Region regionJDBC : regionJDBCs) {
 			TreeBean treeBean = new TreeBean();
-			parentMap.put(regionJDBC.getParent_code(),regionJDBC.getParent_name());
-			treeBean.setId(regionJDBC.getRegion_code());
-			treeBean.setParent_code(regionJDBC.getParent_code());
-			treeBean.setRegion_code(regionJDBC.getRegion_code());
-			treeBean.setText(regionJDBC.getRegion_name());
-			treeBean.setPname(regionJDBC.getParent_name());
+			parentMap.put(regionJDBC.getParentCode(),regionJDBC.getParentName());
+			treeBean.setId(regionJDBC.getRegionCode());
+			treeBean.setParentCode(regionJDBC.getParentCode());
+			treeBean.setRegionCode(regionJDBC.getRegionCode());
+			treeBean.setText(regionJDBC.getRegionName());
+			treeBean.setPname(regionJDBC.getParentName());
 			treeBeans.add(treeBean);
 		}
 		
@@ -71,7 +71,7 @@ public class RegionServiceImpl implements RegionService {
 			List<TreeBean> childrens = new ArrayList<>();
 			
 			for (TreeBean treeBean1 : treeBeans) {
-				if (treeBean1.getParent_code().equals(parent_code)) {
+				if (treeBean1.getParentCode().equals(parent_code)) {
 					childrens.add(treeBean1);
 				}
 			}

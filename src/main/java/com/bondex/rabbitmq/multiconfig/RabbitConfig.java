@@ -113,7 +113,14 @@ public class RabbitConfig {
 		return new Binding("air_label_queue_o", Binding.DestinationType.QUEUE, "DL_EXCHANGE", "KEY_R", null);
 	}
 	
-	
+	/**
+	 * 派昂队列
+	 * @return
+	 */
+	@Bean
+	public Queue paiangQueue() {
+		return QueueBuilder.durable("PaiAngPrintQueue").build();
+	}
 	
 	
 }

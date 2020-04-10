@@ -31,19 +31,19 @@ public class UserDefaultRegionDaoImpl implements UserDefaultRegionDao {
 		if(StringUtils.isNull(userDefaultRegion)){
 			return null;
 		}
-		String sql="SELECT	d.id, d.opid, d.username,	d.default_region_code,	d.office_id, d.type,d.createTime,r.region_id,r.region_code,	r.region_name,	r.parent_code,	r.parent_name FROM 	default_region d LEFT JOIN region r   ON	d.default_region_code=r.region_code	 WHERE	1=1 ";
+		String sql="SELECT	d.id, d.opid, d.opid_name,	d.default_region, d.type,d.create_time,r.region_id,r.region_code,	r.region_name,	r.parent_code,	r.parent_name FROM 	default_region d LEFT JOIN region r   ON	d.default_region=r.region_code	 WHERE	1=1 ";
 		String opid = userDefaultRegion.getOpid();
 		if(StringUtils.isNotBlank(opid)){
 			sql+="and d.opid = '"+opid+"' ";
 		}
-		if(StringUtils.isNotBlank(userDefaultRegion.getUsername())){
-			sql+="and d.username like '%"+userDefaultRegion.getUsername()+"%' ";
+		if(StringUtils.isNotBlank(userDefaultRegion.getOpidName())){
+			sql+="and d.opid_name like '%"+userDefaultRegion.getOpidName()+"%' ";
 		}
-		String region_code = userDefaultRegion.getRegion_code();
+		String region_code = userDefaultRegion.getRegionCode();
 		if(StringUtils.isNotBlank(region_code)){
 			//当ztree点击树的父节点时 region_code=chengdu
 			Region regionJDBC = new Region();
-			regionJDBC.setParent_code(region_code);
+			regionJDBC.setParentCode(region_code);
 			List<Region> allParentRegion = regionDao.getALLParentRegion(regionJDBC); //判断region_code该值是否为父节点code
 			if(StringUtils.isEmpty(allParentRegion)){
 				sql+="and r.region_code = '"+region_code+"' ";
@@ -51,14 +51,14 @@ public class UserDefaultRegionDaoImpl implements UserDefaultRegionDao {
 				sql+="and r.parent_code =  '"+region_code+"' ";
 			}
 		}
-		if(StringUtils.isNotBlank(userDefaultRegion.getRegion_name())){
-			sql+="and r.region_name like '%"+userDefaultRegion.getRegion_name()+"%' ";
+		if(StringUtils.isNotBlank(userDefaultRegion.getRegionName())){
+			sql+="and r.region_name like '%"+userDefaultRegion.getRegionName()+"%' ";
 		}
-		if(StringUtils.isNotBlank(userDefaultRegion.getParent_code())){
-			sql+="and r.parent_code = '"+userDefaultRegion.getParent_code()+"' ";
+		if(StringUtils.isNotBlank(userDefaultRegion.getParentCode())){
+			sql+="and r.parent_code = '"+userDefaultRegion.getParentCode()+"' ";
 		}
-		if(StringUtils.isNotBlank(userDefaultRegion.getParent_name())){
-			sql+="and r.parent_name like '%"+userDefaultRegion.getParent_name()+"%' ";
+		if(StringUtils.isNotBlank(userDefaultRegion.getParentName())){
+			sql+="and r.parent_name like '%"+userDefaultRegion.getParentName()+"%' ";
 		}
 		
 		 sql+="and d.type = '"+userDefaultRegion.getType()+"' "; //默认值0
@@ -78,11 +78,11 @@ public class UserDefaultRegionDaoImpl implements UserDefaultRegionDao {
 	public Integer updateOrAddUserRegion(UserDefaultRegion userDefaultRegion) {
 		if(StringUtils.isNotNull(userDefaultRegion)){
 			
-			String sql="INSERT INTO default_region (opid,office_id,username,default_region_code,type) VALUES (?,?,?,?,?)"
+			String sql="INSERT INTO default_region (opid,opid_name,default_region,type,create_time) VALUES (?,?,?,?,NOW())"
 					+"ON DUPLICATE KEY UPDATE "
-					+"office_id=VALUES(office_id),username=VALUES(username),default_region_code=VALUES(default_region_code),type=VALUES(type)";
+					+" opid_name=VALUES(opid_name),default_region=VALUES(default_region),type=VALUES(type)";
 			
-			int i = jdbcTemplate.update(sql,new Object[] { userDefaultRegion.getOpid(),userDefaultRegion.getRegion_id(),userDefaultRegion.getUsername(),userDefaultRegion.getDefault_region_code(),userDefaultRegion.getType()});
+			int i = jdbcTemplate.update(sql,new Object[] { userDefaultRegion.getOpid(),userDefaultRegion.getOpidName(),userDefaultRegion.getDefaultRegion(),userDefaultRegion.getType()});
 			return i;
 		}
 		

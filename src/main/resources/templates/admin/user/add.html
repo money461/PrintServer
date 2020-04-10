@@ -9,14 +9,14 @@
     <div class="main-content">
         <form id="form-user-add" class="form-horizontal">
         <!-- 设定区域 办公室code-->
-            <input name="default_region_code" type="hidden" id="treeId"/>
+            <input name="defaultRegion" type="hidden" id="treeId"/>
             <h4 class="form-header h4">基本信息</h4>
             <div class="row">
             	<div class="col-sm-6">
                     <div class="form-group">
                         <label class="col-sm-4 control-label"><span style="color: red; ">*</span>用户名称：</label>
                         <div class="col-sm-8">
-                            <input name="username" placeholder="请输入用户名称" class="form-control" type="text" maxlength="30" required>
+                            <input name="opidName" placeholder="请输入用户名称" class="form-control" type="text" maxlength="30" required>
                         </div>
                     </div>
                 </div>
@@ -25,7 +25,7 @@
                         <label class="col-sm-4 control-label"><span style="color: red; ">*</span>打印办公室：</label>
                         <div class="col-sm-8">
                             <div class="input-group">
-                            	<input name="region_name" onclick="selectDeptTree()" id="treeName" type="text" placeholder="请选择打印办公室" class="form-control" required>
+                            	<input name="regionName" onclick="selectDeptTree()" id="treeName" type="text" placeholder="请选择打印办公室" class="form-control" required>
                                 <span class="input-group-addon"><i class="fa fa-search"></i></span>
                             </div>
                         </div>
@@ -61,8 +61,13 @@
       
     <div class="row">
         <div class="col-sm-offset-5 col-sm-10">
+        	<@shiro.hasAnyPermissions name="${code}.btn-add">
             <button type="button" class="btn btn-sm btn-primary" onclick="submitHandler()"><i class="fa fa-check"></i>保 存</button>&nbsp;
+            </@shiro.hasAnyPermissions>
+            
+        	<@shiro.hasAnyPermissions name="${code}.btn-realod">
             <button type="button" class="btn btn-sm btn-danger" onclick="closeItem()"><i class="fa fa-reply-all"></i>关 闭 </button>
+            </@shiro.hasAnyPermissions>
         </div>
     </div>
 	<!-- 引入通用js -->

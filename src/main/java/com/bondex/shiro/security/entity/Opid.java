@@ -15,7 +15,7 @@ public class Opid implements Serializable{
 	 */
 	private static final long serialVersionUID = -1224192431868505094L;
 	private String opid; //操作id
-	private String opid_name; //操作姓名
+	private String opidName; //操作姓名
 
 	public String getOpid() {
 		return opid;
@@ -25,18 +25,18 @@ public class Opid implements Serializable{
 		this.opid = opid;
 	}
 
-	public String getOpid_name() {
-		return opid_name;
+	public String getOpidName() {
+		return opidName;
 	}
 
-	public void setOpid_name(String opid_name) {
-		this.opid_name = opid_name;
+	public void setOpidName(String opidName) {
+		this.opidName = opidName;
 	}
 
-	public Opid(String opid, String opid_name) {
+	public Opid(String opid, String opidName) {
 		super();
 		this.opid = opid;
-		this.opid_name = opid_name;
+		this.opidName = opidName;
 	}
 
 	public Opid() {
@@ -45,7 +45,7 @@ public class Opid implements Serializable{
 
 	@Override
 	public String toString() {
-		return "Opid [opid=" + opid + ", opid_name=" + opid_name + "]";
+		return "Opid [opid=" + opid + ", opidName=" + opidName + "]";
 	}
 
 }

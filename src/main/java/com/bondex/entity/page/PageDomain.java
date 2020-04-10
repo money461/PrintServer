@@ -18,21 +18,34 @@ public class PageDomain
     /** 排序的方向 "desc" 或者 "asc". */
     private String isAsc;
 
+    
+    
     /**
      * 排序字段是否驼峰命名
      * @param underScoreCase
+     * @param tableName 表名称
      * @return
      */
-    public String getOrderBy(Boolean underScoreCase)
+    public String getOrderBy(Boolean underScoreCase,String tableName)
     {
-        if (StringUtils.isEmpty(orderByColumn))
-        {
-            return "";
-        }
-        if(underScoreCase){
-        	return StringUtils.toUnderScoreCase(orderByColumn) + " " + isAsc; //下划线转驼峰命名
-        }
-        return orderByColumn + " " + isAsc; //下划线转驼峰命名
+    	String byColumn = orderByColumn(underScoreCase);
+    	if(StringUtils.isNotNull(tableName) && StringUtils.isNotBlank(byColumn)){
+    		return tableName + "." + byColumn;
+    	}else{
+    		return byColumn;
+    	}
+       
+    }
+    
+    public String orderByColumn(Boolean underScoreCase){
+    	 if (StringUtils.isEmpty(orderByColumn))
+         {
+             return "";
+         }
+         if(!underScoreCase){
+        	 return orderByColumn + " " + isAsc; //不需要驼峰命名
+         }
+         return StringUtils.toUnderScoreCase(orderByColumn) + " " + isAsc; //默认下划线转驼峰命名
     }
 
     public Integer getPageNum()

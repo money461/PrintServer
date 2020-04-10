@@ -14,29 +14,59 @@
 			<div class="form-group">
 				<label class="col-sm-3 control-label">模板名称：</label>
 				<div class="col-sm-8">
-					<input class="form-control" type="text" name="template_name" id="template_name" value='${data.template_name}' required>
+					<input class="form-control" type="text" name="templateName" id="templateName"  style="display: none;"  value='${data.templateName!}' required>
+					<input class="select2 form-control" type="text" id='1' href='/labelPrint/template/getUserAuthenTemplate' inputMessage="请输入或选择打印模板" >
 				</div>
 			</div>
 			<div class="form-group">
 				<label class="col-sm-3 control-label ">模板编号：</label>
 				<div class="col-sm-8">
-					<input class="form-control" type="text" name="template_id" id="template_id" value='${data.template_id}' required>
+					<input class="form-control" type="text" name="templateId" id="templateId" value='${data.templateId!}' readonly="true" required>
 				</div>
 			</div>
 			<div class="form-group">
 				<label class="col-sm-3 control-label">打印宽度：</label>
 				<div class="col-sm-8">
-					<input class="form-control" type="text" name="width" id="width" value='${data.width}' required>
+					<input class="form-control" type="text" name="width" id="width" value='${data.width!}' required>
 				</div>
 			</div>
 			<div class="form-group">
 				<label class="col-sm-3 control-label">打印高度：</label>
 				<div class="col-sm-8">
-					<input class="form-control" type="text" name="height" id="height" value='${data.height}' required>
+					<input class="form-control" type="text" name="height" id="height" value='${data.height!}' required>
 				</div>
 			</div>
 			
-			<div class="form-group" id='status'>
+			
+			<div class="form-group">
+				<label class="col-sm-3 control-label">打印标签：</label>
+				<div class="col-sm-8">
+					 <input class="form-control" type="text" style="display: none;" id='codeName' name="codeName" value='${data.codeName!}' required />
+				     <input class="select2 form-control" type="text" id='2' href='/labelPrint/template/getAllCode' inputMessage="请输入或选择打印标签" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">业务code：</label>
+				<div class="col-sm-8">
+				     <input class="form-control" type="text"  id='code' name="code" readonly="true" value='${data.code!}' required></input>
+				</div>
+			</div>
+			
+			<div class="form-group" id='isDefault'>
+				<label class="col-sm-3 control-label">是否绑定：</label>
+				<div class="col-sm-8">
+					<div class="radio-box">
+						<div class="iradio-blue"><input type="radio" id="6" name="isDefault" value="0" checked="checked" /></div>
+						<label for="6" class="">绑定</label>
+					</div>
+					<div class="radio-box">
+						<div class="iradio-blue"><input type="radio" id="7" name="isDefault" value="1"/></div>
+						<label for="7" class="">不绑定</label>
+					</div>
+				</div>
+			</div>
+			
+			<div class="form-group" id='status' style="display: none;">
 				<label class="col-sm-3 control-label">使用状态：</label>
 				<div class="col-sm-8">
 					<div class="radio-box">
@@ -60,16 +90,79 @@
 	<script src="${request.contextPath}/js/admin/labeltemplate.js"></script>
 	
 	<script  type="text/javascript">
+	
+		var prefix = ctx + "/template";
 	 $(function(){
-		 var status = '${data.status}';
-		 $("#status input:radio[value="+status+"]").prop('checked','true'); //设置当前是询问还是不询问
+		 
+		 var status = '${data.isDefault}';
+		 $("#isDefault input:radio[value="+status+"]").prop('checked','true'); //设置当前是询问还是不询问
+		 
+		 var code = '${data.code}';
+	     labeltemplate.select2(2,code,selected);
+	     
+		 var templateId = '${data.templateId}';
+	     labeltemplate.select2(1,templateId,selected);
+		 
 	 });
 	  
-		var prefix = ctx + "/label";
+		function selected(data,id){
+			if('1'==id){
+				$("#templateId").val(data.id);
+				$("#templateName").val(data.text);
+			}else if('2'==id){
+				$("#code").val(data.id);
+				$("#codeName").val(data.text);
+			}
+		}
+		
+		$("#form-post-edit").validate({
+				onkeyup: false,
+	        	rules:{
+		        	 code:{ 
+		        		 required: true
+		        	 },
+		        	 height:{digits:true},
+		        	 width:{digits:true},
+		        	 isDefault:{
+						 remote: {
+					                url: prefix + "/checkCodeBindTemplateUnique", //校验字段唯一
+					                type: "post",
+					                dataType: "json",
+					                async: false,
+					                data: {
+						                	"templateId":function(){return $("#templateId").val()},
+						                	"code": function() {
+						                		//return $("input[name='regionCode']").val(); //取出办公室简码
+						                		return $.common.trim( $("#code option:checked").text())
+						                    },
+						                    "isDefault":function(){return $("input[name='isDefault']:checked").val()}
+					                	
+					                      },
+	                    			 dataFilter: function(data, type) { //后台返回0 不存在    返回1 存在
+	                	                 return $.validate.unique(data); // 判断返回标识是否唯一 1->false 不存在   0->true 存在
+	                               }
+							     }
+	                }
+	        	},
+	        	messages: {
+	        		code :"请输入业务code",
+	        		isDefault:"业务code已经默认绑定了其它模板！"
+	            },
+	            focusCleanup: true
+				
+			});
+		
 		//点击确定
 		function submitHandler() {
-			    var param = $('#form-post-edit').serialize();
+			 if ($.validate.form()) {
+			    var param = $.common.formToJSON('form-post-edit');
+			    //获取业务code
+			    if($.common.isEmpty(param.code)){
+					$.modal.msgError('业务code不能为空！');
+					return;
+				}
 			    labeltemplate.saveorupdatetemplate(prefix + "/saveorupdateTempalte", param);
+			 }
 	    }
 		
 		

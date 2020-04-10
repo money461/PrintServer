@@ -163,9 +163,9 @@ mybatis:
     # 配置mapper的扫描，找到所有的mapper.xml映射文件
     mapper-location: /mybatis/*.xml
     # 驼峰命名规范 如：数据库字段是  order_id 那么 实体字段就要写成 orderId
-    # configuration.map-underscore-to-camel-case: false 
+    configuration.map-underscore-to-camel-case: true 
     # 加载全局的配置文件 与上面的配置不能同时存在
-    configLocation: classpath:/mybatis/config/mybatis-config.xml
+    #configLocation: classpath:/mybatis/config/mybatis-config.xml
     property:
        order: BEFORE
 # PageHelper分页插件

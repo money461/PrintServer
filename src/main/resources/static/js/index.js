@@ -9,7 +9,10 @@ layer.config({
 
 $(function() {
 	
-    // MetsiMenu
+	//加载判断是否需要切换opid
+	opids.ajaxOpid();
+	
+    // metisMenu导航插件
     $('#side-menu').metisMenu();
 
     //固定菜单栏
@@ -44,6 +47,8 @@ $(function() {
     if (/(iPhone|iPad|iPod|iOS)/i.test(navigator.userAgent)) {
         $('#content-main').css('overflow-y', 'auto');
     }
+    
+    initMenuiframe();
 
 });
 
@@ -84,7 +89,8 @@ function SmoothlyMenu() {
 /**
  * iframe处理
  */
-$(function() {
+//$(function() {
+function initMenuiframe(){
     //计算元素集合的总宽度
     function calSumWidth(elements) {
         var width = 0;
@@ -589,4 +595,6 @@ $(function() {
             },
         }
     })
-});
+    
+    console.info('index-2');
+};

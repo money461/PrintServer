@@ -1,28 +1,25 @@
 package com.bondex.controller.airLabel;
 
 import java.net.URLDecoder;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.shiro.authz.annotation.Logical;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
 
 import com.alibaba.fastjson.JSON;
 import com.bondex.common.Common;
@@ -33,10 +30,8 @@ import com.bondex.entity.Label;
 import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.Template;
 import com.bondex.entity.page.TableDataInfo;
-import com.bondex.entity.res.AjaxResult;
 import com.bondex.entity.res.MsgResult;
 import com.bondex.service.LabelInfoService;
-import com.bondex.util.GsonUtil;
 import com.bondex.util.StringUtils;
 
 @Controller
@@ -56,6 +51,22 @@ public class AirLabelController extends BaseController {
 		return false;
 	}
 
+	
+	/**
+	 * 进入空运标签展示页面
+	 * @param mawb
+	 * @param modelAndView
+	 * @return
+	 */
+	@RequestMapping(value={"/airlable/{code}","/airlabel"},method = RequestMethod.GET)
+	@ResponseBody
+	//@RequiresPermissions(value={"quanxianquanxian","look"},logical=Logical.OR)
+	public ModelAndView indexpage(@PathVariable(name="code",required=false) String code,ModelAndView modelAndView){
+		modelAndView.addObject("code", code);
+		modelAndView.setViewName("/airlabel/airlabel"); //页面展示
+		return modelAndView;
+	}
+	
 
 	/**
 	 * 获取用户拥有的模板
@@ -69,51 +80,8 @@ public class AirLabelController extends BaseController {
 		return labelInfoService.getUserAuthtemplate(template);
 	}
 	
-	/**
-	 * 获取所有的模板
-	 * @param opid
-	 * @return
-	 */
-	@RequestMapping(value="/getAlltemplate",method={RequestMethod.POST})
-	@ResponseBody
-	public Object getAlltemplate(Template template) {
-		startPage(false);//设置分页pagehelper
-		List<Template> list = labelInfoService.getALLTemplate(template);
-		return getDataTable(list);
-	}
 	
-	 /**
-     * 修改编辑模板跳转
-     */
-    @GetMapping("/edit/{template_id}")
-    public String edit(@PathVariable("template_id") String template_id, ModelMap mmap)
-    {
-    	Template template = new Template();
-    	template.setTemplate_id(template_id);
-    	List<Template> list = labelInfoService.getALLTemplate(template);
-    	if(list.isEmpty()){
-    		mmap.put("data",null);
-    	}else{
-    		
-    		mmap.put("data", list.get(0));
-    	}
-        return   "admin/labeltemplate/edit";
-    }
-    
-    /**
-     * 更新保存模板
-     * @param template
-     * @return
-     */
-    @PostMapping("/saveorupdateTempalte")
-    @ResponseBody
-    public Object saveorupdateTempalte(Template template )
-    {
-    	labelInfoService.saveorupdateTempalte(template);
-    	
-    	return  AjaxResult.success();
-    }
-    
+	
     
 
 	/**
@@ -140,7 +108,7 @@ public class AirLabelController extends BaseController {
 			throw new BusinessException(ResEnum.FORBIDDEN.CODE,"操作号没有配置任何操作权限,无法查看数据");
 		}
 		Label label2 = JSON.parseObject(URLDecoder.decode(JSON.toJSONString(label), "utf-8"), Label.class);
-		startPage(false);//分页
+		startPage(true,"label");//分页 表名称
 		List<LabelAndTemplate> list= labelInfoService.selectLabelByPage(label2);
 		TableDataInfo dataTable = getDataTable(list); //pagehelper分页
 		return MsgResult.result(ResEnum.SUCCESS.CODE, ResEnum.SUCCESS.MESSAGE, dataTable);
@@ -152,7 +120,7 @@ public class AirLabelController extends BaseController {
 	public Object update(@RequestBody List<LabelAndTemplate> labels) {
 		for (LabelAndTemplate label : labels) {
 			//查询修改的模板名称
-			List<Template> template = jdbcTemplate.query("select * from template where template_name = ?", new Object[] { label.getTemplate_name() }, new BeanPropertyRowMapper<Template>(Template.class));
+			List<Template> template = jdbcTemplate.query("select * from template where template_name = ?", new Object[] { label.getTemplateName() }, new BeanPropertyRowMapper<Template>(Template.class));
 			label.setReserve3(String.valueOf(template.get(0).getId()));
 			labelInfoService.updateLabel(label);
 		}
@@ -162,8 +130,7 @@ public class AirLabelController extends BaseController {
 	//刪除標簽
 	@RequestMapping(value="/delete",method = {RequestMethod.POST },consumes={"application/json; charset=UTF-8"},produces = "application/json; charset=UTF-8")
 	@ResponseBody
-	public Object delete(String label) {
-		List<Label> labels = GsonUtil.GsonToList(label, Label.class);
+	public Object delete(@RequestBody List<Label> labels) {
 		labelInfoService.deleteLabel(labels);
 		return MsgResult.nodata(ResEnum.SUCCESS.CODE, ResEnum.SUCCESS.MESSAGE);
 	}

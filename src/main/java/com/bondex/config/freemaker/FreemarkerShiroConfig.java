@@ -17,10 +17,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.bondex.config;
+package com.bondex.config.freemaker;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
@@ -35,7 +35,7 @@ import com.jagregory.shiro.freemarker.ShiroTags;
  * @since 1.0
  */
 @Configuration
-public class FreeMarkerConfig {
+public class FreemarkerShiroConfig implements InitializingBean  {
 
   
 	/**
@@ -44,8 +44,9 @@ public class FreeMarkerConfig {
 
     @Autowired
     private FreeMarkerConfigurer freeMarkerConfigurer;
-    @Bean
-    public freemarker.template.Configuration getFreemarkerConfiguration(){
+    
+    @Override
+    public void afterPropertiesSet() throws Exception {
         freemarker.template.Configuration configuration = freeMarkerConfigurer.getConfiguration();
         /**
          * 添加自定义标签
@@ -54,10 +55,13 @@ public class FreeMarkerConfig {
         /**
          * 设置shiro标签会话
          */
-        configuration.setSharedVariable("shiro",new ShiroTags());
+        ShiroTags shiroTags = new ShiroTags();
+        shiroTags.put("hasAnyPermissions", new HasAnyPermissionsTag());
+        configuration.setSharedVariable("shiro",shiroTags);
         configuration.setNumberFormat("#");//防止页面输出数字,变成2,000
         //可以添加很多自己的要传输到页面的[方法、对象、值]
-        
-        return configuration;
     }
+
+    
+    
 }

@@ -2,7 +2,6 @@ package com.bondex.controller.admin.region;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.alibaba.fastjson.JSONObject;
 import com.bondex.controller.BaseController;
 import com.bondex.entity.Region;
 import com.bondex.entity.tree.TreeBean;
@@ -31,6 +29,26 @@ public class RegionController extends BaseController{
 	
 	@Autowired
 	private RegionService  regionService;
+	
+	
+	
+	
+	/**
+	 * 进入办公室管理展示页面
+	 * @param mawb
+	 * @param modelAndView
+	 * @return
+	 */
+	@RequestMapping(value={"/view/{code}","/view"},method = RequestMethod.GET)
+	@ResponseBody
+//	@RequiresPermissions(value={"viewdata","look"},logical=Logical.OR)
+	public ModelAndView indexpage(@PathVariable(name="code",required=false) String code,ModelAndView modelAndView){
+		modelAndView.addObject("code", code);
+		modelAndView.setViewName("/admin/region/regionlist"); //页面展示
+		return modelAndView;
+	}
+	
+	
 	/**
 	 * 获取数据库中所有的办公室
 	 * @return
@@ -54,18 +72,33 @@ public class RegionController extends BaseController{
     public ModelAndView add(@PathVariable("parentId") String parent_code, ModelAndView modelAndView)
     {
     	Region re =new  Region(); 
-    	re.setParent_code(parent_code);
+    	re.setParentCode(parent_code);
     		//存在父级节点的查询
     	List<Region> allParentRegion = regionService.getALLParentRegion(re);
     	if(StringUtils.isNotEmpty(allParentRegion)){
     		re = allParentRegion.get(0);
     	}else{
-    		re.setRegion_name("");
-    		re.setRegion_code("");
+    		re.setRegionName("");
+    		re.setRegionCode("");
     	}
     	//不存在父级节点直接跳转页面
     	modelAndView.addObject("region",re);
     	modelAndView.setViewName("admin/region/add");
+        return   modelAndView;
+    }
+    
+    /**
+     * 编辑办公室
+     * @return
+     */
+    @GetMapping("/edit/{regionCode}")
+    public ModelAndView edit(@PathVariable("regionCode") String regionCode, ModelAndView modelAndView){
+    	Region region = new Region();
+    	region.setRegionCode(regionCode);
+    	List<Region> list = regionService.getALLRegion(region);
+    	Region region2 = list.get(0);
+    	modelAndView.addObject("region",region2);
+    	modelAndView.setViewName("admin/region/edit");
         return   modelAndView;
     }
     
@@ -79,11 +112,11 @@ public class RegionController extends BaseController{
     public ModelAndView selectregionTree(@PathVariable("region_code") String region_code, ModelAndView modelAndView){
     
     	Region re =new  Region(); 
-    	re.setParent_code(region_code);
+    	re.setParentCode(region_code);
 	    List<Region> allParentRegion = regionService.getALLParentRegion(re);
 	    if(StringUtils.isEmpty(allParentRegion)){
 	    	//子节点
-	    	re.setRegion_code(region_code);
+	    	re.setRegionCode(region_code);
 	    	List<Region> allRegion = regionService.getALLRegion(re);
 	    	re = allRegion.get(0);
 	    }else{
@@ -144,9 +177,9 @@ public class RegionController extends BaseController{
         for (Region Region : allParentRegion)
         {
                 Ztree ztree = new Ztree();
-                ztree.setId(Region.getRegion_code());
-                ztree.setpId(Region.getParent_code());
-                ztree.setName(Region.getRegion_name());
+                ztree.setId(Region.getRegionCode());
+                ztree.setpId(Region.getParentCode());
+                ztree.setName(Region.getRegionName());
                 ztrees.add(ztree);
         }
         return ztrees;

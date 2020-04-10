@@ -1,0 +1,141 @@
+{
+  "231243printButton": [
+    [
+      {
+        "Recordindex": 36591,
+        "Roleid": "DDKY-BQ-03          ",
+        "Printbuttonindex": 127,
+        "Reportcategoryid": "4081EC40-EE18-494E-A15D-9967596C680C",
+        "Reportcategoryname": "CD标签打印",
+        "Reportid": "a357f19f-6a1f-4171-ab8e-1f1a2b77377a",
+        "Reportname": "标签-邦达普货",
+        "Isvisible": 1,
+        "Isdefault": 0,
+        "Showorder": 0
+      },
+      {
+        "Recordindex": 36592,
+        "Roleid": "DDKY-BQ-03          ",
+        "Printbuttonindex": 127,
+        "Reportcategoryid": "4081EC40-EE18-494E-A15D-9967596C680C",
+        "Reportcategoryname": "CD标签打印",
+        "Reportid": "988b4162-00af-4924-a6fe-6b310d161900",
+        "Reportname": "标签-富士康",
+        "Isvisible": 1,
+        "Isdefault": 0,
+        "Showorder": 0
+      },
+      {
+        "Recordindex": 36598,
+        "Roleid": "DDKY-BQ-03          ",
+        "Printbuttonindex": 127,
+        "Reportcategoryid": "4081EC40-EE18-494E-A15D-9967596C680C",
+        "Reportcategoryname": "CD标签打印",
+        "Reportid": "2b7eddea-d953-4186-bc3b-a642940d57ea",
+        "Reportname": "标签-乔达",
+        "Isvisible": 1,
+        "Isdefault": 0,
+        "Showorder": 0
+      },
+      {
+        "Recordindex": 38037,
+        "Roleid": "BQ-CQKC             ",
+        "Printbuttonindex": 127,
+        "Reportcategoryid": "4081EC40-EE18-494E-A15D-9967596C680C",
+        "Reportcategoryname": "CD标签打印",
+        "Reportid": "2785d11a-e261-4c61-8096-8f9f21e2a3f0",
+        "Reportname": "标签-重庆",
+        "Isvisible": 1,
+        "Isdefault": 1,
+        "Showorder": 0
+      },
+      {
+        "Recordindex": 38037,
+        "Roleid": "BQ-CQKC             ",
+        "Printbuttonindex": 127,
+        "Reportcategoryid": "4081EC40-EE18-494E-A15D-9967596C680C",
+        "Reportcategoryname": "CD标签打印",
+        "Reportid": "4e2b8f59-9858-4297-962f-6ee4862085aa",
+        "Reportname": "标签-派昂医药",
+        "Isvisible": 1,
+        "Isdefault": 1,
+        "Showorder": 0
+      }
+    ]
+  ],
+  "231243model": [
+    {
+      "ApplicationID": "827",
+      "IsClosed": "false",
+      "IsInherit": "false",
+      "IsSystem": "false",
+      "ModuleID": "820",
+      "ModuleName": "标签打印",
+      "ModuleURL": "/layout/west/label",
+      "PageCode": "AirPrintLabel",
+      "ParentID": "0",
+      "ShowOrder": "1",
+	   "IsSystem": false,
+      "IsClosed": false,
+      "IconURL": null,
+      "IsInherit": false
+    },
+    {
+      "ApplicationID": "827",
+      "IsClosed": "false",
+      "IsInherit": "false",
+      "IsSystem": "true",
+      "ModuleID": "881",
+      "ModuleName": "空运国际主分单ֵ",
+      "ModuleURL": "/AirWaybillBooking/Index",
+      "MVCModuleIcon": "iconfont icon-option",
+      "PageCode": "AirWaybillBooking.Index",
+      "ParentID": "658",
+      "ShowOrder": "15"
+    },
+    {
+      "ApplicationID": "827",
+      "IsClosed": "false",
+      "IsInherit": "false",
+      "IsSystem": "true",
+      "ModuleID": "882",
+      "ModuleName": "空运交运信息",
+      "ModuleURL": "/AirWaybillBooking/SLI",
+      "MVCModuleIcon": "iconfont icon-option",
+      "PageCode": "AirWaybillBooking.SLI",
+      "ParentID": "658",
+      "ShowOrder": "16"
+    }
+  ],
+  "231243button": [
+    [
+      "AirPrintLabel.label-print",
+      "AirPrintLabel.label-search"
+    ],
+    [
+      "AirWaybillBooking.Index.AddMaster",
+      "AirWaybillBooking.Index.AddHouse",
+      "AirWaybillBooking.Index.Edit",
+      "AirWaybillBooking.Index.Delete",
+      "AirWaybillBooking.Index.Tags",
+      "AirWaybillBooking.Index.Search",
+      "AirWaybillBooking.Index.SendMaster",
+      "AirWaybillBooking.Index.SendHouse",
+      "AirWaybillBooking.Index.Print",
+      "AirWaybillBooking.Index.Copy",
+      "AirWaybillBooking.Index.Import"
+    ],
+    [
+      "AirWaybillBooking.SLI.Search",
+      "AirWaybillBooking.SLI.Tags",
+      "AirWaybillBooking.SLI.Delete",
+      "AirWaybillBooking.SLI.Edit",
+      "AirWaybillBooking.SLI.AddHouse",
+      "AirWaybillBooking.SLI.AddMaster",
+      "AirWaybillBooking.SLI.SendMaster",
+      "AirWaybillBooking.SLI.SendHouse"
+    ]
+  ]
+}
+
+

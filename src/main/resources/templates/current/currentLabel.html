@@ -16,6 +16,7 @@
 			<!--派昂医药 查询条件筛选区域-->
 			<div class="select-list">
 			             <ul>
+			             	 <input  type="text"  style="display: none;" id="code" name='code' value=${code!''}></input>
 							<li>
 								<label>展示单号：</label>
 								<textarea  type="textarea" rows="1" class="easyui-textbox"   data-options="multiline:true" name="showNum" id="showNum" ></textarea>
@@ -23,7 +24,6 @@
 							<li>
 								<label>数据来源：</label>
 								<input  type="text" name="docTypeName" id="docTypeName"></input>
-								<input  type="text"  style="display: none;" id="data" value=${data}></input>
 							</li>
 							<li>
 								<label>入库时间： </label>
@@ -57,6 +57,8 @@
 		</form>
 	 </div>
 	 
+	 <input  type="text"  style="display: none;" id="data" value=${data!''}></input>
+	 
 	<!-- 数据展示 -->
 	<div class="col-sm-12 select-table table-striped">
 		 
@@ -77,7 +79,8 @@
 	<@commonjs/>
 	<script  type="text/javascript"> // 需要添加 th:inline 才能访问 model 中的属性
 	
-			
+			var code = "${code!''}";
+			sessionstorage.set('code',code);
 			
 	        window.onload = function () {
 	        // 获取ModelAndView中的paiangmawb对象}
@@ -92,7 +95,6 @@
 	        	 if($.common.isNotEmpty(data)){
 		    		 $(currentlabel_tab).datagrid('loadData',JSON.parse(data)); //加载本地数据
 	        	 }else{
-		        	 var url = prefix + "/all";
 		    		 $(currentlabel_tab).datagrid('options').url=url;
 		    		 $(currentlabel_tab).datagrid('reload'); //加载网络数据
 	        	 }
@@ -104,20 +106,20 @@
 		     	tableSelect.render({
 		     		elem: id,	//定义输入框input对象 必填
 		     		checkedKey: 'opid', //表格的唯一建值，非常重要，影响到选中状态 必填
-		     		searchKey: 'opid_name',	//搜索输入框的name值 默认keyword
+		     		searchKey: 'opidName',	//搜索输入框的name值 默认keyword
 		     		searchPlaceholder: '操作号/名称关键词搜索',	//搜索输入框的提示文字 默认关键词搜索
 		     		table: {	//定义表格参数，与LAYUI的TABLE模块一致，只是无需再定义表格elem
 				     		url: url,
 				     		cols: [[
 				     			{ type: 'radio' },
 				     			{ field: 'opid', title: '操作号' },
-				     			{ field: 'opid_name', title: '操作姓名' }
+				     			{ field: 'opidName', title: '操作姓名' }
 				     		]]
 		     		},
 		     		done: function (elem, data) {
 		     			var NEWJSON = [];
 		     			layui.each(data.data, function (index, item) {
-		     				NEWJSON.push(item.opid_name)
+		     				NEWJSON.push(item.opidName)
 		     			})
 		     			elem.val(NEWJSON.join(","));
 		     		}

@@ -44,17 +44,20 @@
 							<p>${userInfo.psnname!"admin"}</p>
 							<!-- Status -->
 							<a href="#"><i class="fa fa-circle text-success"></i> Online</a>
-							<a href="logout" style="padding-left:5px;"><i class="fa fa-sign-out text-danger"></i> 注销</a>
+							<a href="javascript:void(0);" onclick="logoutmethod()" style="padding-left:5px;"><i class="fa fa-sign-out text-danger"></i> 注销</a>
+							<!-- <a href="logout" style="padding-left:5px;"><i class="fa fa-sign-out text-danger"></i> 注销</a> -->
 						</div>
 				        
 				    </div>
 				    
             	</li>
             	
+            
+   				 <!--         	
             	 <@shiro.hasPermission  name="PrintLabel"> 
             	<li>
                 	<a href="#">
-                		<i class="fa fa-print"></i>
+                		<i class="fa fa-print" style="width: 20px;"></i>
                     	<span class="nav-label">标签打印</span> 
                     	<span class="fa arrow"></span>
                 	</a>
@@ -71,18 +74,17 @@
 							<a class="menuItem" href="paiang/viewdata"><i class="fa fa-print" style="width: 20px;"></i>派昂标签</a>
 						</li>
 						</@shiro.hasPermission>
-						<li>
-							<a class="menuItem" href="currentlabel/currentlabel"><i class="fa fa-print" style="width: 20px;"></i>通用打印</a>
-						</li>
+					
 					</ul>
+					
                 </li>
                 </@shiro.hasPermission>
-                
+                 -->
+                <!-- 
                  <@shiro.hasPermission  name="AdminLable"> 
-                 
             	<li>
                 	<a href="#">
-                		<i class="fa fa-gear"></i>
+                		<i class="fa fa-gear" style="width: 20px;"></i>
                     	<span class="nav-label">系统管理</span> 
                     	<span class="fa arrow"></span>
                 	</a>
@@ -100,17 +102,16 @@
 						</li>
 						 </@shiro.hasPermission>
 						 
-						 <@shiro.hasPermission  name="AdminLable-region"> 
+						 <@shiro.hasPermission  name="-region"> 
 						<li>
 							<a class="menuItem" href="admin/region"><i class="glyphicon glyphicon-map-marker" style="width: 20px;"></i>区域办公室管理</a>
 						</li>
 						 </@shiro.hasPermission>
-						
 						 <@shiro.hasPermission  name="AdminLable-log"> 
 						  <li>
                                 <a href="#">
-			                		<i class="fa fa-calendar"></i>
-			                    	<span class="nav-label">日志管理</span> 
+			                		<i class="fa fa-calendar" style="width: 20px;"></i>
+			                    	日志管理
 			                    	<span class="fa arrow"></span>
 			                	</a>	
 			                	
@@ -126,7 +127,20 @@
 						
 						 </@shiro.hasPermission>
 						 
-						
+					</ul>
+                </li>
+                 </@shiro.hasPermission>
+                 -->
+                 <!-- 
+                <@shiro.hasPermission  name="systemMonitor"> 
+            	<li>
+                	<a href="#">
+                		<i class="fa fa-video-camera" style="width: 20px;"></i>
+                    	<span class="nav-label">系统监控</span> 
+                    	<span class="fa arrow"></span>
+                	</a>
+                    <ul class="nav nav-second-level collapse" aria-expanded="false" style="height: 0px;">
+                   			
 						 <@shiro.hasPermission  name="swagger-ui"> 
 						<li>
 							<a class="menuItem" href="swagger-ui.html"><i class="fa fa-book" style="width: 20px;"></i>API文档</a>
@@ -144,12 +158,11 @@
 							<a class="menuItem" href="monitor/server"><i class="fa fa-gear" style="width: 20px;"></i>服务监控</a>
 						</li>
 						 </@shiro.hasPermission>
-						
 					</ul>
                 </li>
-                
                  </@shiro.hasPermission>
-                
+                  -->
+                  
             </ul>
         </div>
     </nav>
@@ -194,7 +207,7 @@
 										<a data-toggle="modal" data-target="#myModal" class="btn btn-default btn-flat" id="qhczh">切换操作号</a>
 									</div>
 									<div class="pull-right">
-										<a href="logout" class="btn btn-default btn-flat">退出登录</a>
+										<a href="javascript:void(0);" onclick="logoutmethod()" class="btn btn-default btn-flat"><i class="fa fa-sign-out"></i>退出登录</a>
 									</div>
 								</li>
 						</ul>
@@ -261,10 +274,14 @@
 <script src="${request.contextPath}/js/ry-ui.js?v=4.1.0"></script>
 <script src="${request.contextPath}/js/common.js?v=4.1.0"></script>
 <script src="${request.contextPath}/js/index.js"></script>
-<script src="${request.contextPath}/ajax/libs/fullscreen/jquery.fullscreen.js"></script>
 <script src="${request.contextPath}/js/opid.js"></script>
+<script src="${request.contextPath}/ajax/libs/fullscreen/jquery.fullscreen.js"></script>
+
 <script type="text/javascript">
-var ctx = "/";
+var ctx = "/labelPrint";
+
+console.log("---index页面开始加载----");
+
 var skin = storage.get("skin");
 // 本地主题优先，未设置取系统配置
 if($.common.isNotEmpty(skin)){
@@ -307,7 +324,7 @@ $(function() {
     
     $(window).unbind('beforeunload');
   　　 window.onbeforeunload = null;
-    storage.clear();
+    
 });
 
 /* 
@@ -317,8 +334,21 @@ window.onbeforeunload= function(event) {
 	localStorage.clear();
 	return true; 
 } */
-</script>
 
+function logoutmethod(){
+	$.modal.confirm("确定要退出系统吗？", function() {
+		storage.clear(); //localStorage有效期：永不失效，除非web应用主动删除。
+		sessionstorage.clear();
+		window.location.href="logout";
+	});
+}
+
+window.onload = function () {
+    // 获取ModelAndView中的paiangmawb对象}
+        console.log("---index页面加载完成----");
+}
+
+</script>
 
 </body>
 </html>

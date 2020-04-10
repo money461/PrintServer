@@ -1,5 +1,7 @@
 package com.bondex.shiro.security.entity;
 
+import java.util.SortedSet;
+
 /**
  * 
  * @author bondex_public
@@ -19,6 +21,8 @@ public class SecurityModel {
 	private String PageCode;
 	private String ParentID;
 	private String ShowOrder;
+	 /** 子菜单 SortedSet TreeSet是边插入边比较 根据ShowOrder实现自动排序 */
+	SortedSet<SecurityModel> children;
 
 	public String getApplicationID() {
 		return ApplicationID;
@@ -123,5 +127,15 @@ public class SecurityModel {
 	public void setShowOrder(String showOrder) {
 		ShowOrder = showOrder;
 	}
+
+	public SortedSet<SecurityModel> getChildren() {
+		return children;
+	}
+
+	public void setChildren(SortedSet<SecurityModel> children) {
+		this.children = children;
+	}
+
+	
 
 }

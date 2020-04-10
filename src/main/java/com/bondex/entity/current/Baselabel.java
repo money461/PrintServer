@@ -18,11 +18,23 @@ public class Baselabel extends BaseEntity {
 	@Column(name="show_num")
 	private String showNum;
 	
-	@Column(name="docType_id")
-	private String docTypeId;
+	@Column(name="code")
+	private String code; //业务code
 	
-	@Column(name="docType_name")
-	private String docTypeName;
+	@Column(name="code_name")
+	private String codeName; //打印标签名称
+	
+	@Column(name="template_id")
+	private String templateId; //模板编号
+	
+	@Column(name="template_name")
+	private String templateName; //模板名称
+	
+	@Column(name="doctype_id")
+	private String doctypeId;
+	
+	@Column(name="doctype_name")
+	private String doctypeName;
 	
 	@Column(name="copies")
 	private Integer copies;
@@ -47,5 +59,7 @@ public class Baselabel extends BaseEntity {
 	
 	@Column(name="alert_name")
 	private String alertName;
+	
+
 	
 }

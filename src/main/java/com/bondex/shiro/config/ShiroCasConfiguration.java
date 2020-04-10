@@ -184,7 +184,6 @@ public class ShiroCasConfiguration {
         
 //        filters.put("myauth", new LoginFilter(casAutoconfig.getIgnorePattern()));
         filters.put("myauth", new MyAuthenticationFilter(casAutoconfig.getIgnorePattern()));
-        
         //<!--单点登出过滤器-->
       /*  LogoutFilter logoutFilter = new LogoutFilter();
         // <!-- 注销时重定向的URL -->
@@ -223,8 +222,9 @@ public class ShiroCasConfiguration {
         //<!-- 过滤链定义，从上向下顺序执行，一般将 /**放在最为下边 -->:这是一个坑呢，一不小心代码就不好使了;
         //<!-- authc:所有url都必须认证通过才可以访问; anon:所有url都都可以匿名访问-->
        //控制页面跳转的权限
-        filterChainDefinitionMap.put("/layout/west/airlabel","perms[AirPrintLabel]");  
-//        filterChainDefinitionMap.put("paiang/viewdata","perms[paiangPrintLabel]");	  
+          filterChainDefinitionMap.put("/currentlabel/view/**","authc,perms[[a-zA-Z]+_label]"); //业务标签 必须是字母组成 切 _label结尾
+          filterChainDefinitionMap.put("/label/airlable/**","authc,perms[air_label]");	  
+          filterChainDefinitionMap.put("/paiang/viewdata/**","authc,perms[paiang_label]");	  
         //user:需要已登录或“记住我”的用户才能访问;
 //        filterChainDefinitionMap.put("/**", "user");
         //4.登录过的不拦截
@@ -299,6 +299,7 @@ public class ShiroCasConfiguration {
 //    	shiroRealm.setAuthorizationCacheName("authorizationCache");
     	//设置凭证(密码)验证器，用于SimpleAuthorizationInfo验证token中密码是否和数据库密码是否匹配
 //    	shiroRealm.setCredentialsMatcher(hashedCredentialsMatcher()); 
+    	shiroRealm.setPermissionResolver(new BitAndWildPermissionResolver()); //默认通过WildcardPermissionResolver 解析为Permission实例 权限匹配
     	return shiroRealm;
     }
 /*    *//**

@@ -23,7 +23,7 @@ public class RegionTreeUtil {
 		
 		for (Region region : treeSelectRegionData) {
 			LinkedHashMap<String, Object> linkedHashMap = null;
-			if (StringUtils.isBlank(region.getParent_code())){ //最高级父节点开始循环
+			if (StringUtils.isBlank(region.getParentCode())){ //最高级父节点开始循环
 				linkedHashMap = selectOptionssMap(treeSelectRegionData,linkedHashMap,region);
 			} 
 			if (StringUtils.isNotEmpty(linkedHashMap)){
@@ -44,10 +44,10 @@ public class RegionTreeUtil {
      */
     public static LinkedHashMap<String, Object> selectOptionssMap(List<Region> treeSelectRegionData,LinkedHashMap<String,Object> map, Region region){
     	    map = new LinkedHashMap<String, Object>();
-            map.put("id", region.getRegion_code());
-            map.put("name",region.getRegion_name());
+            map.put("id", region.getRegionCode());
+            map.put("name",region.getRegionName());
             map.put("open", true);//展开
-            String region_code = region.getRegion_code();
+            String region_code = region.getRegionCode();
             if(StringUtils.isNotBlank(region_code)){
             	map.put("children", createOpionChildren(treeSelectRegionData,region_code));
             }
@@ -62,12 +62,12 @@ public class RegionTreeUtil {
      */
     public static List<LinkedHashMap<String, Object>> createOpionChildren(List<Region> treeSelectRegionData,String parent_code) {
     	
-    	List<Region> childrenList = treeSelectRegionData.stream().filter(x->parent_code.equals(x.getParent_code())).collect(Collectors.toList());
+    	List<Region> childrenList = treeSelectRegionData.stream().filter(x->parent_code.equals(x.getParentCode())).collect(Collectors.toList());
     	
         List<LinkedHashMap<String, Object>> childList = new ArrayList<LinkedHashMap<String, Object>>();
         for (Region region:childrenList) {
         	LinkedHashMap<String, Object> map = null;
-            if (region.getParent_code().equals(parent_code)) {
+            if (region.getParentCode().equals(parent_code)) {
             	map = selectOptionssMap(treeSelectRegionData,map,region);
             	}
             if (StringUtils.isNotEmpty(map)){

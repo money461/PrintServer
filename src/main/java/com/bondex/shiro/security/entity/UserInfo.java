@@ -3,6 +3,7 @@ package com.bondex.shiro.security.entity;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 /**
  * 当前用户数据基础信息
  * @author Qianli
@@ -20,7 +21,7 @@ public class UserInfo implements Serializable {
 	private String logintype;  //登录方式，表单登录与二维码扫描登录
 	private String opid;   //初始登录会返回当前用户默 认操作ID
 	private Map<String, String> opids;   //返回当前用户对应的一至多个操作ID  "opids":{"28108":"CD显示操作/张玉凤"}
-	private List<Opid> allOpid; //json对象的形式返回 opid=28108, username=CD显示操作/张玉凤
+	private List<Opid> allOpid; //json对象的形式返回 opid=28108, opidName=CD显示操作/张玉凤
 	private String opname; //默认绑定的操作姓名
 	private String psncode;  //	员工编号
 	private String psnname;  //员工姓名
@@ -30,6 +31,7 @@ public class UserInfo implements Serializable {
 	private List<String> usercorplist;
 	private int TZ;
 	private List<String> opidData; //当前操作id 所属下 操作及系统获取操作数据权限
+	private SortedSet<SecurityModel> menus; //菜单信息
 	
 	public String getCstoken() {
 		return cstoken;
@@ -121,6 +123,12 @@ public class UserInfo implements Serializable {
 	}
 	public void setOpidData(List<String> opidData) {
 		this.opidData = opidData;
+	}
+	public SortedSet<SecurityModel> getMenus() {
+		return menus;
+	}
+	public void setMenus(SortedSet<SecurityModel> menus) {
+		this.menus = menus;
 	}
 	
 	

@@ -12,7 +12,7 @@ public class SqlUtil
     /**
      * 仅支持字母、数字、下划线、空格、逗号（支持多个字段排序）
      */
-    public static String SQL_PATTERN = "[a-zA-Z0-9_\\ \\,]+";
+    public static String SQL_PATTERN = "[a-zA-Z0-9_\\ \\,.]+";
 
     /**
      * 检查字符，防止注入绕过
@@ -33,4 +33,15 @@ public class SqlUtil
     {
         return value.matches(SQL_PATTERN);
     }
+    
+    /**
+     * 测试 表达式
+     * @param args
+     */
+    public static void main(String[] args) {
+		System.out.println(isValidOrderBySql("label.update_time asc"));
+	}
+    
 }
+
+

@@ -6,7 +6,6 @@ import com.bondex.entity.Label;
 import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.Template;
 import com.bondex.entity.log.Log;
-import com.bondex.entity.msg.JsonRootBean;
 
 public interface LabelInfoDao {
 	/**
@@ -43,15 +42,7 @@ public interface LabelInfoDao {
 	 */
 	public List<Template> getUserAuthtemplate(Template template);
 	
-	/**
-	 * 获取数据库中的模板
-	 * @param template
-	 * @return
-	 */
-	public List<Template> getALLTemplate(Template template);
-
 	
-	public void saveorupdateTempalte(Template template);
 	
 	/**
 	 * 校验用户是否可以使用打印模板

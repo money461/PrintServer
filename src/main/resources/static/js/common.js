@@ -249,21 +249,36 @@ var log = {
         console.error(msg);
     }
 };
-
-//本地缓存处理
-var storage = {
+//sessionStorage作用域：sessionStorage的作用域也是限定在文档源级别。但需要注意的是，如果相同文档源的页面渲染在不同的标签中，sessionStorage的数据是无法共享的。
+var sessionstorage = {
     set: function(key, value) {
-        window.localStorage.setItem(key, value);
+        window.sessionStorage.setItem(key, value);
     },
     get: function(key) {
-        return window.localStorage.getItem(key);
+        return window.sessionStorage.getItem(key);
     },
     remove: function(key) {
-        window.localStorage.removeItem(key);
+        window.sessionStorage.removeItem(key);
     },
     clear: function() {
-        window.localStorage.clear();
+        window.sessionStorage.clear();
     }
+};
+
+//本地缓存处理 必须手动清除
+var storage = {
+		set: function(key, value) {
+			window.localStorage.setItem(key, value);
+		},
+		get: function(key) {
+			return window.localStorage.getItem(key);
+		},
+		remove: function(key) {
+			window.localStorage.removeItem(key);
+		},
+		clear: function() {
+			window.localStorage.clear();
+		}
 };
 
 /** 设置全局ajax处理 */

@@ -1,4 +1,6 @@
 [
+  "air_label",
+  "paiang_label",
   "AirPrintLabel",
   "AirPrintLabel.label-print",
   "AirPrintLabel.label-search",
@@ -26,7 +28,7 @@
   "PrintLabel",
   "AirPrintLabel",
   "PaiangPrintLabel",
-  "AdminLable",
+  "systemMonitor",
   "AdminLable-user",
   "AdminLable-template",
   "AdminLable-region",

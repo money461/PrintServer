@@ -45,5 +45,7 @@ public class BaseEntity {
     /** 请求参数 */ //params[endTime] params[beginTime]
     @Ignore
     private Map<String, Object> params;
+    
+    
 
 }

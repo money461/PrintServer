@@ -9,15 +9,9 @@ import org.springframework.stereotype.Component;
 
 import com.bondex.common.enums.ResEnum;
 import com.bondex.dao.ClientDao;
-import com.bondex.dao.RegionDao;
 import com.bondex.entity.Label;
 import com.bondex.entity.Region;
-import com.bondex.entity.UserDefaultRegion;
-import com.bondex.entity.res.AjaxResult;
 import com.bondex.entity.res.MsgResult;
-import com.bondex.mapper.AdminDataCurrentMapper;
-import com.bondex.util.StringUtils;
-import com.bondex.util.context.ApplicationContextProvider;
 
 @Component
 public class ClientDaoImpl implements ClientDao {
@@ -43,7 +37,7 @@ public class ClientDaoImpl implements ClientDao {
 	 */
 	@Override
 	public Region getDefaultBindRegionByOpid(String opid) {
-		List<Region> defaultRegions = jdbcTemplate.query("select * from region where region_code = (select default_region_code from default_region where opid = ? and type = 0)", new Object[] { opid }, new BeanPropertyRowMapper<Region>(Region.class));
+		List<Region> defaultRegions = jdbcTemplate.query("select * from region where region_code = (select default_region from default_region where opid = ? and type = 0)", new Object[] { opid }, new BeanPropertyRowMapper<Region>(Region.class));
 		if (defaultRegions.isEmpty()) {
 			return null;
 		} else {

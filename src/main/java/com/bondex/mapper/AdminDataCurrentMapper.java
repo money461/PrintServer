@@ -11,6 +11,7 @@ import com.bondex.entity.UserDefaultRegion;
 import com.bondex.entity.log.Log;
 import com.bondex.mapper.provider.TemplateDataProvider;
 
+
 @Repository
 @Mapper
 public interface AdminDataCurrentMapper {
@@ -25,7 +26,8 @@ public interface AdminDataCurrentMapper {
 	@SelectProvider(type=TemplateDataProvider.class,method="adminDataCurrentSQL")
 	public List<UserDefaultRegion> selectUserDefaultRegion(String sql);
 	
-	
+	@SelectProvider(type=TemplateDataProvider.class,method="adminDataCurrentSQL")
+	public List<String> queryALLCode(String sql);
 	
 	
 }

@@ -1,19 +1,18 @@
 package com.bondex.entity;
 
-import org.springframework.stereotype.Component;
+import com.bondex.annoation.dao.Table;
 /**
  * 用户办公室信息表
  * @author Qianli
  * 
  * 2020年2月27日 下午4:52:50
  */
-@Component
+@Table(name="default_region")
 public class UserDefaultRegion extends Region {
 	private Integer id; //自增id
 	private String opid; //用户opid
-	private Integer office_id; //打算不再使用
-	private String username;
-	private String  default_region_code;
+	private String opidName; //用户名称
+	private String defaultRegion; //默认区域
 	private int type;
 	public Integer getId() {
 		return id;
@@ -27,32 +26,26 @@ public class UserDefaultRegion extends Region {
 	public void setOpid(String opid) {
 		this.opid = opid;
 	}
-	public Integer getOffice_id() {
-		return office_id;
+	public String getOpidName() {
+		return opidName;
 	}
-	public void setOffice_id(Integer office_id) {
-		this.office_id = office_id;
+	public void setOpidName(String opidName) {
+		this.opidName = opidName;
 	}
-	public String getUsername() {
-		return username;
+	public String getDefaultRegion() {
+		return defaultRegion;
 	}
-	public void setUsername(String username) {
-		this.username = username;
+	public void setDefaultRegion(String defaultRegion) {
+		this.defaultRegion = defaultRegion;
 	}
-	public String getDefault_region_code() {
-		return default_region_code;
-	}
-	public void setDefault_region_code(String default_region_code) {
-		this.default_region_code = default_region_code;
-	}
-	
 	public int getType() {
 		return type;
 	}
 	public void setType(int type) {
 		this.type = type;
 	}
-
+	
+	
 	
 	
 

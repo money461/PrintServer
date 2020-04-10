@@ -1,7 +1,6 @@
 package com.bondex.service;
 
 import java.util.List;
-import java.util.Map;
 
 import com.bondex.entity.Label;
 import com.bondex.entity.LabelAndTemplate;
@@ -26,17 +25,5 @@ public interface LabelInfoService {
 	 */
 	public List<Template> getUserAuthtemplate(Template template);
 	
-	/**
-	 * 获取数据库中的模板
-	 * @param template
-	 * @return
-	 */
-	public List<Template> getALLTemplate(Template template);
-
-	/**
-	 * 修改更新模板
-	 * @param template
-	 */
-	public void saveorupdateTempalte(Template template);
 	
 }

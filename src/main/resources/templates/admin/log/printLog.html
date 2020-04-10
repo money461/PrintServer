@@ -18,12 +18,15 @@
 								展示单号：<input type="text" name="showNum"/>
 							</li>
 							<li>
+								打印标签：<input class="select2 form-control" href="/labelPrint/template/getAllCode" inputMessage="请输入选择打印标签" id='code' name="code"></input>
+							</li>
+							<li>
 							         打印人：<input type="text" id="opidName" name="opidName"/>
 							</li>
 							<li>
 									    	<input class="form-control" type="text" id='queueCode' style='display: none;' name="queueCode"/>
 									    	<input class="form-control" type="text" id='regionName' style='display: none;' name="regionName"/>
-						                     <input type="text"  id="treeSelect"></label> 
+						                    <input type="text"  id="treeSelect"/> 
 								
 							</li>
 							<li>
@@ -42,9 +45,14 @@
 							</li>
 							
 							<li>
+								<@shiro.hasAnyPermissions name="${code}.btn-search">
 								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								</@shiro.hasAnyPermissions>
+								<@shiro.hasAnyPermissions name="${code}.btn-realod">
 							    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+								</@shiro.hasAnyPermissions>
 							</li>
+							
 						</ul>
 					</div>
 				</form>
@@ -65,7 +73,14 @@
 	<script  type="text/javascript">
         var prefix = ctx + "/printlog";
 
+        function selected(data){
+			$("#code").val(data.id);
+		}
+        
         $(function() {
+        	
+        	printlog.select2(null,selected);
+        	
             var options = {
                 url: prefix + "/all",
                 search:true, //是否显示搜索框功能
@@ -85,7 +100,8 @@
 		        onExpandRow : function(index, row, $detail) { //详细视图事件 添加表格
 					initChildTable(index, row, $detail); //index：父表当前行的行索引。row：父表当前行的Json数据对象。$detail：当前行下面创建的新行里面的td对象。
 				},
-		        sortName: "updateTime",
+				sortName: "updateTime", //默认排序字段
+			    sortOrder: "desc",
 		        pageSize:50,
 		        pageList: [20, 50, 100],
 		        modalName: "打印日志",
@@ -131,6 +147,17 @@
 					}
 				},
 				{
+					field : 'code', 
+					title : '打印标签code',
+					align: 'center',
+					visible	: false
+					
+				},{
+					field : 'codeName', 
+					title : '打印标签',
+					align: 'center'
+				},
+				{
 				    field : 'regionName',
 				    title : '打印办公室'
 				},
@@ -144,7 +171,7 @@
 				},
 				{
 				    field : 'reason',
-				    title : '原因',
+				    title : '结果描述',
 				    width:200,
 				    cellStyle:{
 						css:{
@@ -157,7 +184,7 @@
 				},
 				{
                     field: 'status',
-                    title: '成功/失败',
+                    title: '失败/成功',
                     align: 'center',
                     formatter: function(value, row, index) {
                     	return printlog.selectDictLabel(value);
@@ -171,7 +198,6 @@
                     field: 'updateTime',
                     title: '消息处理日期',
                     sortable: true,
-                    order:'desc'                    
                 },
 				{
                     field: 'createTime',
@@ -288,12 +314,12 @@
         				width:10
         				
         			},{
-        				field:'docTypeId',
+        				field:'doctypeId',
         				title:'数据来源编号',
         				visible: false
         				
         			},{
-        				field:'docTypeName',
+        				field:'doctypeName',
         				title:'数据来源',
         				width:10
         			       
@@ -349,20 +375,20 @@
 	     	tableSelect.render({
 	     		elem: id,	//定义输入框input对象 必填
 	     		checkedKey: 'opid', //表格的唯一建值，非常重要，影响到选中状态 必填
-	     		searchKey: 'opid_name',	//搜索输入框的name值 默认keyword
+	     		searchKey: 'opidName',	//搜索输入框的name值 默认keyword
 	     		searchPlaceholder: '操作号/名称关键词搜索',	//搜索输入框的提示文字 默认关键词搜索
 	     		table: {	//定义表格参数，与LAYUI的TABLE模块一致，只是无需再定义表格elem
 			     		url: url,
 			     		cols: [[
 			     			{ type: 'radio' },
 			     			{ field: 'opid', title: '操作号' },
-			     			{ field: 'opid_name', title: '操作姓名' }
+			     			{ field: 'opidName', title: '操作姓名' }
 			     		]]
 	     		},
 	     		done: function (elem, data) {
 	     			var NEWJSON = [];
 	     			layui.each(data.data, function (index, item) {
-	     				NEWJSON.push(item.opid_name)
+	     				NEWJSON.push(item.opidName)
 	     			})
 	     			elem.val(NEWJSON.join(","));
 	     		}

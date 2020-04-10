@@ -5,49 +5,62 @@
 	
 		<div class="btn-group" style="float: right; background-color: #F5F5F5; width: 100%;">
 		
-		 <@shiro.hasPermission  name="AirPrintLabel.label-search"> 
+		 <@shiro.hasPermission  name="${code}.label-search"> 
 			<button type="button" class="btn btn-default" onclick="label.search();">
 				<span class="glyphicon glyphicon-search"></span> 查询(ctrl+1)
 			</button>
 		  </@shiro.hasPermission>
 		  
-		  <@shiro.hasPermission  name="AirPrintLabel.label-print"> 
+		  <@shiro.hasPermission  name="${code}.label-print"> 
 			<button type="button" class="btn btn-default" onclick="label.labelPrint()" id='printButton'> 
 				<span class="glyphicon glyphicon-print"></span> 打印
 			</button>
 		  </@shiro.hasPermission>
 		 	
-		  <@shiro.hasPermission  name="AirWaybillBooking.Index.Import"> 
+		  <@shiro.hasPermission  name="${code}.label-export"> 
 			<button type="button" class="btn btn-default" onclick="label.labelExport()">
 				<span class="glyphicon glyphicon-share"></span> 导出标签
 			</button>
 		  </@shiro.hasPermission>
 		  
-		  <@shiro.hasPermission  name="AirWaybillBooking.Index.Edit">
+		  <@shiro.hasPermission  name="${code}.label-save">
 			<button type="button" class="btn btn-default" onclick="label.save();" id='saveButton'>
 				<span class="glyphicon glyphicon-floppy-disk"></span> 保存
 			</button>
 		  </@shiro.hasPermission>
 		  
+		  <@shiro.hasPermission  name="${code}.label-rejectchange">
 			<button type="button" class="btn btn-default" onclick="label.rejectChange();" id='rejectButton'>
 				<span class="glyphicon glyphicon-share-alt"></span> 撤销
 			</button>
+		  </@shiro.hasPermission>
 			
-		  <@shiro.hasPermission  name="AirWaybillBooking.Index.Delete">
+		  <@shiro.hasPermission  name="${code}.label-remove">
 			<button type="button" class="btn btn-default" onclick="label.labelDelete();">
 				<span class="glyphicon glyphicon-remove"></span> 删除
 			</button>
 		  </@shiro.hasPermission>
+		  
+		  
+		  <@shiro.hasPermission  name="${code}.label-refresh">
 			<button type="button" class="btn btn-default" onclick="label.refresh(true)">
 				<span class="glyphicon glyphicon-refresh"></span> 刷新表单
 			</button>
+		  </@shiro.hasPermission>
+		  
+		  <@shiro.hasPermission  name="${code}.label-subscribe">
 			<button type="button" class="btn btn-default" onclick="subscribe.initWindow()">
 				<span class="glyphicon glyphicon-envelope"></span> 订阅
 			</button>
+		  </@shiro.hasPermission>
+		  
+		  <@shiro.hasPermission  name="${code}.label-help">
 			<button type="button" class="btn btn-default" onclick="alert('')">
 				<span class="glyphicon glyphicon-bell"></span> 帮助
 			</button>
-			<@shiro.hasPermission  name="AirWaybillBooking.Index.AddHouse">
+		  </@shiro.hasPermission>
+		  
+			<@shiro.hasPermission  name="${code}.label-office">
 			<button type="button" class="btn btn-default" onclick="label.alertprint()">
 				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: red; font-size: 14" id="quyu">设置打印/办公室</b>
 			</button>
@@ -65,48 +78,61 @@
 		<div class="btn-group" style="float: right; background-color: #F5F5F5; width: 100%;">
 		
 			
-		 	<@shiro.hasPermission  name="PaiangPrintLabel.label-search">
+		 	<@shiro.hasPermission  name="${code}.label-search">
 			<button type="button" class="btn btn-default" onclick="paiang.search();">
-				<span class="glyphicon glyphicon-search"></span> 查询(ctrl+1)
+				<span class="glyphicon glyphicon-search"></span> 查询
 			</button>
 		  	</@shiro.hasPermission>
 		  	
 		  	
-		  	<@shiro.hasPermission  name="PaiangPrintLabel.label-print">
+		  	<@shiro.hasPermission  name="${code}.label-print">
 			<button type="button" class="btn btn-default" onclick="paiang.tableprint()" id='printButton'>
 				<span class="glyphicon glyphicon-print"></span> 打印
 			</button>
 			</@shiro.hasPermission>
 			
-			<button type="button" class="btn btn-default" onclick="paiang.labelExport()">
+			<@shiro.hasPermission  name="${code}.label-export">
+			<button type="button" style="display: none;" class="btn btn-default" onclick="paiang.labelExport()">
 				<span class="glyphicon glyphicon-share"></span> 导出标签
 			</button>
+			</@shiro.hasPermission>
 			
+			<@shiro.hasPermission  name="${code}.label-save">
 			<button type="button" class="btn btn-default" onclick="paiang.save();" id='saveButton'>
 				<span class="glyphicon glyphicon-floppy-disk"></span> 保存
 			</button>
+			</@shiro.hasPermission>
 			
+			<@shiro.hasPermission  name="${code}.label-rejectchange">
 			<button type="button" class="btn btn-default" onclick="paiang.rejectChange();" id='rejectButton'>
 				<span class="glyphicon glyphicon-share-alt"></span> 撤销
 			</button>
+			</@shiro.hasPermission>
 			
+			<@shiro.hasPermission  name="${code}.label-remove">
 			<button type="button" class="btn btn-default" onclick="paiang.deletedata();">
 				<span class="glyphicon glyphicon-remove"></span> 删除
 			</button>
+			</@shiro.hasPermission>
 			
+			<@shiro.hasPermission  name="${code}.label-refresh">
 			<button type="button" class="btn btn-default" onclick="paiang.securityReload();">
 				<span class="glyphicon glyphicon-refresh"></span> 刷新表单
 			</button>
-			<button type="button" class="btn btn-default" onclick="subscribe.initWindow()">
+			</@shiro.hasPermission>
+			
+			<button type="button" style="display: none;" class="btn btn-default" onclick="subscribe.initWindow()">
 				<span class="glyphicon glyphicon-envelope"></span> 订阅
 			</button>
-			<button type="button" class="btn btn-default" onclick="alert('该功能暂未上线')">
+			<button type="button" style="display: none;" class="btn btn-default" onclick="alert('该功能暂未上线')">
 				<span class="glyphicon glyphicon-bell"></span> 帮助
 			</button>
 			
+			<@shiro.hasPermission  name="${code}.label-office">
 			<button type="button" class="btn btn-default" onclick="paiang.alertprint()">
 				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: red; font-size: 14" id="quyu">设置打印/办公室</b>
 			</button>
+			</@shiro.hasPermission>
 			
 		</div>
 	 </div>
@@ -122,48 +148,61 @@
 		<div class="btn-group" style="float: right; background-color: #F5F5F5; width: 100%;">
 		
 			
-		 	<@shiro.hasPermission  name="PaiangPrintLabel.label-search">
+		 	<@shiro.hasPermission  name="${code}.label-search">
 			<button type="button" class="btn btn-default" onclick="currentlabel.search();">
-				<span class="glyphicon glyphicon-search"></span> 查询(ctrl+1)
+				<span class="glyphicon glyphicon-search"></span> 查询
 			</button>
 		  	</@shiro.hasPermission>
 		  	
 		  	
-		  	<@shiro.hasPermission  name="PaiangPrintLabel.label-print">
+		  	<@shiro.hasPermission  name="${code}.label-print">
 			<button type="button" class="btn btn-default" onclick="currentlabel.tableprint()" id='printButton'>
 				<span class="glyphicon glyphicon-print"></span> 打印
 			</button>
 			</@shiro.hasPermission>
 			
-			<button type="button" class="btn btn-default" onclick="currentlabel.labelExport()">
+		  	<@shiro.hasPermission  name="${code}.label-export">
+			<button type="button" style="display: none;" class="btn btn-default" onclick="currentlabel.labelExport()">
 				<span class="glyphicon glyphicon-share"></span> 导出标签
 			</button>
+			</@shiro.hasPermission>
 			
+		  	<@shiro.hasPermission  name="${code}.label-save">
 			<button type="button" class="btn btn-default" onclick="currentlabel.save();" id='saveButton'>
 				<span class="glyphicon glyphicon-floppy-disk"></span> 保存
 			</button>
+			</@shiro.hasPermission>
 			
+		  	<@shiro.hasPermission  name="${code}.label-rejectchange">
 			<button type="button" class="btn btn-default" onclick="currentlabel.rejectChange();" id='rejectButton'>
 				<span class="glyphicon glyphicon-share-alt"></span> 撤销
 			</button>
+			</@shiro.hasPermission>
 			
+		  	<@shiro.hasPermission  name="${code}.label-remove">
 			<button type="button" class="btn btn-default" onclick="currentlabel.deletedata();">
 				<span class="glyphicon glyphicon-remove"></span> 删除
 			</button>
+			</@shiro.hasPermission>
 			
+		  	<@shiro.hasPermission  name="${code}.label-refresh">
 			<button type="button" class="btn btn-default" onclick="currentlabel.securityReload();">
 				<span class="glyphicon glyphicon-refresh"></span> 刷新表单
 			</button>
-			<button type="button" class="btn btn-default" onclick="subscribe.initWindow()">
+			</@shiro.hasPermission>
+			
+			<button type="button" style="display: none;" class="btn btn-default" onclick="subscribe.initWindow()">
 				<span class="glyphicon glyphicon-envelope"></span> 订阅
 			</button>
-			<button type="button" class="btn btn-default" onclick="alert('该功能暂未上线')">
+			<button type="button" style="display: none;" class="btn btn-default" onclick="alert('该功能暂未上线')">
 				<span class="glyphicon glyphicon-bell"></span> 帮助
 			</button>
 			
+		  	<@shiro.hasPermission  name="${code}.label-office">
 			<button type="button" class="btn btn-default" onclick="currentlabel.alertprint()">
 				<span class="glyphicon glyphicon-map-marker"></span> <b style="color: red; font-size: 14" id="quyu">设置打印/办公室</b>
 			</button>
+			</@shiro.hasPermission>
 			
 		</div>
 	 </div>

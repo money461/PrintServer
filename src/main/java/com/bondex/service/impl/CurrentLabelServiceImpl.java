@@ -28,7 +28,6 @@ import com.bondex.entity.client.Client;
 import com.bondex.entity.current.BaseLabelDetail;
 import com.bondex.entity.log.Log;
 import com.bondex.entity.log.PrintLog;
-import com.bondex.entity.page.PageBean;
 import com.bondex.entity.res.AjaxResult;
 import com.bondex.rabbitmq.Producer;
 import com.bondex.service.CurrentLabelService;
@@ -62,14 +61,14 @@ public class CurrentLabelServiceImpl implements CurrentLabelService {
 	
 
 	@Override
-	public PageBean<BaseLabelDetail> selectBaseLabelList(BaseLabelDetail baseLabelDetail) {
+	public List<BaseLabelDetail> selectBaseLabelList(BaseLabelDetail baseLabelDetail) {
 		return currentLabelDao.selectBaseLabelList(baseLabelDetail,true);
 	}
 
 	@Override
 	public void updateBaseLabel(List<BaseLabelDetail> list) {
 		
-		currentLabelDao.updateBaseLabel(list);
+		currentLabelDao.insertforUpdateBaseLabel(list);
 	}
 
 	@Override
@@ -88,15 +87,19 @@ public class CurrentLabelServiceImpl implements CurrentLabelService {
 			JSONArray parseArray = JSONObject.parseArray(message);
 			for(int i=0;i<parseArray.size();i++){
 				JSONObject jsonObject = parseArray.getJSONObject(i);
+				String code = jsonObject.getString("code");
+				log.setCode(code); //业务code
+				String codoName = jsonObject.getString("codeName");
+				log.setCodeName(codoName);
 				String showNum = jsonObject.getString("showNum");
 				showNum = showNum==null?"":showNum;
 				showNumLog += showNum +",";
 				String jsonData = jsonObject.getString("jsonData");
-				String docTypeName = jsonObject.getString("docTypeName");
+				String docTypeName = jsonObject.getString("doctypeName");
 				docTypeName = docTypeName==null?"":docTypeName;
 				docTypeNameLog += docTypeName + ",";
 				String opidName = jsonObject.getString("opidName");
-				if(StringUtils.isBlank(showNum) || StringUtils.isBlank(jsonData) || StringUtils.isBlank(opidName) ||StringUtils.isBlank(docTypeName)  ){
+				if(StringUtils.isBlank(showNum) ||StringUtils.isBlank(code) || StringUtils.isBlank(code) || StringUtils.isBlank(jsonData) || StringUtils.isBlank(opidName) ||StringUtils.isBlank(docTypeName)  ){
 					throw new BusinessException("必填字段为空！");
 				}
 				BaseLabelDetail baseLabelDetail = GsonUtil.GsonToBean(jsonObject.toJSONString(), BaseLabelDetail.class);
@@ -105,7 +108,7 @@ public class CurrentLabelServiceImpl implements CurrentLabelService {
 			}
 			
 			//保存数据
-			currentLabelDao.updateBaseLabel(list);
+			currentLabelDao.insertBaseLabel(list);
 			log.setStatus(0); //入库成功
 			log.setDetail("入库成功！");
 			
@@ -120,11 +123,13 @@ public class CurrentLabelServiceImpl implements CurrentLabelService {
 		} catch (Exception e) {
 			log.setStatus(3);
 			log.setDetail("数据入库未知异常！");
+			System.out.println(Thread.currentThread().getName()+"发生异常："+e.getMessage());
+			e.printStackTrace();
 			
 		}finally {
 			//日志入库
 			log.setMawb(showNumLog);
-			log.setDocTypeName(docTypeNameLog);
+			log.setDoctypeName(docTypeNameLog);
 			logInfoDao.insertLableLog(log); //日志入库
 			
 		}
@@ -139,6 +144,8 @@ public class CurrentLabelServiceImpl implements CurrentLabelService {
 	}
 
 	//打印标签并写入打印日志
+	//异常回滚状态
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void printCurrentLabelSendClient(List<BaseLabelDetail> list, String regionCode, String mqaddress) {
 		UserInfo userInfo = ShiroUtils.getUserInfo();
@@ -155,17 +162,20 @@ public class CurrentLabelServiceImpl implements CurrentLabelService {
 		printLog.setOpidName(userInfo.getOpname());
 		try {
 			String id = list.stream().map(res -> String.valueOf(res.getId())).collect(Collectors.joining(","));
-			String showNum = list.stream().map(res -> String.valueOf(res.getShowNum())).collect(Collectors.joining(","));
 			printLog.setLabelId(id);
+			String showNum = list.stream().map(res -> String.valueOf(res.getShowNum())).collect(Collectors.joining(","));
 			printLog.setShowNum(showNum);
+			BaseLabelDetail baseLabelDetail = list.get(0);
+			printLog.setCode(baseLabelDetail.getCode()); //业务code
+			printLog.setCodeName(baseLabelDetail.getCodeName());
 			//校验打印办公室
 			// 获取打印区域 从数据库中获取
 			Region region = clientDao.getRegionByRegioncode(regionCode);
 			if(StringUtils.isNull(region)){
 				throw new BusinessException("请指定打印办公室！");
 			}
-			printLog.setQueueCode(region.getParent_code()+"_"+region.getRegion_code()); //打印办公室
-			printLog.setRegionName(region.getParent_name()+"/"+region.getRegion_name());
+			printLog.setQueueCode(region.getParentCode()+"_"+region.getRegionCode()); //打印办公室
+			printLog.setRegionName(region.getParentName()+"/"+region.getRegionName());
 			
 			//封装打印客户端 且发送客户端
 			List<Client> clientList = SendClientList(list,userInfo,mqaddress,region);
@@ -207,8 +217,7 @@ public class CurrentLabelServiceImpl implements CurrentLabelService {
 		}
 	}
 	
-	//异常回滚状态
-	@Transactional(rollbackFor = Exception.class)
+	
 	private List<Client> SendClientList(List<BaseLabelDetail> list, UserInfo userInfo, String mqaddress, Region region) throws Exception {
 		List<Client> clientList = new ArrayList<Client>();
 		for (BaseLabelDetail baseLabelDetail : list) {
@@ -217,8 +226,8 @@ public class CurrentLabelServiceImpl implements CurrentLabelService {
 			Template template = LabelInfoDao.checkUseTemplate(templateId);
 			//开始封装
 			//为了防止前端传过来的数据有误
-			baseLabelDetail.setTemplateId(template.getTemplate_id());
-			baseLabelDetail.setTemplateName(template.getTemplate_name());
+			baseLabelDetail.setTemplateId(template.getTemplateId());
+			baseLabelDetail.setTemplateName(template.getTemplateName());
 			baseLabelDetail.setWidth(template.getWidth());
 			baseLabelDetail.setHeight(template.getHeight());
 			baseLabelDetail.setPrintName(userInfo.getOpname()); //设置打印人

@@ -1,14 +1,16 @@
 package com.bondex.shiro.security;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
@@ -39,8 +41,6 @@ import com.bondex.shiro.security.entity.UserInfo;
 import com.bondex.util.Axis2WebServiceClient;
 import com.bondex.util.GsonUtil;
 import com.bondex.util.HttpClient;
-import com.bondex.util.ReadTxtFile;
-import com.bondex.util.context.ApplicationContextProvider;
 import com.google.gson.reflect.TypeToken;
 /**
  * 权限获取模块
@@ -73,7 +73,7 @@ public class SecurityService {
 		this.applicationId = springCasAutoconfig.getApplicationId();
 		this.frameworkapi = springCasAutoconfig.getFrameworkapi();
 	}
-
+	
 	
 	//获取用户信息 存入session 并且绑定最新与Token opid
 	public UserInfo setSerlvetContext(String username){
@@ -105,11 +105,35 @@ public class SecurityService {
 					 userInfo.setOpname(userInfo.getOpids().get(getBindingOpid));
 					//获取用户的操作及系统获取操作数据权限
 					if(com.bondex.util.StringUtils.isNotBlank(getBindingOpid)){
+						SortedSet<SecurityModel> list=null;
+					 try {
+						//部门下的opid集合
 						JSONObject object = getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetUserRoleOp);
-//						JSONObject object  = JSONObject.parseObject(ReadTxtFile.readTxtFile("C:\\Users\\admin\\Desktop\\标签打印\\RoleData.json"));
+						//JSONObject object  = JSONObject.parseObject(ReadTxtFile.readJsonFromClassPath("data/RoleData.json",String.class));
 						JSONArray jsonArray = object.getJSONArray("Data");
 						List<String> opidData = JSONObject.parseArray( JSONObject.toJSONString(jsonArray), String.class);
 						userInfo.setOpidData(opidData);
+						//用户的菜单信息
+						JSONObject object2 = getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetHasPermissionModuleList);
+						JSONArray array = object2.getJSONArray("Data");
+						Type objectTypemenu = new TypeToken<List<SecurityModel>>() {}.getType();
+						List<SecurityModel> securityModels =  GsonUtil.getGson().fromJson(array.toJSONString(), objectTypemenu);
+						list = securityModelTreeUtil(securityModels);
+						
+//							String  menu = (String)ReadTxtFile.readJsonFromClassPath("data/menu.json",String.class);
+//							Type objectTypemenu = new TypeToken<List<SecurityModel>>() {}.getType();
+//							List<SecurityModel>  securityModels =  GsonUtil.getGson().fromJson(menu, objectTypemenu);
+						   /**父子菜单整理 */
+//							list= securityModelTreeUtil(securityModels);
+							
+							
+						} catch (Exception e) {
+							e.printStackTrace();
+						}	
+						
+						System.out.println(GsonUtil.GsonString(list));
+						userInfo.setMenus(list);
+						
 					} 
 					//初始页面 的时候弹出 opids 提供用户选择
 					Datagrid<Opid> datagrid = new Datagrid<Opid>();
@@ -157,15 +181,12 @@ public class SecurityService {
 		/*	String rt = permissionService.getHasPermissionModuleList(applicationId, opid.getOpid());
 			System.err.println("用户功能模块权限：" + rt);*/
 			
-			// 查询模块权限
+			// 查询菜单模块权限
 			LinkedHashMap<String, String> moduleMap = new LinkedHashMap<>();
 			moduleMap.put("ApplicationId", applicationId);
 			moduleMap.put("OperatorId", opid);
 			
 			JSONObject securityModeljsonObject = Axis2WebServiceClient.getWebServicePararm(moduleMap, "GetHasPermissionModuleList").getJSONObject("GetHasPermissionModuleListResult");
-
-//			SecurityHead<SecurityModel> securityHead = GsonUtil.GsonToBean(securityModeljsonObject.toJSONString(),SecurityHead.class);
-			
 			
 			Type objectType = new TypeToken<SecurityHead<SecurityModel>>() {}.getType();
 			SecurityHead<SecurityModel> securityHead = GsonUtil.getGson().fromJson(securityModeljsonObject.toJSONString(), objectType);
@@ -180,7 +201,7 @@ public class SecurityService {
 				// 获取用户功能模块按钮权限
 				for (SecurityModel securityModel : securityModels) {
 					String pageCode = securityModel.getPageCode();
-					if (!pageCode.equals("AirExpHAWBList") && !securityModel.getPageCode().equals("AirExpMAWBList") && !securityModel.getPageCode().equals("AirExpOrder")) {
+					//if (!pageCode.equals("AirExpHAWBList") && !securityModel.getPageCode().equals("AirExpMAWBList") && !securityModel.getPageCode().equals("AirExpOrder")) {
 						premissionSet.add(pageCode); //添加权限realm
 						LinkedHashMap<String, String> buttonMap = new LinkedHashMap<>();
 						buttonMap.put("ApplicationId", applicationId);
@@ -223,16 +244,23 @@ public class SecurityService {
 							}
 						}
 					}
-					
+		
+				/*	try {
+						String menu = (String)ReadTxtFile.readJsonFromClassPath("data/menu.json",String.class);
+						Type objectTypemenu = new TypeToken<List<SecurityModel>>() {}.getType();
+						securityModels =  GsonUtil.getGson().fromJson(menu, objectTypemenu);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					*/
 					authorizationMap.put(opid + Common.UserSecurity_Model, securityModels);// 用户功能模块权限
 					authorizationMap.put(opid + Common.UserSecurity_PrintButton, jsonResults);// 用户打印权限
 					authorizationMap.put(opid + Common.UserSecurity_Button, securityModel1);// 用户功能模块按钮权限
-			}
 			
 			}
 			
 			//校验是否是系统管理员
-			String isAdmin = CheckSystemAdmin(userInfo);
+			/*String isAdmin = CheckSystemAdmin(userInfo);
 			String activeProfile = ApplicationContextProvider.getActiveProfile();
 			if("1".equals(isAdmin) || !"prod".equals(activeProfile)){
 				try {
@@ -241,12 +269,13 @@ public class SecurityService {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-			}
+			}*/
 		
 		return authorizationMap;
 	}
 
-	
+
+
 	/**
 	 * 获取数据
 	 * @param paramap 接口参数
@@ -494,5 +523,85 @@ public class SecurityService {
 		return "1";
 	}
 
+	
+	
+	private SortedSet<SecurityModel> securityModelTreeUtil(List<SecurityModel> securityModels) {
+		
+		SortedSet<SecurityModel> arrayList = getInstanceTreeSet();
+		for (SecurityModel bean : securityModels) {
+			if ("0".equals(bean.getParentID())){ //最高级父节点开始循环
+				bean.setIsClosed("true");//不展开
+				SortedSet<SecurityModel> list = buildTree(securityModels, bean.getModuleID());
+				bean.setChildren(list);
+				arrayList.add(bean);
+			}
+		}
+		return arrayList;
+	}
+	
+	/**
+	 * 递归
+	 * @param treeBeans 不包含最高层次节点的集合
+	 * @param pId 父类id
+	 * @return
+	 */
+	private static SortedSet<SecurityModel> buildTree(List<SecurityModel> securityModels,String pId){
+		
+		SortedSet<SecurityModel> result =getInstanceTreeSet() ;
+		
+		for (SecurityModel treeBean : securityModels) {
+			String id = treeBean.getModuleID();
+			String pid = treeBean.getParentID();
+			if(StringUtils.isNotBlank(pid)){
+				if(pid.equals(pId)){
+					 //递归查询当前子节点的子节点
+					SortedSet<SecurityModel> childrenTree = buildTree(securityModels, id);
+					treeBean.setChildren(childrenTree);
+					String url = null;
+					if(StringUtils.isNotBlank(treeBean.getPageCode())){
+						url= treeBean.getModuleURL() +"/"+ treeBean.getPageCode();
+					}else{
+						url= treeBean.getModuleURL();
+					}
+					treeBean.setModuleURL(url);
+					result.add(treeBean);
+				}
+			}
+		}
+		
+		return result;
+		
+	}
+	
+	
+	private static  SortedSet<SecurityModel> getInstanceTreeSet(){
+	
+		return new TreeSet<SecurityModel>(new Comparator<SecurityModel>() {
+	
+	    	/**
+	    	 * 比较器中返回为0 ，Set中认为是相等的，会执行去重操作。如果比较器逻辑有问题，可能会触发死循环比较。
+	    	 */
+			@Override
+			public int compare(SecurityModel o1, SecurityModel o2) {
+				String showOrder1 = o1.getShowOrder();
+				String showOrder2 = o2.getShowOrder();
+				try {
+					if(StringUtils.isNotBlank(showOrder1) && StringUtils.isNotBlank(showOrder2)){
+						Integer one = Integer.valueOf(showOrder1);
+						Integer two = Integer.valueOf(showOrder2);
+						
+						if(one>two){
+							return 1;
+						}
+						
+					}
+					
+				} catch (Exception e) {
+					System.err.println("菜单排序异常！");
+				}
+				return -1;
+			}
+		} );
+	}
 	
 }

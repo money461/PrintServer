@@ -4,16 +4,17 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
 
 import com.bondex.controller.BaseController;
 import com.bondex.entity.UserDefaultRegion;
 import com.bondex.entity.page.TableDataInfo;
 import com.bondex.entity.res.AjaxResult;
 import com.bondex.service.UserDefaultRegionService;
-import com.bondex.util.StringUtils;
 @Controller
 @RequestMapping(value="/user")
 public class UserDefaultRegionController extends BaseController {
@@ -21,16 +22,42 @@ public class UserDefaultRegionController extends BaseController {
 	@Autowired
 	private UserDefaultRegionService userDefaultRegionService;
 	
+	
+	/**
+	 * 进入用户管理展示页面
+	 * @param mawb
+	 * @param modelAndView
+	 * @return
+	 */
+	@RequestMapping(value={"/view/{code}","/view"},method = RequestMethod.GET)
+	@ResponseBody
+//	@RequiresPermissions(value={"viewdata","look"},logical=Logical.OR)
+	public ModelAndView indexpage(@PathVariable(name="code",required=false) String code,ModelAndView modelAndView){
+		modelAndView.addObject("code", code);
+		modelAndView.setViewName("/admin/user/userlist"); //页面展示
+		return modelAndView;
+	}
+	
+	@RequestMapping(value={"/adduser/{code}","/adduser"},method = RequestMethod.GET)
+	@ResponseBody
+//	@RequiresPermissions(value={"viewdata","look"},logical=Logical.OR)
+	public ModelAndView addpage(@PathVariable(name="code",required=false) String code,ModelAndView modelAndView){
+		modelAndView.addObject("code", code);
+		modelAndView.setViewName("/admin/user/add"); //页面展示
+		return modelAndView;
+	}
+	
+	
 	@RequestMapping("/list")
 	@ResponseBody
 	public Object getAllUserDefaultRegion(UserDefaultRegion defaultRegion){
-		startPage(false); //分页插件
+		startPage(true,"d"); //分页插件 ,sql 表别名
 		List<UserDefaultRegion> list = userDefaultRegionService.selectUserDefaultRegion(defaultRegion);
 		TableDataInfo info=  getDataTable(list); //数据转换
-		if(StringUtils.isEmpty(list)){
+	/*	if(StringUtils.isEmpty(list)){
 			info.setCode(1);
-			info.setMsg("没有找到匹配的操作！");
-		}
+			info.setMsg("没有找到匹配的操作人员！");
+		}*/
 		return info;
 		
 	}

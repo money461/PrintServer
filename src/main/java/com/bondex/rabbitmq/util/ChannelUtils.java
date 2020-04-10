@@ -10,12 +10,12 @@
  */
 package com.bondex.rabbitmq.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 〈一句话功能简述〉<br>
@@ -38,8 +38,12 @@ public class ChannelUtils {
         ConnectionFactory connectionFactory = new ConnectionFactory();
 
         connectionFactory.setHost("172.16.88.150");
+//        connectionFactory.setHost("192.168.42.128");
+//        connectionFactory.setHost("mq.bondex.com.cn");
         connectionFactory.setPort(5672);
         connectionFactory.setVirtualHost("/");
+//        connectionFactory.setUsername("ZXOSRMQ051");
+//        connectionFactory.setPassword("astiasti");
         connectionFactory.setUsername("admin");
         connectionFactory.setPassword("123456");
 

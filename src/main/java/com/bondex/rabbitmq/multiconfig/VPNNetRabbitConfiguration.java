@@ -90,11 +90,11 @@ public class VPNNetRabbitConfiguration extends AbstractRabbitConfiguration {
         ContainerFactory.setReceiveTimeout(10000L);
 //      ContainerFactory.setTaskExecutor(threadPoolTaskExecutor); //设置线程池
        // 设置消费者线程数
-        ContainerFactory.setConcurrentConsumers(10);
+        ContainerFactory.setConcurrentConsumers(2);
         // 设置最大消费者线程数
-        ContainerFactory.setMaxConcurrentConsumers(30);
+        ContainerFactory.setMaxConcurrentConsumers(3);
         //设置公平分发Prefetch Count为配置设置的值3，意味着每个消费者每次会预取3个消息准备消费。
-        ContainerFactory.setPrefetchCount(3);
+        ContainerFactory.setPrefetchCount(2);
         
         ///新消费者开始之间的最小间隔。
         ContainerFactory.setStartConsumerMinInterval(1000L);

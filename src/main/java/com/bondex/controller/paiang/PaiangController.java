@@ -4,16 +4,15 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -21,16 +20,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.bondex.common.Common;
 import com.bondex.common.enums.ResEnum;
-import com.bondex.config.exception.BusinessException;
 import com.bondex.controller.BaseController;
 import com.bondex.entity.Label;
 import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.page.Datagrid;
 import com.bondex.entity.page.TableDataInfo;
+import com.bondex.entity.res.AjaxResult;
 import com.bondex.entity.res.MsgResult;
-import com.bondex.service.LabelInfoService;
+import com.bondex.service.PaiangService;
 import com.bondex.util.StringUtils;
 
 @Controller
@@ -40,19 +38,23 @@ public class PaiangController extends BaseController{
 
 
 	@Resource(name="paiangServiceImple")
-	private LabelInfoService labelInfoService;
+	private PaiangService paiangService;
+	
+	
+	
 	/**
-	 * 进入展示页面
+	 * 进入派昂标签展示页面
 	 * @param mawb
 	 * @param modelAndView
 	 * @return
 	 */
-	@RequestMapping(value="/viewdata",method = RequestMethod.GET)
+	@RequestMapping(value={"/viewdata/{code}","/viewdata"},method = RequestMethod.GET)
 	@ResponseBody
 //	@RequiresPermissions(value={"viewdata","look"},logical=Logical.OR)
-	public ModelAndView viewdata(@RequestParam(name="mawb",required=false)String mawb,ModelAndView modelAndView){
+	public ModelAndView viewdata(@RequestParam(name="mawb",required=false)String mawb,@PathVariable(name="code",required=false) String code,ModelAndView modelAndView){
 		try {
-			modelAndView.addObject("mawb", mawb);
+			modelAndView.addObject("code", code);
+			modelAndView.addObject("MBLNo", mawb);
 			modelAndView.setViewName("paiang/paiangList"); //页面展示
 			
 		} catch (Exception e) {
@@ -70,20 +72,38 @@ public class PaiangController extends BaseController{
 	@RequestMapping(value="/search",method = RequestMethod.POST,headers = {"content-type=application/x-www-form-urlencoded; charset=UTF-8"},produces={"application/json; charset=UTF-8"})
 	@ResponseBody
 	public Object search(Label label,HttpServletRequest request) throws Exception{
-		HttpSession session = request.getSession();
-		Map<String, Object> map = (Map<String, Object>) session.getAttribute(Common.Session_UserSecurity);
-		if(StringUtils.isNull(map)||map.size()==0){
-			throw new BusinessException(ResEnum.FORBIDDEN.CODE,"操作号没有配置任何操作权限,无法查看数据");
+		startPage(false,"label");
+		List<LabelAndTemplate> list = paiangService.selectPaiangLabelByPage(label);
+		TableDataInfo info = getDataTable(list);
+		if(StringUtils.isEmpty(list)){
+			info.setCode(1);
+			info.setMsg("<b style='color:red;'>抱歉，没有找到匹配的数据！</b>");
 		}
-		List<LabelAndTemplate> list = labelInfoService.selectLabelByPage(label);
-		TableDataInfo dataTable = getDataTable(list);
-		 return MsgResult.result(ResEnum.SUCCESS.CODE,ResEnum.SUCCESS.MESSAGE,dataTable);
+		 return MsgResult.result(ResEnum.SUCCESS.CODE,ResEnum.SUCCESS.MESSAGE,info);
 	}
 	
 	@RequestMapping(value="/update",method=RequestMethod.POST,consumes={"application/json; charset=UTF-8"},produces={"application/json; charset=UTF-8"})
 	@ResponseBody
-	public Object update(@RequestBody List<LabelAndTemplate> datalist){
+	public Object updatePaiangData(@RequestBody List<Label> datalist){
+		paiangService.updatePaiangData(datalist);
+		return AjaxResult.success();
 		
+	}
+	@RequestMapping(value="/delete",method=RequestMethod.POST,consumes={"application/json; charset=UTF-8"},produces={"application/json; charset=UTF-8"})
+	@ResponseBody
+	public Object deletePaiangData(@RequestBody List<Label> datalist){
+		for (Label label : datalist) {
+			label.setReserve1("1");//已经删除
+		}
+		paiangService.updatePaiangData(datalist);
+		return AjaxResult.success();
+		
+	}
+		
+//	@RequestMapping(value="/update",method=RequestMethod.POST,consumes={"application/json; charset=UTF-8"},produces={"application/json; charset=UTF-8"})
+	@ResponseBody
+	public Object update(@RequestBody List<LabelAndTemplate> datalist){
+			
 		 //分单号=key
 		 TreeMap<String, List<LabelAndTemplate>> treeMap = new TreeMap<String, List<LabelAndTemplate>>();
 		 
@@ -149,6 +169,11 @@ public class PaiangController extends BaseController{
         }
         return result;
     }
+    
+    
+    
+    
+    
 
 	
 }

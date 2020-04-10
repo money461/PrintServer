@@ -80,15 +80,15 @@ public class Producer {
 	public void vpnNetPrint(Object message, Region regionInfo) throws Exception {
 		 // 声明交换机 可以自动删除
 //		vpnNetRabbitAdmin.deleteExchange(SendExchanage);
-		vpnNetRabbitAdmin.declareExchange(new TopicExchange(SendExchanage, true, true, new HashMap<>()));
+		vpnNetRabbitAdmin.declareExchange(new TopicExchange(SendExchanage, true, false, new HashMap<>()));
 		
-		String ROUNTING_KEY = "air_print_label_" + regionInfo.getParent_code() + "_" + regionInfo.getRegion_code() + "_queue_RootKey"; 
-		String QUEUE_NAME = "air_print_label_" + regionInfo.getParent_code() + "_" + regionInfo.getRegion_code() + "_queue"; 
+		String ROUNTING_KEY = "air_print_label_" + regionInfo.getParentCode() + "_" + regionInfo.getRegionCode() + "_queue_RootKey"; 
+		String QUEUE_NAME = "air_print_label_" + regionInfo.getParentCode() + "_" + regionInfo.getRegionCode() + "_queue"; 
 		
 		//定义队列，均为持久化
 		// 1.队列名2.是否持久化，3是否局限与链接，4不再使用是否删除，5其他的属性
 //		vpnNetRabbitAdmin.deleteQueue(QUEUE_NAME);
-		vpnNetRabbitAdmin.declareQueue(new Queue(QUEUE_NAME, true, false, true, null));
+		vpnNetRabbitAdmin.declareQueue(new Queue(QUEUE_NAME, true, false, false, null));
 		
 		//Binding 绑定
 		vpnNetRabbitAdmin.declareBinding(new Binding(QUEUE_NAME,Binding.DestinationType.QUEUE, SendExchanage,ROUNTING_KEY,new HashMap()));
@@ -109,16 +109,16 @@ public class Producer {
 	 */
 	public void outNetPrint(Object message, Region regionInfo) throws Exception {
 		// 声明交换机
-//		outNetRabbitAdmin.deleteExchange(SendExchanage);
-		outNetRabbitAdmin.declareExchange(new TopicExchange(SendExchanage, true, true, new HashMap<>()));
+		//outNetRabbitAdmin.deleteExchange(SendExchanage);
+		outNetRabbitAdmin.declareExchange(new TopicExchange(SendExchanage, true, false, new HashMap<>()));
 		
-		String ROUNTING_KEY = "air_print_label_" + regionInfo.getParent_code() + "_" + regionInfo.getRegion_code() + "_queue_RootKey"; 
-		String QUEUE_NAME = "air_print_label_" + regionInfo.getParent_code() + "_" + regionInfo.getRegion_code() + "_queue"; 
+		String ROUNTING_KEY = "air_print_label_" + regionInfo.getParentCode() + "_" + regionInfo.getRegionCode() + "_queue_RootKey"; 
+		String QUEUE_NAME = "air_print_label_" + regionInfo.getParentCode() + "_" + regionInfo.getRegionCode() + "_queue"; 
 		
 		//定义队列，均为持久化
 		// 1.队列名2.是否持久化，3是否局限与链接，4不再使用是否删除，5其他的属性
 //		outNetRabbitAdmin.deleteQueue(QUEUE_NAME);
-		outNetRabbitAdmin.declareQueue(new Queue(QUEUE_NAME, true, false, true, null));
+		outNetRabbitAdmin.declareQueue(new Queue(QUEUE_NAME, true, false, false, null));
 		//Binding 绑定
 		outNetRabbitAdmin.declareBinding(new Binding(QUEUE_NAME,Binding.DestinationType.QUEUE, SendExchanage,ROUNTING_KEY,new HashMap()));
 		
@@ -139,8 +139,8 @@ public class Producer {
 	 */
 	public void print(Object message, Region regionInfo) throws Exception {
 		
-		String ROUNTING_KEY = "air_print_label_" + regionInfo.getParent_code() + "_" + regionInfo.getRegion_code() + "_queue_RootKey"; 
-		String QUEUE_NAME = "air_print_label_" + regionInfo.getParent_code() + "_" + regionInfo.getRegion_code() + "_queue"; 
+		String ROUNTING_KEY = "air_print_label_" + regionInfo.getParentCode() + "_" + regionInfo.getRegionCode() + "_queue_RootKey"; 
+		String QUEUE_NAME = "air_print_label_" + regionInfo.getParentCode() + "_" + regionInfo.getRegionCode() + "_queue"; 
 		
 		
 		logger.info("发送消息至内网交换机：【{}】,路由器：【{}】,队列名称：【{}】，消息体：【{}】",SendExchanage,ROUNTING_KEY,QUEUE_NAME,message);
@@ -161,7 +161,7 @@ public class Producer {
 	}
 	
 	
-	public void send(Object object) throws IOException{
+	public Object send(Object object) throws IOException{
 		
 		    Channel channel = ChannelUtils.getChannel("标签打印发送客户端");
 		   /* //声明队列 可以不写
@@ -218,7 +218,8 @@ public class Producer {
 				e.printStackTrace();
 			}
 			
-			logger.debug("消息ID:{},返回结果：{}",correlationId,sResult); //1f8089e278b143498da496a3c740e061
+			return sResult;
+			//logger.debug("消息ID:{},返回结果：{}",correlationId,sResult); //1f8089e278b143498da496a3c740e061
 			
 	}
 	

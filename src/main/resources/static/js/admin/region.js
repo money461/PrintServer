@@ -8,21 +8,24 @@ region.prototype.saveOrUpdateRegion = function(url, data, callback) {
 	        url: url,
 	        type: "post",
 	        dataType: "json",
+	        async: false, //同步加载
 	        data: data,
 	        beforeSend: function () {
 	        	$.modal.loading("正在处理中，请稍后...");
 	        	$.modal.disable();
 	        },
 	        success: function(result) {
+	        	$.modal.closeLoading();
+	        	$.modal.enable();
+	        	var parent = window.parent;
 	        	if('200'==result.status){
-	        		var parent = window.parent;
                     if (parent.table.options.type == table_type.bootstrapTreeTable) {
                     	$.modal.close();
-                        parent.$.modal.msgSuccess(result.msg);
+                        parent.$.modal.msgSuccess(result.message);
                         parent.$.treeTable.refresh();
                     }
-	        		$.modal.closeLoading();
-	        		$.modal.enable();
+	        	}else{
+	        		 parent.$.modal.msgError(result.message);
 	        	}
 	        }
 	    };

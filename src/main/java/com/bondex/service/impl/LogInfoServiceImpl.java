@@ -1,12 +1,13 @@
 package com.bondex.service.impl;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bondex.dao.LogInfoDao;
 import com.bondex.entity.log.Log;
-import com.bondex.entity.page.PageBean;
 import com.bondex.service.LogInfoService;
 @Service
 @Transactional(rollbackFor = Exception.class)
@@ -16,7 +17,7 @@ public class LogInfoServiceImpl implements LogInfoService {
 	private LogInfoDao logInfoDao;
 	
 	@Override
-	public PageBean<Log> getlogDetail(Log log) {
+	public List<Log> getlogDetail(Log log) {
 		return logInfoDao.getlogDetail(log);
 	}
 

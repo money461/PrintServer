@@ -86,16 +86,6 @@ public class DataSourceConfig {
     	JdbcTemplateSupport template = new JdbcTemplateSupport(dataSource());
     	return template;
     }
-    /**
-     * template扩展
-     * @return
-     */
-    @Bean
-    public NamedParameterJdbcTemplateSupport namedParameterJdbcTemplateSupport() {
-    	NamedParameterJdbcTemplateSupport template = new NamedParameterJdbcTemplateSupport(dataSource());
-    	return template;
-    }
-    
     
     
     

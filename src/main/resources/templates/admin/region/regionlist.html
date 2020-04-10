@@ -13,14 +13,18 @@
 					<div class="select-list">
 						<ul>
 							<li>
-								办公室名称：<input type="text" name="region_name"/>
+								办公室名称：<input type="text" name="regionName"/>
 							</li>
 							<li>
-								区域名称：<input type="text" name="parent_name"/>
+								区域名称：<input type="text" name="parentName"/>
 							</li>
 							<li>
+								<@shiro.hasAnyPermissions name="${code}.btn-search">
 								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.treeTable.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								</@shiro.hasAnyPermissions>
+								<@shiro.hasAnyPermissions name="${code}.btn-realod">
 								<a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+								</@shiro.hasAnyPermissions>
 							</li>
 						</ul>
 					</div>
@@ -28,12 +32,14 @@
 			</div>
                 
             <div class="btn-group-sm" id="toolbar" role="group">
+            	<@shiro.hasAnyPermissions name="${code}.btn-add">
 		        <a class="btn btn-success" onclick="$.operate.add('new')">
                     <i class="fa fa-plus"></i> 新增全新区域
                 </a>
-                <a class="btn btn-primary" onclick="$.operate.edit()">
+                </@shiro.hasAnyPermissions>
+               <!--  <a class="btn btn-primary"  onclick="$.operate.edit()">
 		            <i class="fa fa-edit"></i> 修改
-		        </a>
+		        </a> -->
                 <a class="btn btn-info" id="expandAllBtn">
                     <i class="fa fa-exchange"></i> 展开/折叠
                 </a>
@@ -56,8 +62,8 @@
 
 		$(function() {
 		    var options = {
-		        code: "region_code",
-		        parentCode: "parent_code",
+		        code: "regionCode",
+		        parentCode: "parentCode",
 		        uniqueId: "",
 		        expandAll: false,
 		        expandFirst: false,
@@ -65,46 +71,63 @@
 		        createUrl: prefix + "/add/{id}",
 		        updateUrl: prefix + "/edit/{id}",
 		        removeUrl: prefix + "/remove/{id}",
+		        sortName: "updateTime", //默认排序字段
+			    sortOrder: "desc",
 		        modalName: "打印办公室",
 		        expandColumn: 2,
-		        columns: [{
-                    field: 'selectItem', 
+		        columns: [
+		         {
+		        	field: 'selectItem',
                     radio: true
                  },
                  {
- 		            field: 'region_id',
+ 		            field: 'regionId',
  		            title: '区域ID',
- 		            align: "left"
+ 		            align: "center",
+ 		            visible: false
  		        },
                  {
-		            field: 'region_name',
+		            field: 'regionName',
 		            title: '区域名称',
 		            align: "left"
 		        },
                  {
-		            field: 'region_code',
+		            field: 'regionCode',
 		            title: '区域简码',
 		            align: "left"
+		        },{
+		        	field: 'printerName',
+		        	title: '打印机名称',
+		        	align: "left"
+		        },{
+		        	field: 'printerIp',
+		        	title: '打印机IP',
+		        	align: "left"
+		        },
+		        {
+		            field: 'updateTime',
+		            title: '更新时间',
+		            align: "left",
+		            sortable : true
 		        },
 		        {
 		            field: 'createTime',
 		            title: '创建时间',
-		            align: "left"
+		            align: "center",
+		            visible : false
 		        },
 		        {
 		            title: '操作',
-		            align: 'left',
+		            align: 'center',
 		            formatter: function(value, row, index) {
 		                    var actions = [];
-		                if (row.parent_code != null) { //具体办公室 子节点
-		                    actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="$.operate.edit(\'' + row.region_code + '\')"><i class="fa fa-edit"></i>编辑</a> ');
-		                    actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="$.operate.remove(\'' + row.region_code + '\')"><i class="fa fa-trash"></i>删除</a>');
+		                if (row.parentCode != null) { //具体办公室 子节点
+		                    actions.push('<@shiro.hasAnyPermissions name="${code}.btn-edit"> <a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="$.operate.edit(\'' + row.regionCode + '\')"><i class="fa fa-edit"></i>编辑</a> </@shiro.hasAnyPermissions>');
+		                    actions.push('<a style="display:none;" class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="$.operate.remove(\'' + row.regionCode + '\')"><i class="fa fa-trash"></i>删除</a>');
 		                    return actions.join('');
 		                	
 		                }else{
-		                    actions.push('<a class="btn btn-info  btn-xs ' + addFlag + '" href="javascript:void(0)" onclick="$.operate.add(\'' + row.region_code + '\')"><i class="fa fa-plus"></i>新增办公室</a> ');
-		                    actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="$.operate.edit(\'' + row.region_code + '\')"><i class="fa fa-edit"></i>编辑</a> ');
-		                    actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="$.operate.remove(\'' + row.region_code + '\')"><i class="fa fa-trash"></i>删除</a>');
+		                    actions.push('<@shiro.hasAnyPermissions name="${code}.btn-add"> <a class="btn btn-info  btn-xs ' + addFlag + '" href="javascript:void(0)" onclick="$.operate.add(\'' + row.regionCode + '\')"><i class="fa fa-plus"></i>新增办公室</a> </@shiro.hasAnyPermissions>');
 		                    return actions.join('');
 		                }
 		            }

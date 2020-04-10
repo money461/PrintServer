@@ -1,10 +1,13 @@
 package com.bondex.dao.impl;
 
-import java.util.Map;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Repository;
 
 import com.bondex.config.jdbc.JdbcTemplateSupport;
@@ -12,16 +15,19 @@ import com.bondex.dao.PrintLogDao;
 import com.bondex.dao.base.BaseDao;
 import com.bondex.entity.log.PrintLog;
 import com.bondex.entity.page.PageBean;
-import com.bondex.util.CollectionUtils;
+import com.bondex.shiro.security.entity.SecurityModel;
 import com.bondex.util.StringUtils;
-import com.github.pagehelper.Page;
+import com.bondex.util.shiro.ShiroUtils;
 
 @Repository
 public class PrintLogDaoImpl extends BaseDao<PrintLog, Integer> implements PrintLogDao {
 
+	private JdbcTemplateSupport jdbcTemplateSupport;
+	
 	@Autowired
-	public PrintLogDaoImpl(JdbcTemplateSupport jdbcTemplate) {
-		super(jdbcTemplate);
+	public PrintLogDaoImpl(JdbcTemplateSupport jdbcTemplateSupport) {
+		super(jdbcTemplateSupport);
+		this.jdbcTemplateSupport = jdbcTemplateSupport;
 	}
 
 	@Override
@@ -32,15 +38,16 @@ public class PrintLogDaoImpl extends BaseDao<PrintLog, Integer> implements Print
 
 	//拼装成父子表格形式
 	@Override
-	public PageBean<PrintLog> getPrintlogDetail(PrintLog printLog) {
-		Page<PrintLog> pagination = startPage(true);//设置分页pagehelper
-		
+	public List<PrintLog> getPrintlogDetail(PrintLog printLog) {
 		String sql="SELECT * FROM `print_log` WHERE 1=1 ";
 		
 		if(StringUtils.isNotNull(printLog)){
 			
 			if( null!=printLog.getId()){
 				sql+=" and id = '"+printLog.getId()+"'";
+			}
+			if(StringUtils.isNotBlank(printLog.getCode())){
+				sql+=" and code = '"+printLog.getCode()+"'";
 			}
 			if(StringUtils.isNotBlank(printLog.getLabelId())){
 				sql+=" and label_id = '"+printLog.getLabelId()+"'";
@@ -64,7 +71,8 @@ public class PrintLogDaoImpl extends BaseDao<PrintLog, Integer> implements Print
 				sql+=" and region_name like '%"+regionName+"%'";
 			}
 			//状态
-			sql+=" and status = ?";
+			sql+=" and status = :status";
+			sql+=" and code in (:code) ";
 			
 			Map<String, Object> params = printLog.getParams();
 			if(StringUtils.isNotEmpty(params)&& StringUtils.isNotBlank((String)params.get("beginTime"))){
@@ -75,8 +83,14 @@ public class PrintLogDaoImpl extends BaseDao<PrintLog, Integer> implements Print
 			}
 			
 		}
+		MapSqlParameterSource map = new MapSqlParameterSource();
+		List<SecurityModel> model = ShiroUtils.getUserSecurityModel();
+		List<String> codes = model.stream().map(se -> se.getPageCode()).collect(Collectors.toList());
+		map.addValue("status", printLog.getStatus());
+		map.addValue("code", codes);
 		
-		return findPageBySQL(sql, new Object[] {printLog.getStatus()},new BeanPropertyRowMapper<PrintLog>(PrintLog.class), pagination);
+		PageBean<PrintLog> pageBean = jdbcTemplateSupport.queryForPage(sql, true, null, map, new BeanPropertyRowMapper<PrintLog>(PrintLog.class));
+		return pageBean.getList();
 	}
 
 

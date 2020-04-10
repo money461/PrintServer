@@ -1,7 +1,6 @@
 package com.bondex.shiro.security.entity;
 
 import java.util.List;
-import java.util.Map;
 
 public class TokenResult {
 	private boolean success;	

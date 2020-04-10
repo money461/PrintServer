@@ -21,6 +21,11 @@ public class PrintLog extends BaseEntity {
 	@Column(name="show_num")
 	private String showNum;
 	
+	private String code; //业务code
+	
+	@Column(name="code_name")
+	private String codeName; //打印标签名称
+	
 	private Integer status;
 	
 	private String mqaddress;

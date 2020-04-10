@@ -1,7 +1,6 @@
 package com.bondex.rabbitmq.multiconfig;
 
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 
 import lombok.Data;
 

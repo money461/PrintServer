@@ -13,7 +13,7 @@
 		  <div class="col-sm-12 search-collapse">
 			<!--form表单数据搜索条件筛选区域-->
 			<form id='searchForm' class="form-horizontal center-vertical" role="form">
-			
+				<input type="text" id="code" name="code" value="${code!''}" style="display: none;"/>
 				<!--空 运标签 查询条件筛选区域-->
 		     	<div class="select-list">
 		     	  <ul>
@@ -31,27 +31,17 @@
 		     	  	 </li>
 		     	  	 <li>
 		     	  	 	<label>录入时间：</label>
-		     	  	 		<input type="text" id="start_time"  placeholder="开始时间"   name="start_time"/>
+		     	  	 		<input type="text" id="startTime"  placeholder="开始时间" name="params[startTime]"/>
 								<span>-</span>
-							<input type="text" id="end_time"  placeholder="结束时间" name="end_time"/>
+							<input type="text" id="endTime"  placeholder="结束时间" name="params[endTime]"/>
 		     	  	 </li>
 		     	  	 <li>
 		     	  	 	<label>航班日期：</label>
-		     	  	 	<input id="flight_date" type="text" name="flight_date"/>
+		     	  	 	<input id="flightDate" type="text" name="flightDate"/>
 		     	  	 </li>
-		     	  	 <!-- 
 		     	  	 <li>
 		     	  	 	<label>起始地：</label>
-		     	  	 	<input type="text" id="airport_departure" name="airport_departure" />
-		     	  	 </li>
-		     	  	 <li>
-		     	  	 	<label>目的地：</label>
-		     	  	 	<input type="text" id="destination" name="destination" />
-		     	  	 </li>
-		     	  	  -->
-		     	  	 <li>
-		     	  	 	<label>起始地：</label>
-		                <select class="select2"  type="select" id="airport_departure"  name="airport_departure" href="/labelPrint/client/getRegion" inputMessage="请输入地址简码" style="height: 30px; width: 158px;">
+		                <select class="select2"  type="select" id="airportDeparture"  name="airportDeparture" href="/labelPrint/client/getRegion" inputMessage="请输入地址简码" style="height: 30px; width: 158px;">
 		                </select>
 		     	  	 </li>
 		     	  	 <li>
@@ -61,14 +51,14 @@
 		     	  	 </li>
 		     	  	 <li>
 		     	  	 	<label>打印：</label>
-		     	  	 	<select  type="select" id="status" name="status" style="width: 158px;">
+		     	  	 	<select  type="select" id="isPrint" name="isPrint" style="width: 158px;">
 												<option value="0" selected="selected">未打印</option>
 												<option value="1">已打印</option>
 					    </select>
 		     	  	 </li>
 		     	  	 <li>
 		     	  	 	<label>录入操作：</label>
-		     	  	 	<input type="text" placeholder="请选择"  autocomplete="off" value="全部"   id="opid_name" name="opid_name" />
+		     	  	 	<input type="text" placeholder="请选择"  autocomplete="off" value="全部"   id="opidName" name="opidName" />
 		     	  	 </li>
 		     	  	 <@shiro.hasPermission  name="auth">
 		     	  	 <li><input type="text" style="display: none"/></li>
@@ -81,7 +71,7 @@
      
 		<!--表格数据展示区域-->
 		<div class="col-sm-12 select-table table-striped">
-			<table id="dg1"></table>
+			<table id="easyui-datagrid"></table>
 		</div>
 		
 	<!-- rows 结束 -->
@@ -166,7 +156,7 @@
 		<div class="form-group has-success col-sm-6">
 			<label for="disabledSelect" class="col-sm-2 control-label">起始地: </label>
 			<div class="col-sm-10">
-				<input class="form-control" id="airport_departure1" type="text" name="airport_departure" disabled="disabled">
+				<input class="form-control" id="airportDeparture1" type="text" name="airportDeparture" disabled="disabled">
 			</div>
 		</div>
 		<div class="form-group has-success col-sm-6">
@@ -178,13 +168,13 @@
 		<div class="form-group has-success col-sm-6">
 			<label class="col-sm-2 control-label" for="inputWarning">状态:</label>
 			<div class="col-sm-10">
-				<input type="text" class="form-control" id="is_print1" name="is_print" disabled="disabled">
+				<input type="text" class="form-control" id="is_print1" name="isPrint" disabled="disabled">
 			</div>
 		</div>
 		<div class="form-group has-success col-sm-6">
 			<label class="col-sm-2 control-label" for="inputWarning">入库时间:</label>
 			<div class="col-sm-10">
-				<input type="text" class="form-control" id="create_time" name="create_time" disabled="disabled">
+				<input type="text" class="form-control" id="createTime" name="createTime" disabled="disabled">
 			</div>
 		</div>
 		<div class="form-group has-success col-sm-6">
@@ -196,14 +186,14 @@
 		<div class="form-group has-success col-sm-6">
 			<label class="col-sm-2 control-label" for="inputWarning">航班日期 :</label>
 			<div class="col-sm-10">
-				<!-- <input type="text" class="form-control" id="flight_date" name="flight_date" disabled="disabled"> -->
-				<input type="text" class="form-control" name="flight_date" disabled="disabled">
+				<!-- <input type="text" class="form-control" id="flightDate" name="flightDate" disabled="disabled"> -->
+				<input type="text" class="form-control" name="flightDate" disabled="disabled">
 			</div>
 		</div>
 		<div class="form-group has-success col-sm-6">
 			<label class="col-sm-2 control-label" for="inputWarning">打印人 :</label>
 			<div class="col-sm-10">
-				<input type="text" class="form-control" id="print_user" name="print_user" disabled="disabled">
+				<input type="text" class="form-control" id="printUser" name="printUser" disabled="disabled">
 			</div>
 		</div>
 		<div class="form-group has-success col-sm-6">
@@ -229,6 +219,9 @@
 	<script src="${request.contextPath}/js/airlabel/subscribe.js"></script>
 	
 	<script  type="text/javascript">
+	
+	var code = "${code!''}";
+	sessionstorage.set('code',code);
 	
 	$(function () {
 		//var thisOpid =  ${userInfo.opid};
@@ -267,11 +260,11 @@
 			}
 		})
 	
-		$('#flight_date').datebox({
+		$('#flightDate').datebox({
 			editable:false,
 			buttons:buttons1
 		});	
-		$('#start_time').datetimebox({  
+		$('#startTime').datetimebox({  
 			width:110,
 		    required : false,  
 		    editable:false,
@@ -283,7 +276,7 @@
 		    	//label.search();
 		    }  
 		});
-		$('#end_time').datetimebox({
+		$('#endTime').datetimebox({
 			width:110,
 		    required : false,  
 		    editable:false,
@@ -320,22 +313,22 @@
 	/* layer 选择下拉框表格展示 */
 	var tableSelect = layui.tableSelect;
 	tableSelect.render({
-		elem: '#opid_name',	//定义输入框input对象 必填
-		checkedKey: 'opid_name', //表格的唯一建值，非常重要，影响到选中状态 必填
-		searchKey: 'opid_name',	//搜索输入框的name值 默认keyword
+		elem: '#opidName',	//定义输入框input对象 必填
+		checkedKey: 'opidName', //表格的唯一建值，非常重要，影响到选中状态 必填
+		searchKey: 'opidName',	//搜索输入框的name值 默认keyword
 		searchPlaceholder: '操作号/名称关键词搜索',	//搜索输入框的提示文字 默认关键词搜索
 		table: {	//定义表格参数，与LAYUI的TABLE模块一致，只是无需再定义表格elem
 		url: '/labelPrint/client/getOpidName',
 		cols: [[
 			{ type: 'radio' },
 			{ field: 'opid', title: '操作号' },
-			{ field: 'opid_name', title: '操作姓名' }
+			{ field: 'opidName', title: '操作姓名' }
 		]]
 		},
 		done: function (elem, data) {
 			var NEWJSON = [];
 			layui.each(data.data, function (index, item) {
-				NEWJSON.push(item.opid_name)
+				NEWJSON.push(item.opidName)
 			})
 			elem.val(NEWJSON.join(","));
 		}

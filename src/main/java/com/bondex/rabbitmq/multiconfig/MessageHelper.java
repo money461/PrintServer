@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.core.MessageDeliveryMode;
@@ -12,8 +11,9 @@ import org.springframework.amqp.core.MessageProperties;
 
 import com.bondex.util.JsonUtil;
 import com.bondex.util.RandomUtil;
-import com.rabbitmq.client.Channel;
+import com.bondex.util.StringUtils;
 import com.rabbitmq.client.AMQP.BasicProperties;
+import com.rabbitmq.client.Channel;
 
 
 public class MessageHelper {
@@ -34,12 +34,12 @@ public class MessageHelper {
     }
 
     //取出消息转为实体
-    public static <T> T msgToObj(Message message, Class<T> clazz) throws UnsupportedEncodingException {
+    public static <T> T msgToObj(Message message, Class<T> clazz) {
         if (null == message || null == clazz) {
             return null;
         }
 
-        String str = new String(message.getBody(),"utf-8");
+        String str = byteArrayToStr(message.getBody(),"utf-8");
         T obj = JsonUtil.strToObj(str, clazz);
 
         return obj;
@@ -56,7 +56,7 @@ public class MessageHelper {
     	MessageProperties messageProperties = message.getMessageProperties();
     	@SuppressWarnings("deprecation")
 		byte[] correlationbyte = messageProperties.getCorrelationId();//关联id 过时了spring rabbitmq 2.0新版不存在这个
-		String correlationId = new String(correlationbyte);
+    	String correlationId = byteArrayToStr(correlationbyte,"utf-8");
     	if(StringUtils.isBlank(correlationId)){
 			correlationId = RandomUtil.UUID32();
 			//重回队列
@@ -75,6 +75,19 @@ public class MessageHelper {
             return null;
 		}
     	return correlationId;
+    }
+    
+    public static String byteArrayToStr(byte[] byteArray,String charsetName) {
+        if (byteArray == null) {
+            return null;
+        }
+        String str = null;
+		try {
+			str = new String(byteArray,charsetName);
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+        return str;
     }
 
 }

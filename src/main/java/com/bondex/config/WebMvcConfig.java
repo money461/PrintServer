@@ -12,6 +12,7 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
@@ -44,6 +45,23 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
 		this.springCasAutoconfig = springCasAutoconfig;
 		this.clientloginUrl=springCasAutoconfig.getClientloginUrl();
 	}
+
+	/**
+	 * addResourceLocations 指的是文件放置的目录 
+	 * addResourceHandler 指的是对外暴露的访问路径
+	 * 添加静态资源处理器
+	 */
+	
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+//    	registry.addResourceHandler("/**").addResourceLocations("/");
+        registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/");
+    	
+    	registry.addResourceHandler("doc.html").addResourceLocations("classpath:/META-INF/resources/");
+    	registry.addResourceHandler("/swagger-ui.html").addResourceLocations("classpath:/META-INF/resources/");
+    	registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
+    	super.addResourceHandlers(registry);
+    }
 	
 	/**
 	 * 注册 拦截器
@@ -67,17 +85,19 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
 		registry.addViewController("/").setViewName("forward:"+clientloginUrl);  //请求重定向最终跳转路径http://localhost:8088/login 2次请求
 //		registry.addViewController("/").setViewName("forward:/login");  //请求转发最终路径http://localhost:8088/
 		registry.addViewController("/error/403").setViewName("/error/403"); //渲染页面视图
-		registry.addViewController("/label/airlabel").setViewName("/airlabel/airlabel"); //渲染空运标签
+		//registry.addViewController("/label/airlabel").setViewName("/airlabel/airlabel"); //渲染空运标签
 		registry.addViewController("/system/main").setViewName("/system/main"); //渲染首页
-		registry.addViewController("/admin/user").setViewName("/admin/user/userlist"); //渲染用户
-		registry.addViewController("/admin/labeltemplate").setViewName("/admin/labeltemplate/labeltemplate"); //渲染打印模板管理页面
-		registry.addViewController("/label/addtemplate").setViewName("/admin/labeltemplate/add"); //渲染添加打印模板管理页面
-		registry.addViewController("/admin/region").setViewName("/admin/region/regionlist"); //渲染区域办公室管理页面
-		registry.addViewController("/user/adduser").setViewName("/admin/user/add"); //渲染添加用户页面
-		registry.addViewController("/currentlabel/currentlabel").setViewName("/current/currentLabel"); //渲染通用标签
+		registry.addViewController("/template/addtemplate").setViewName("/admin/labeltemplate/add"); //渲染添加打印模板管理页面
+		//registry.addViewController("/user/adduser").setViewName("/admin/user/add"); //渲染添加用户页面
 		
-		registry.addViewController("/admin/labelLog").setViewName("/admin/log/labelLog"); //渲染标签日志管理页面
-		registry.addViewController("/admin/printLog").setViewName("/admin/log/printLog"); //渲染标签日志管理页面
+		
+		//registry.addViewController("/admin/user").setViewName("/admin/user/userlist"); //渲染用户
+		//registry.addViewController("/admin/labeltemplate").setViewName("/admin/labeltemplate/labeltemplate"); //渲染打印模板管理页面
+		//registry.addViewController("/admin/region").setViewName("/admin/region/regionlist"); //渲染区域办公室管理页面
+		
+		//registry.addViewController("/admin/labelLog").setViewName("/admin/log/labelLog"); //渲染标签日志管理页面
+		//registry.addViewController("/admin/printLog").setViewName("/admin/log/printLog"); //渲染标签日志管理页面
+		
 		registry.setOrder(Ordered.HIGHEST_PRECEDENCE);
 		super.addViewControllers(registry);
 	}

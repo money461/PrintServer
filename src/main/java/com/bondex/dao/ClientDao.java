@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.bondex.entity.Label;
 import com.bondex.entity.Region;
-import com.bondex.entity.UserDefaultRegion;
 
 public interface ClientDao {
 

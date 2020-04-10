@@ -14,13 +14,13 @@ public class JsonResult {
 	private int Recordindex;
 	private String Roleid;
 	private int Printbuttonindex;
-	private String Reportcategoryid;
-	private String Reportcategoryname;
-	private String Reportid;
-	private String Reportname;
+	private String Reportcategoryid; //分类id
+	private String Reportcategoryname; //分类名称
+	private String Reportid; //模板id
+	private String Reportname; //模板名称
 	private int Isvisible;
 	private int Isdefault;
-	private int Showorder;
+	private int Showorder; //展示顺序
 
 	public void setRecordindex(int Recordindex) {
 		this.Recordindex = Recordindex;

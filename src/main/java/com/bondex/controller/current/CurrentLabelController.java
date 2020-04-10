@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -16,7 +18,6 @@ import org.springframework.web.servlet.ModelAndView;
 import com.bondex.controller.BaseController;
 import com.bondex.entity.current.BaseLabelDetail;
 import com.bondex.entity.current.Baselabel;
-import com.bondex.entity.page.PageBean;
 import com.bondex.entity.page.TableDataInfo;
 import com.bondex.entity.res.AjaxResult;
 import com.bondex.service.CurrentLabelService;
@@ -24,8 +25,14 @@ import com.bondex.util.GsonUtil;
 import com.bondex.util.JsonUtil;
 import com.bondex.util.StringUtils;
 import com.google.gson.reflect.TypeToken;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 @Controller
 @RequestMapping(value="/currentlabel")
+@Api(tags = { "接口分组1", "接口分组2" })
 public class CurrentLabelController extends BaseController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -33,30 +40,71 @@ public class CurrentLabelController extends BaseController {
 	private CurrentLabelService currentLabelService;
 	
 	/**
+	 * 通用标签业务code跳转
+	 * @param parent_code
+	 * @param modelAndView
+	 * @return
+	 */
+	@ApiOperation(value = "根据业务code跳转打印数据展示页面", notes = "code必须填写", httpMethod = "GET", tags = "接口分组1")
+	@ApiImplicitParams({
+		@ApiImplicitParam(name = "code", value = "业务编码", example = "code_air", required = true, dataType = "string", paramType = "query")
+	})
+    @GetMapping("/view/{code}")
+    public ModelAndView add(@PathVariable("code") String code, ModelAndView modelAndView)
+    {
+    	modelAndView.addObject("code",code);
+    	modelAndView.setViewName("/current/currentLabel");
+        return  modelAndView;
+    }
+	
+	/**
 	 * 查询基本数据
 	 * @return
 	 */
 
+	@ApiOperation(value = "根据业务code多条件查询标签", notes = "code必须填写", httpMethod = "POST", tags = "接口分组1")
 	@RequestMapping(value="/all",method={RequestMethod.GET,RequestMethod.POST})
 	@ResponseBody
 	public Object selectBaseLabelList(BaseLabelDetail baseLabelDetail){
-		PageBean<BaseLabelDetail> list = currentLabelService.selectBaseLabelList(baseLabelDetail);
+		List<BaseLabelDetail> list = currentLabelService.selectBaseLabelList(baseLabelDetail);
 		TableDataInfo info = getDataTable(list);
-		List<BaseLabelDetail> listdata = list.getList();
-		if(StringUtils.isEmpty(listdata)){
+		if(StringUtils.isEmpty(list)){
 			info.setCode(1);
 			info.setMsg("<b style='color:red;'>抱歉，没有找到匹配的数据！</b>");
 		}
 		return info;
 	}
 	
-	
+	/**
+	 * 更新
+	 * @param list
+	 * @return
+	 */
 	@RequestMapping(value="/update",method={RequestMethod.POST})
 	@ResponseBody
 	public Object updateBaseLabel(@RequestBody List<BaseLabelDetail> list){
 		currentLabelService.updateBaseLabel(list);
 		return AjaxResult.success();
 	}
+	
+	
+	/**
+	 * 删除
+	 * @param list
+	 * @return
+	 */
+	@RequestMapping(value="/delete",method={RequestMethod.POST})
+	@ResponseBody
+	public Object deleteBaseLabel(@RequestBody List<BaseLabelDetail> list){
+		for (BaseLabelDetail baseLabelDetail : list) {
+			baseLabelDetail.setPrintStatus(4); //值为删除状态
+		}
+		currentLabelService.updateBaseLabel(list);
+		return AjaxResult.success();
+	}
+	
+	
+	
 	
 	/**
 	 * 发送通用打印数据
@@ -80,8 +128,8 @@ public class CurrentLabelController extends BaseController {
 		list = new ArrayList<Baselabel>();
 		Baselabel baselabel = new Baselabel();
 		baselabel.setShowNum("mawb2020022488888"); //展示单号
-		baselabel.setDocTypeId("OrderManageClient");
-		baselabel.setDocTypeName("订单管理请求");
+		baselabel.setDoctypeId("OrderManageClient");
+		baselabel.setDoctypeName("订单管理请求");
 		baselabel.setCopies(5);
 		baselabel.setOpid("231243");
 		baselabel.setOpidName("重庆空运操作/邹凤");

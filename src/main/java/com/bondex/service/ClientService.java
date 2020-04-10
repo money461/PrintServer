@@ -34,9 +34,10 @@ public interface ClientService {
 	 * @param report
 	 * 
 	 * @return
+	 * @throws Exception 
 	 */
 
-	void sendLabel(List<LabelAndTemplate> labelAndTemplates, String regionCode, String mqaddress);
+	void sendLabel(List<LabelAndTemplate> labelAndTemplates, String regionCode, String mqaddress) throws Exception;
 
 	List<Label> getLabel(String labels);
 

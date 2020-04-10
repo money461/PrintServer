@@ -32,15 +32,15 @@
 			<div class="row">
 				<div class="col-sm-12 search-collapse">
 					<form id="user-form">
-						<input type="hidden" id="region_code" name="region_code">
-		                <input type="hidden" id="parent_code" name="parent_code">
+						<input type="hidden" id="regionCode" name="regionCode">
+		                <input type="hidden" id="parentCode" name="parentCode">
 						<div class="select-list">
 							<ul>
 								<li>
-									操作名称：<input type="text" name="username"/>
+									操作名称：<input type="text" name="opidName"/>
 								</li>
 								<li>
-									办公室名称：<input type="text" name="region_name"/>
+									办公室名称：<input type="text" name="regionName"/>
 								</li>
 								<li>
 									用户状态：
@@ -51,8 +51,12 @@
 								</li>
 								
 								<li>
+									<@shiro.hasAnyPermissions name="${code}.btn-search">
 									<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+									 </@shiro.hasAnyPermissions>
+									<@shiro.hasAnyPermissions name="${code}.btn-realod">
 								    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+									 </@shiro.hasAnyPermissions>
 								</li>
 							</ul>
 						</div>
@@ -60,19 +64,23 @@
 				</div>
 				
 		        <div class="btn-group-sm" id="toolbar" role="group">
+					<@shiro.hasAnyPermissions name="${code}.btn-add">
 		        	<a class="btn btn-success" onclick="$.operate.addTab()" >
 		                <i class="fa fa-plus"></i> 新增
 		            </a>
-		             <a class="btn btn-primary single disabled" onclick="$.operate.editTab()">
+		         </@shiro.hasAnyPermissions>
+		         
+		             <a class="btn btn-primary single disabled" style="display: none;" onclick="$.operate.editTab()">
 			            <i class="fa fa-edit"></i> 修改
 			        </a>
-		            <a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()">
+		         
+		            <a class="btn btn-danger multiple disabled" style="display: none;"  onclick="$.operate.removeAll()">
 		                <i class="fa fa-remove"></i> 删除
 		            </a>
-		            <a class="btn btn-info" onclick="$.table.importExcel()">
+		            <a class="btn btn-info" style="display: none;"  onclick="$.table.importExcel()">
 			            <i class="fa fa-upload"></i> 导入
 			        </a>
-		            <a class="btn btn-warning" onclick="$.table.exportExcel()">
+		            <a  style="display: none;"  class="btn btn-warning" onclick="$.table.exportExcel()">
 			            <i class="fa fa-download"></i> 导出
 			        </a>
 		        </div>
@@ -94,6 +102,8 @@
 		var removeFlag = "";
 		var resetPwdFlag = "";
 		var prefix = ctx + "/user";
+		
+		var code = '${code}';
 
 		//js初始化
 		$(function() {
@@ -109,15 +119,17 @@
 		function queryUserList() {
 		    var options = {
 		        url: prefix + "/list",
-		        createUrl: prefix + "/adduser",
+		        createUrl: prefix + "/adduser/"+code,
 		        updateUrl: prefix + "/edit/{id}",
 		        removeUrl: prefix + "/remove",
 		        exportUrl: prefix + "/export",
 		        importUrl: prefix + "/importData",
 		        importTemplateUrl: prefix + "/importTemplate",
-		        sortName: "createTime", //默认排序字段
+		        sortName: "updateTime", //默认排序字段
 		        sortOrder: "desc",
-		        modalName: "操作",
+		        modalName: "用户信息",
+		        showExport:true, //是否显示导出
+		        exportDataType:'selected',
 		        columns: [{
 		            checkbox: true
 		        },
@@ -126,17 +138,17 @@
 		            title: '操作ID'
 		        },
 		        {
-		            field: 'username',
+		            field: 'opidName',
 		            title: '操作名称',
 		            width:100
 		        },
 		        {
-		            field: 'region_name',
+		            field: 'regionName',
 		            title: '打印办公室',
 		            width:100
 		        },
 		        {
-		            field: 'parent_name',
+		            field: 'parentName',
 		            title: '办公室区域',
 		            valign: 'middle',
 		            align: 'middle',
@@ -152,18 +164,25 @@
 		        	}
 		        },
 		        {
+		            field: 'updateTime',
+		            title: '更新时间',
+		            sortable: true
+		        },
+		        {
 		            field: 'createTime',
 		            title: '创建时间',
-		            sortable: true
+		            sortable: true,
+		            visible: false
 		        },
 		        {
 		            title: '操作',
 		            align: 'center',
+		            visible : false,
 		            formatter: function(value, row, index) {
 		                var actions = [];
 		                actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="$.operate.editTab(\'' + row.opid + '\')"><i class="fa fa-edit"></i>编辑</a> ');
 		                actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="$.operate.remove(\'' + row.opid + '\')"><i class="fa fa-remove"></i>删除</a> ');
-		                actions.push('<a class="btn btn-info btn-xs ' + resetPwdFlag + '" href="javascript:void(0)" onclick="resetPwd(\'' + row.opid + '\')"><i class="fa fa-key"></i>重置</a>');
+		                actions.push('<a style="display:none;" class="btn btn-info btn-xs ' + resetPwdFlag + '" href="javascript:void(0)" onclick="resetPwd(\'' + row.opid + '\')"><i class="fa fa-key"></i>重置</a>');
 		                return actions.join('');
 		            }
 		        }]
@@ -182,8 +201,8 @@
 			$.tree.init(options);
 			//选中树节点查询user数据
 			function zOnClick(event, treeId, treeNode) {
-				$("#region_code").val(treeNode.id);
-				$("#parent_code").val(treeNode.pId);
+				$("#regionCode").val(treeNode.id);
+				$("#parentCode").val(treeNode.pId);
 				$.table.search();
 			}
 		}

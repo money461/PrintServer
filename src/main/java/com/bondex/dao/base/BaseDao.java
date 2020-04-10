@@ -17,11 +17,6 @@ import com.bondex.annoation.dao.Table;
 import com.bondex.common.Common;
 import com.bondex.config.jdbc.JdbcTemplateSupport;
 import com.bondex.entity.page.PageBean;
-import com.bondex.entity.page.PageDomain;
-import com.bondex.entity.page.TableSupport;
-import com.bondex.util.sql.SqlUtil;
-import com.github.pagehelper.Page;
-import com.github.pagehelper.PageHelper;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
@@ -76,7 +71,37 @@ public class BaseDao<T, P> {
 
 		String sql = StrUtil.format("INSERT INTO {table} ({columns}) VALUES ({params})", Dict.create().set("table", table).set("columns", columns).set("params", params));
 		
+		log.debug("【执行SQL】SQL：{}", sql);
+		log.debug("【执行SQL】参数：{}", JSONUtil.toJsonStr(values));
+		return jdbcTemplate.getJdbcOperations().update(sql, values);
+	}
+	/**
+	 * 通用插入，自增列需要添加 {@link Pk} 主键注解
+	 *mysql并发插入，出现duplicate时，获取 Gap 锁 产生死锁
+	 * @param t          对象
+	 * @param ignoreNull 是否忽略 null 值
+	 * @return 操作的行数
+	 */
+	protected Integer insertforUpdate(T t, Boolean ignoreNull) {
+		String table = getTableName(t);
+		
+		List<Field> filterField = getField(t, ignoreNull);
+		
+		List<String> columnList = getColumns(filterField);
+		
+		String columns = StrUtil.join(Common.SEPARATOR_COMMA, columnList);
+		
+		// 构造占位符
+		String params = StrUtil.repeatAndJoin("?", columnList.size(), Common.SEPARATOR_COMMA);
+		
+		// 构造值
+		Object[] values = filterField.stream().map(field -> ReflectUtil.getFieldValue(t, field)).toArray();
+		
+		String sql = StrUtil.format("INSERT INTO {table} ({columns}) VALUES ({params})", Dict.create().set("table", table).set("columns", columns).set("params", params));
+		
 		sql+= " ON DUPLICATE KEY UPDATE ";
+		
+		columnList.remove("`create_time`"); //跳过create_time 字段不许更新
 		
 		for (int i=0;i<columnList.size();i++) {
 			String column = columnList.get(i);
@@ -88,7 +113,7 @@ public class BaseDao<T, P> {
 		}
 		log.debug("【执行SQL】SQL：{}", sql);
 		log.debug("【执行SQL】参数：{}", JSONUtil.toJsonStr(values));
-		return jdbcTemplate.update(sql, values);
+		return jdbcTemplate.getJdbcOperations().update(sql, values);
 	}
 
 	/**
@@ -99,10 +124,11 @@ public class BaseDao<T, P> {
 	 */
 	protected Integer deleteById(P pk) {
 		String tableName = getTableName();
-		String sql = StrUtil.format("DELETE FROM {table} where id = ?", Dict.create().set("table", tableName));
+		String id = getPKFieldName();
+		String sql = StrUtil.format("DELETE FROM {table} where {id} = ?", Dict.create().set("table", tableName).set("id", id));
 		log.debug("【执行SQL】SQL：{}", sql);
 		log.debug("【执行SQL】参数：{}", JSONUtil.toJsonStr(pk));
-		return jdbcTemplate.update(sql, pk);
+		return jdbcTemplate.getJdbcOperations().update(sql, pk);
 	}
 
 	/**
@@ -128,11 +154,11 @@ public class BaseDao<T, P> {
 		valueList.add(pk);
 
 		Object[] values = ArrayUtil.toArray(valueList, Object.class);
-
-		String sql = StrUtil.format("UPDATE {table} SET {params} where id = ?", Dict.create().set("table", tableName).set("params", params));
+		String id = getPKFieldName();
+		String sql = StrUtil.format("UPDATE {table} SET {params} where {id} = ?", Dict.create().set("table", tableName).set("id", id).set("params", params));
 		log.debug("【执行SQL】SQL：{}", sql);
 		log.debug("【执行SQL】参数：{}", JSONUtil.toJsonStr(values));
-		return jdbcTemplate.update(sql, values);
+		return jdbcTemplate.getJdbcOperations().update(sql, values);
 	}
 
 	/**
@@ -143,11 +169,12 @@ public class BaseDao<T, P> {
 	 */
 	public T findOneById(P pk) {
 		String tableName = getTableName();
-		String sql = StrUtil.format("SELECT * FROM {table} where id = ?", Dict.create().set("table", tableName));
+		String id = getPKFieldName();
+		String sql = StrUtil.format("SELECT * FROM {table} where {id} = ?", Dict.create().set("table", tableName).set("id", id));
 		RowMapper<T> rowMapper = new BeanPropertyRowMapper<>(clazz);
 		log.debug("【执行SQL】SQL：{}", sql);
 		log.debug("【执行SQL】参数：{}", JSONUtil.toJsonStr(pk));
-		return jdbcTemplate.queryForObject(sql, new Object[]{pk}, rowMapper);
+		return jdbcTemplate.getJdbcOperations().queryForObject(sql, new Object[]{pk}, rowMapper);
 	}
 
 	/**
@@ -170,7 +197,7 @@ public class BaseDao<T, P> {
 		String sql = StrUtil.format("SELECT * FROM {table} where 1=1 {where}", Dict.create().set("table", tableName).set("where", StrUtil.isBlank(where) ? "" : where));
 		log.debug("【执行SQL】SQL：{}", sql);
 		log.debug("【执行SQL】参数：{}", JSONUtil.toJsonStr(values));
-		List<Map<String, Object>> maps = jdbcTemplate.queryForList(sql, values);
+		List<Map<String, Object>> maps = jdbcTemplate.getJdbcOperations().queryForList(sql, values);
 		List<T> ret = CollUtil.newArrayList();
 		maps.forEach(map -> ret.add(BeanUtil.fillBeanWithMap(map, ReflectUtil.newInstance(clazz), true, false)));
 		return ret;
@@ -180,7 +207,7 @@ public class BaseDao<T, P> {
 	 * @param t
 	 * @return
 	 */
-	public  PageBean<T> findPageByExample(T t,RowMapper<T> rowMapper,Page<T> pagination) {
+	public  PageBean<T> findPageByExample(T t,Boolean underScoreCase,RowMapper<T> rowMapper) {
 		String tableName = getTableName(t);
 		List<Field> filterField = getField(t, true);
 		List<String> columnList = getColumns(filterField);
@@ -194,15 +221,15 @@ public class BaseDao<T, P> {
 		String sql = StrUtil.format("SELECT * FROM {table} where 1=1 {where}", Dict.create().set("table", tableName).set("where", StrUtil.isBlank(where) ? "" : where));
 		log.debug("【执行SQL】SQL：{}", sql);
 		log.debug("【执行SQL】参数：{}", JSONUtil.toJsonStr(values));
-		PageBean<T> pageBean = jdbcTemplate.queryForPage(sql, pagination, values,rowMapper);
+		PageBean<T> pageBean = jdbcTemplate.queryForPage(sql, underScoreCase,tableName, values,rowMapper);
 		return pageBean;
 	}
 	
 	
-	public  PageBean<T> findPageBySQL(String sql,Object[] values,RowMapper<T> rowMapper,Page<T> pagination) {
+	public  PageBean<T> findPageBySQL(String sql,Boolean underScoreCase,String tableName,Object[] values,RowMapper<T> rowMapper) {
 		log.debug("【执行SQL】SQL：{}", sql);
 		log.debug("【执行SQL】参数：{}", JSONUtil.toJsonStr(values));
-		PageBean<T> pageBean = jdbcTemplate.queryForPage(sql, pagination, values,rowMapper);
+		PageBean<T> pageBean = jdbcTemplate.queryForPage(sql, underScoreCase,tableName, values,rowMapper);
 		return pageBean;
 	}
 
@@ -237,7 +264,30 @@ public class BaseDao<T, P> {
 			return StrUtil.format("`{}`", clazz.getName().toLowerCase());
 		}
 	}
-
+	
+	/**
+	 * 获取主键id name
+	 * @return
+	 */
+	private String getPKFieldName() {
+		// 获取所有字段，包含父类中的字段
+		Field[] fields = ReflectUtil.getFields(clazz);
+		//不存在 Ignore和 PK注解的字段
+		List<Field> filterField = CollUtil.toList(fields).stream().filter(field -> ObjectUtil.isNotNull(field.getAnnotation(Pk.class))).collect(Collectors.toList());
+		String idName="";
+		if(null!=filterField){
+			Field field = filterField.get(0);
+			Column annotation = field.getAnnotation(Column.class);
+			if(ObjectUtil.isNotNull(annotation)){
+				idName = annotation.name();
+			}else{
+				idName=field.getName();
+			}
+		}
+		return idName;
+	}
+	
+	
 	/**
 	 * 获取列
 	 *
@@ -287,22 +337,5 @@ public class BaseDao<T, P> {
 		return filterField;
 	}
 	
-	 /**
-     * 设置请求分页数据 
-     * @param tableStyle 表格类型
-     * @param underScoreCase 排序字段是否驼峰命名
-     */
-	protected Page<T> startPage(Boolean underScoreCase)
-    {
-        PageDomain pageDomain = TableSupport.buildPageRequest();
-        Integer pageNum = pageDomain.getPageNum();
-        Integer pageSize = pageDomain.getPageSize();
-        if (com.bondex.util.StringUtils.isNotNull(pageNum) && com.bondex.util.StringUtils.isNotNull(pageSize))
-        {
-            String orderBy = SqlUtil.escapeOrderBySql(pageDomain.getOrderBy(underScoreCase));
-            return PageHelper.startPage(pageNum, pageSize, orderBy);
-        }
-		return  PageHelper.startPage(1,20,null);
-    }
-	
+
 }

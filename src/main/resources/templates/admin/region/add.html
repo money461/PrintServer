@@ -13,7 +13,7 @@
 				<label class="col-sm-3 control-label ">上级区域：</label>
 				<div class="col-sm-8">
 				    <div class="input-group">
-						<input class="form-control" type="text"  id="treeName"  name="parent_name" value="${region.region_name!}" required>
+						<input class="form-control" type="text"  id="treeName"  name="parentName" value="${region.regionName!}" required>
 					    <span class="input-group-addon"><i class="fa fa-search"></i></span>
 				    </div>
 				</div>
@@ -22,7 +22,7 @@
 				<label class="col-sm-3 control-label ">上级区域简码：</label>
 				<div class="col-sm-8">
 				    <div class="input-group">
-						<input class="form-control" type="text" id="treeId" name="parent_code"  value="${region.region_code!}" required>
+						<input class="form-control" type="text" id="treeId" name="parentCode"  value="${region.regionCode!}" required>
 					    <span class="input-group-addon"><i class="fa fa-search"></i></span>
 				    </div>
 				</div>
@@ -31,13 +31,25 @@
 			<div class="form-group">
 				<label class="col-sm-3 control-label">办公室名称：</label>
 				<div class="col-sm-8">
-					<input class="form-control" type="text" name="region_name" id="region_name" required>
+					<input class="form-control" type="text" name="regionName" id="regionName" required>
 				</div>
 			</div>
 			<div class="form-group">
 				<label class="col-sm-3 control-label">办公室简码：</label>
 				<div class="col-sm-8">
-					<input class="form-control" type="text" name="region_code" id="region_code" required>
+					<input class="form-control" type="text" name="regionCode" id="regionCode" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">打印机名称：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="printerName" id="printerName" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">打印机IP：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="printerIp" id="printerIp" required>
 				</div>
 			</div>
 			
@@ -51,10 +63,10 @@
 	<script  type="text/javascript">
 	 
 		//判断父级节点是否可编辑
-		//var parent_name = '${region.region_name}'; 
+		//var parentName = '${region.regionName}'; 
 		var prefix = ctx + "/region";
-		var parent_name=$("#treeName").val();
-		if($.common.isNotEmpty(parent_name)){
+		var parentName=$("#treeName").val();
+		if($.common.isNotEmpty(parentName)){
 			//不可以编辑
 			$("#treeName").attr("readonly",true)//将input元素设置为readonly
 			$("#treeName").attr("onclick","selectregionTree();");//将input元素onclick="selectregionTree()"
@@ -68,15 +80,16 @@
 		$("#form-region-add").validate({
 			onkeyup: false,
 			rules:{
-				region_code:{
+				regionCode:{
 					remote: {
 		                url: prefix + "/checkregionCodeUnique", //校验字段唯一
 		                type: "post",
+		                async: false, //同步加载
 		                dataType: "json",
 		                data: {
-		                	"region_code": function() {
-		                		//return $("input[name='region_code']").val(); //取出办公室简码
-		                		return $.common.trim($("#region_code").val())
+		                	"regionCode": function() {
+		                		//return $("input[name='regionCode']").val(); //取出办公室简码
+		                		return $.common.trim($("#regionCode").val())
 		                    }
 		                	
 		                },
@@ -85,18 +98,19 @@
 		                }
 		            }
 				},
-			  region_name:{
+			  regionName:{
 				  remote: {
 		                url: prefix + "/checkregionCodeUnique", //校验字段唯一
 		                type: "post",
+		                async: false, //同步加载
 		                dataType: "json",
 		                data: {
-		                	"parent_code": function() {
+		                	"parentCode": function() {
 		                		return $.common.trim($("#treeId").val()); //取出父级简码
 		                		
 		                    },
-		                	"region_name" : function() {
-		                        return $.common.trim($("#region_name").val()); //取出办公室名称
+		                	"regionName" : function() {
+		                        return $.common.trim($("#regionName").val()); //取出办公室名称
 		                    }
 		                },
 		                dataFilter: function(data, type) { //后台返回0 不存在    返回1 存在
@@ -104,16 +118,17 @@
 		                }
 		            }
 			  },
-			    parent_name:{
+			    parentName:{
 				  remote: {
 		                url: prefix + "/checkregionCodeUnique", //校验字段唯一
 		                type: "post",
+		                async: false, //同步加载
 		                dataType: "json",
 		                data: {
-		                	"parent_code": function() {
+		                	"parentCode": function() {
 		                		return $.common.trim($("#treeId").val()); //取出父级简码
 		                    },
-		                	"parent_name" : function() {
+		                	"parentName" : function() {
 		                		return $.common.trim($("#treeName").val());; //取出父级简码
 		                    }
 		                },
@@ -122,16 +137,17 @@
 		                }
 		            }
 			  },
-			  parent_code:{
+			  parentCode:{
 				  remote: {
 		                url: prefix + "/checkregionCodeUnique", //校验字段唯一
 		                type: "post",
+		                async: false, //同步加载
 		                dataType: "json",
 		                data: {
-		                	"parent_code": function() {
+		                	"parentCode": function() {
 		                		return $.common.trim($("#treeId").val()); //取出父级简码
 		                    },
-		                	"parent_name" : function() {
+		                	"parentName" : function() {
 		                		return $.common.trim($("#treeName").val());; //取出父级简码
 		                    }
 		                },
@@ -143,26 +159,30 @@
 			  
 			},
 			messages: {
-		        "region_code": {
+		        "regionCode": {
 		            remote: "办公室简码已经存在"
 		        },
-		        "region_name": {
+		        "regionName": {
 		            remote: $("#treeName").val()+"的办公室名称已经存在"
 		        },
-		        "parent_code": {
+		        "parentCode": {
 		            remote: "区域简码或名称已存在"
 		        },
-		        "parent_name": {
+		        "parentName": {
 		            remote: "区域名称或简码已存在"
 		        }
 		    },
 		    focusCleanup: true
 		});
 		
+		var treeNameId=undefined;
+		
 		//确定保存
 		function submitHandler() {
 	        if ($.validate.form()) {
-	        	region.saveOrUpdateRegion(prefix + "/saveOrUpdateRegion", $('#form-region-add').serialize());
+	        	var param = $.common.formToJSON('form-region-add');
+	        	 param.parentName = $("#"+treeNameId).val();
+	        	region.saveOrUpdateRegion(prefix + "/saveOrUpdateRegion", param);
 	        }
 	    }
 	
@@ -232,6 +252,8 @@
 		        // 加载完成后的回调函数
 		        success: function (d) {
 		            console.log(d);
+		            var res = $.common.split(d.treeId,'-');
+		            treeNameId = 'treeSelect-input-'+res[2]; //treeSelect-input-1586258453637 获取iput框的id
 //		                选中节点，根据id筛选
 		     // treeSelect.checkNode('tree', 'xidun');
 //		                获取zTree对象，可以调用zTree方法 该方法应保证在渲染完成后再执行

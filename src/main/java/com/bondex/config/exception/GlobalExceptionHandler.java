@@ -7,12 +7,10 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.shiro.authz.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.ModelAndView;
 
 import com.bondex.common.enums.ResEnum;
 import com.bondex.entity.res.AjaxResult;
@@ -90,6 +88,28 @@ public class GlobalExceptionHandler
             LinkedHashMap<String, Object> modelMap = new LinkedHashMap<String,Object>();
             modelMap.put("message", e.getMessage());
             modelMap.put("code", e.getCode());
+            modelMap.put("url",request.getRequestURL());
+            return ResultUtil.view("error/error", modelMap);
+        }
+    }
+    
+    /**
+     * 自定义验证异常
+     */
+    @ExceptionHandler(BindException.class)
+    public Object validatedBindException(HttpServletRequest request,BindException e)
+    {
+    	log.error("[捕捉自定义异常--请求URL:][{}],原因：{},{}",request.getRequestURL(),e.getMessage(),e);
+        if (ServletUtils.isAjaxRequest(request))
+        {
+            String message = e.getAllErrors().get(0).getDefaultMessage();
+            return AjaxResult.error(message);
+        }
+        else
+        {
+            LinkedHashMap<String, Object> modelMap = new LinkedHashMap<String,Object>();
+            modelMap.put("message", e.getMessage());
+            modelMap.put("code", ResEnum.Bindvalidation);
             modelMap.put("url",request.getRequestURL());
             return ResultUtil.view("error/error", modelMap);
         }

@@ -3,6 +3,7 @@ package com.bondex.controller;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -182,6 +183,21 @@ public class LoginController {
 
 		return buffer.toString();
 	}
+	/**
+	 * 获取菜单数据
+	 * @param request
+	 * @param response
+	 * @param opid
+	 * @return
+	 */
+	@RequestMapping(value="getOpidSecurityModel",method=RequestMethod.GET)
+	@ResponseBody
+	public SortedSet<SecurityModel> getOpidSecurityModel(HttpServletRequest request, HttpServletResponse response) {
+		SortedSet<SecurityModel> userSecurityModelInfo = ShiroUtils.getUserSecurityModelInfo();
+		return userSecurityModelInfo;
+	}
+	
+	
 	
 	
 	/**
@@ -193,8 +209,8 @@ public class LoginController {
 	 */
 	@RequestMapping(value = { "/accountSwitch" }, method = RequestMethod.POST, produces = { "application/json; charset=UTF-8" })
 	@ResponseBody
-	public MsgResult accountSwitch(String opid, String opid_name, HttpServletRequest request, HttpServletResponse reponse) throws Exception {
-		log.debug("切换操作账户:{}-{} 。。。。。。。。。。。。。。。。。。。。。。。。。。",opid,opid_name);
+	public MsgResult accountSwitch(String opid, String opidName, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		log.debug("切换操作账户:{}-{} 。。。。。。。。。。。。。。。。。。。。。。。。。。",opid,opidName);
 		UserInfo userInfo = (UserInfo)ShiroUtils.getSubject().getPrincipal();
 		//重新绑定opid与token
 		Boolean flag = SecurityService.BindingOpid(opid,userInfo.getToken());
@@ -205,6 +221,8 @@ public class LoginController {
 			ShiroUtils.clearCachedAuthorizationInfo();
 			//退出 清除认证
 			ShiroUtils.logout();
+			
+			//request.getRequestDispatcher("/index").forward(request, response); //内部转发，页面不跳转
 			
 			return new MsgResult(ResEnum.SUCCESS.CODE, "账户切换成功！");
 		}else{

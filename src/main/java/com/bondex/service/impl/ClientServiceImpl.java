@@ -3,13 +3,15 @@ package com.bondex.service.impl;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +31,12 @@ import org.springframework.web.client.RestTemplate;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.bondex.common.ComEnum;
 import com.bondex.common.Common;
 import com.bondex.config.exception.BusinessException;
 import com.bondex.dao.ClientDao;
 import com.bondex.dao.LabelInfoDao;
+import com.bondex.dao.PrintLogDao;
 import com.bondex.entity.Label;
 import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.Region;
@@ -42,6 +46,7 @@ import com.bondex.entity.area.Search;
 import com.bondex.entity.client.Client;
 import com.bondex.entity.client.ClientData;
 import com.bondex.entity.client.VwOrderAll;
+import com.bondex.entity.log.PrintLog;
 import com.bondex.entity.page.Datagrid;
 import com.bondex.mapper.TemplateDataMapper;
 import com.bondex.rabbitmq.Producer;
@@ -65,6 +70,8 @@ public class ClientServiceImpl implements ClientService {
 	private RestTemplate restTemplate;
 	@Autowired
 	private ClientDao clientDao;
+	@Autowired
+	private PrintLogDao  printLogDao;
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 	@Autowired
@@ -126,8 +133,8 @@ public class ClientServiceImpl implements ClientService {
 				new Object[] { label2.getReserve3()},
 				new BeanPropertyRowMapper<Template>(Template.class));
 		
-		client.setReportID(template.get(0).getTemplate_id());// 报表id
-		client.setReportTplName(template.get(0).getTemplate_name());// 标签名称
+		client.setReportID(template.get(0).getTemplateId());// 报表id
+		client.setReportTplName(template.get(0).getTemplateName());// 标签名称
 		client.setSenderName(userInfo.getOpname() + "/" + userInfo.getPsnname()); //此处改动 不清楚
 		client.setSendOPID(userInfo.getOpid());// 操作号
 		client.setNoToShow(label2.getMawb() + "_" + label2.getHawb());// 要显示的单号
@@ -138,7 +145,7 @@ public class ClientServiceImpl implements ClientService {
 		vwOrderAll.setMblno(label2.getMawb());
 		vwOrderAll.setHblno(label2.getHawb());
 		vwOrderAll.setTquantity(label2.getTotal());// 件数
-		vwOrderAll.setDportcode(label2.getAirport_departure());// 起始地
+		vwOrderAll.setDportcode(label2.getAirportDeparture());// 起始地
 		vwOrderAll.setAprotcode(label2.getDestination());// 目的地
 
 		vwOrderAlls.add(vwOrderAll);
@@ -160,35 +167,69 @@ public class ClientServiceImpl implements ClientService {
 	 * @param mqaddress vpnnet 内网  outnet外网
 	 * @param labelAndTemplate 
 	 * @return
+	 * @throws Exception 
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public void sendLabel(List<LabelAndTemplate> labelAndTemplates, String regionCode,String mqaddress) {
-		
+	public void sendLabel(List<LabelAndTemplate> labelAndTemplates, String regionCode,String mqaddress) throws Exception {
 		UserInfo userInfo = ShiroUtils.getUserInfo();
-		// 获取打印区域
-		// 获取打印区域 从数据库中获取
-		Region defaultRegion = clientDao.getRegionByRegioncode(regionCode);
+		String gsonString = GsonUtil.GsonString(labelAndTemplates);
+		logger.debug("打印的数据：{}",gsonString);
+		PrintLog printLog = new PrintLog();
+		Date date=  Date.from(LocalDateTime.now().toInstant(ZoneOffset.of("+8"))); //默认时区为东8区
+		printLog.setUpdateTime(date);
+		printLog.setCreateTime(date);
+		printLog.setMessage(gsonString);
+		printLog.setStatus(1); //打印失败
+		printLog.setMqaddress(mqaddress);
+		printLog.setOpid(userInfo.getOpid());
+		printLog.setOpidName(userInfo.getOpname());
+	 try {
+	
+	    String id = labelAndTemplates.stream().map(res -> String.valueOf(res.getLabelId())).collect(Collectors.joining(","));
+	    printLog.setLabelId(id);
+		LabelAndTemplate labelDetail = labelAndTemplates.get(0);
+		printLog.setCode(labelDetail.getCode()); //业务code
+		printLog.setCodeName(labelDetail.getCodeName());
+		
+		String showNum = labelAndTemplates.stream().map(label ->{
+			if(ComEnum.PaiangLabel.code.equals(label.getCode())){
+				return  label.getMBLNo(); //派昂展示运单号
+			}else{
+				return label.getMawb(); //空运标签业务展示主单号
+			}
+			
+		}).collect(Collectors.joining(","));
+		
+		printLog.setShowNum(showNum);
 		
 		List<Client> clients = new ArrayList<>();
-		//判断是否拥有权限
-		for (LabelAndTemplate label : labelAndTemplates) {
+		Region defaultRegion=null;
+		try {
+		// 获取打印区域
+		// 获取打印区域 从数据库中获取
+		 defaultRegion = clientDao.getRegionByRegioncode(regionCode);
+		 printLog.setQueueCode(defaultRegion.getParentCode()+"_"+defaultRegion.getRegionCode()); //打印办公室
+		 printLog.setRegionName(defaultRegion.getParentName()+"/"+defaultRegion.getRegionName());
+		 //判断是否拥有权限
+		 for (LabelAndTemplate label : labelAndTemplates) {
 			String reserve3 = label.getReserve3();
 			Template template = labelInfoDao.checkUseTemplate(reserve3);
 			//为了防止前端传过来的数据有误
-			String template_id = template.getTemplate_id();
-			label.setTemplate_id(template_id);
-			label.setTemplate_name(template.getTemplate_name());
+			String template_id = template.getTemplateId();
+			label.setTemplateId(template_id);
+			label.setTemplateName(template.getTemplateName());
 			label.setWidth(template.getWidth());
 			label.setHeight(template.getHeight());
 			
-			//根据打印模板 封装打印客户端数据
-			if ("4e2b8f59-9858-4297-962f-6ee4862085aa".equals(template_id)) { 
+			//根据打印模板 封装打印客户端数据  
+			if (ComEnum.PaiangLabel.code.equals(label.getCode())) {  //派昂医药标签
 				List<Client> list = getPaiangClients(label, userInfo);
 				clients.addAll(list);
 			} else {
 				String t[] = label.getTotal().split("\\.");
 				label.setTotal(t[0]);
+				//封装打印客户端 且发送客户端
 				Client client = getClients(label, userInfo);
 				clients.add(client);
 			}
@@ -196,29 +237,50 @@ public class ClientServiceImpl implements ClientService {
 			// 发送消息 并且 更新所有打印数据状态为"已打印"
 			//当前时间
 //			LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HHmmss"))
-			String nowTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 			//修改状态
-			clientDao.update("update label set is_print = '1',reserve2='" + nowTime + "',print_user = '" + userInfo.getOpname()	+ "'  where label_id = '" + label.getLabel_id() + "'");
+			clientDao.update("update label set is_print = '1',print_time=NOW(),print_user = '" + userInfo.getOpname()	+ "'  where label_id = '" + label.getLabelId() + "'");
 			
+		 }
+			printLog.setStatus(0); //打印成功
+			printLog.setReason("打印数据发送成功！");
+		 
+		} catch (Exception e) {
+			throw new BusinessException("封装打印数据发送异常！原因："+e.getMessage());
 		}
+	
+		printLog.setMessage(GsonUtil.GsonString(clients)); //记录打印数据
 		
+		try {
 		
-		for (Client client : clients) {
-			// 发送MQ 执行打印
-			try {
-				if(Common.MQAddress_VPNNET.equals(mqaddress)){
-					producer.vpnNetPrint(client, defaultRegion); //发送内网
-				}else if(Common.MQAddress_OUTNET.equals(mqaddress)){
-					producer.outNetPrint(client, defaultRegion); //发送外网
-				}else{
-					producer.print(client, defaultRegion); //封装打印信息 携带打印区域
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
+			for (Client client : clients) {
+				// 发送MQ 执行打印
+					if(Common.MQAddress_VPNNET.equals(mqaddress)){
+						producer.vpnNetPrint(client, defaultRegion); //发送内网
+					}else if(Common.MQAddress_OUTNET.equals(mqaddress)){
+						producer.outNetPrint(client, defaultRegion); //发送外网
+					}else{
+						producer.print(client, defaultRegion); //封装打印信息 携带打印区域
+					}
 			}
+		
+		} catch (Exception e) {
+			throw new BusinessException("发送至"+mqaddress+"打印消息失败！原因："+e.getMessage());
 		}
-
-	}
+		
+	 } catch (BusinessException e) { //自定义异常
+			printLog.setReason(e.getMessage());
+			
+	 } catch (Exception e) {
+			printLog.setReason("打印逻辑发生未知异常！"+e.getMessage());
+		 
+	 }finally{
+		 printLogDao.insertPrintLog(printLog); //打印日志入库
+	 }
+	 
+	 if(1==printLog.getStatus()){
+			throw new BusinessException("失败！"+printLog.getReason());
+	 }
+}
 
 
 	/**
@@ -236,9 +298,9 @@ public class ClientServiceImpl implements ClientService {
 			for (String no : str) {
 					Client client = new Client();// 打印客户端数据结构
 					
-					String template_id =label.getTemplate_id();
+					String template_id =label.getTemplateId();
 					client.setReportID(template_id);// 模板id
-					client.setReportTplName(label.getTemplate_name());// 标签名称
+					client.setReportTplName(label.getTemplateName());// 标签名称
 		
 					client.setSenderName(userInfo.getOpname() + "/" + userInfo.getPsnname()); //此处改动不是很清楚
 					client.setSendOPID(userInfo.getOpid());// 操作号
@@ -250,7 +312,7 @@ public class ClientServiceImpl implements ClientService {
 					
 					client.setCopies(1);// 标签打印份数
 		
-					Label clone = CloneUtils.clone(label);
+					LabelAndTemplate clone = CloneUtils.clone(label);
 					clone.setSerialNo(no);
 					
 					JSONArray array = new JSONArray();
@@ -273,9 +335,9 @@ public class ClientServiceImpl implements ClientService {
 			ClientData clientData = new ClientData();
 			List<Object> vwOrderAlls = new ArrayList<Object>();
 			
-			String template_id =label.getTemplate_id();
+			String template_id =label.getTemplateId();
 			client.setReportID(template_id);// 模板id
-			client.setReportTplName(label.getTemplate_name());// 标签名称
+			client.setReportTplName(label.getTemplateName());// 标签名称
 
 			client.setSenderName(userInfo.getOpname() + "/" + userInfo.getPsnname()); //此处改动不是很清楚
 			client.setSendOPID(userInfo.getOpid());// 操作号
@@ -285,7 +347,7 @@ public class ClientServiceImpl implements ClientService {
 			client.setReportWidth(label.getWidth());// 标签宽度，单位毫米（目前定死）
 			client.setReportHeight(label.getHeight());// 标签高度，单位毫米（目前定死）
 			
-				//封装空运标签数据打印格式 
+				//封装空运标签数据打印格式  重庆标签 打印模板
 				if("2785d11a-e261-4c61-8096-8f9f21e2a3f0".equals(template_id)){
 					
 					if(StringUtils.isBlank(label.getHawb())){
@@ -309,7 +371,7 @@ public class ClientServiceImpl implements ClientService {
 						}
 						jsonObject2.put("HawbNo", labelAndTemplate.getHawb());
 						jsonObject2.put("MawbNo", labelAndTemplate.getMawb());
-						jsonObject2.put("Depature", labelAndTemplate.getAirport_departure());
+						jsonObject2.put("Depature", labelAndTemplate.getAirportDeparture());
 					}
 					
 					vwOrderAlls. add(jsonObject2);
@@ -319,7 +381,7 @@ public class ClientServiceImpl implements ClientService {
 					vwOrderAll.setMblno(label.getMawb()); //主单
 					vwOrderAll.setHblno(label.getHawb()); //分单
 					vwOrderAll.setTquantity(label.getTotal());// 件数
-					vwOrderAll.setDportcode(label.getAirport_departure());// 起始地
+					vwOrderAll.setDportcode(label.getAirportDeparture());// 起始地
 					vwOrderAll.setAprotcode(label.getDestination());// 目的地
 					vwOrderAlls.add(vwOrderAll);
 				}
@@ -378,14 +440,14 @@ public class ClientServiceImpl implements ClientService {
 	 * 查询绑定或者临时的办公室信息
 	 */
 	@Override
-	public Region getDefaultBindRegionByOpid(String default_region_code, String opid) {
+	public Region getDefaultBindRegionByOpid(String default_region, String opid) {
 		Region region = null;
-		if (StringUtils.isBlank(default_region_code)) {
+		if (StringUtils.isBlank(default_region)) {
 			// 查询用户绑定的默认办公室
 			region = clientDao.getDefaultBindRegionByOpid(opid);
 		} else {
 			// 查询临时办公室
-			region = clientDao.getRegionByRegioncode(default_region_code);
+			region = clientDao.getRegionByRegioncode(default_region);
 		}
 		return region;
 	}

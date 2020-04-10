@@ -3,6 +3,8 @@ import java.lang.reflect.Type;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.stream.Collectors;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.mgt.RealmSecurityManager;
@@ -13,7 +15,9 @@ import org.apache.shiro.subject.Subject;
 import com.bondex.common.Common;
 import com.bondex.shiro.realm.ShiroRealm;
 import com.bondex.shiro.security.entity.JsonResult;
+import com.bondex.shiro.security.entity.SecurityModel;
 import com.bondex.shiro.security.entity.UserInfo;
+import com.bondex.util.CommonTool;
 import com.bondex.util.GsonUtil;
 import com.google.gson.reflect.TypeToken;
 
@@ -38,6 +42,10 @@ public class ShiroUtils
     	return (UserInfo)getSubject().getPrincipal();
     }
     
+    /**
+     * 打印模块权限
+     * @return
+     */
     public static List<JsonResult> getUserPrintTemplateInfo(){
     	Session session = getSession();
 		UserInfo userInfo = ShiroUtils.getUserInfo();
@@ -48,6 +56,30 @@ public class ShiroUtils
 		List<List<JsonResult>> jsonResultsList = GsonUtil.getGson().fromJson(GsonUtil.GsonString(object), objectType);
 		List<JsonResult> jsonResults =jsonResultsList.get(0);	
 		return jsonResults;
+    }
+    /**
+     * 菜单模块权限(未排序)
+     * @return
+     */
+    public static List<SecurityModel> getUserSecurityModel(){
+    	Session session = getSession();
+    	UserInfo userInfo = ShiroUtils.getUserInfo();
+    	Map<String, Object> map = (Map<String, Object>) session.getAttribute(Common.Session_UserSecurity);
+    	Object object = map.get(userInfo.getOpid() + Common.UserSecurity_Model);
+    	Type objectTypemenu = new TypeToken<List<SecurityModel>>() {}.getType();
+		List<SecurityModel>  securityModels =  GsonUtil.getGson().fromJson(GsonUtil.GsonString(object), objectTypemenu);
+		List<SecurityModel> list = securityModels.stream().filter(x ->	x.getPageCode().endsWith("_label")).collect(Collectors.toList());
+    	return list;
+    }
+    
+    /**
+     * 菜单跳转权限(排序过的)
+     * @return
+     */
+    public static SortedSet<SecurityModel> getUserSecurityModelInfo(){
+    	UserInfo userInfo = ShiroUtils.getUserInfo();
+    	SortedSet<SecurityModel> menus = userInfo.getMenus();
+    	return menus;
     }
 
     public static void logout()
