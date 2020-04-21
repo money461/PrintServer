@@ -94,6 +94,17 @@ public class HttpRestTemplateUtil {
         log.info("POST_RESPONSE: {}", result);
         return result;
     }
+    
+    public static final <T, E> T doPost(String url, E data, HttpHeaders headers, Class<T> returnType) {
+    	log.info("POST_REQUEST: {}, {}, {}, {}", url, data, returnType.getName());
+    	
+    	HttpEntity<E> entity = new HttpEntity<>(data, headers);
+    	
+    	T result = restTemplate.postForObject(url, entity, returnType); //postForObject 返回的是一个对象，这个对象就是服务端返回的具体值。
+    	
+    	log.info("POST_RESPONSE: {}", result);
+    	return result;
+    }
 
     
     /**

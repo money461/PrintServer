@@ -27,9 +27,9 @@
 							</li>
 							<li>
 								<label>入库时间： </label>
-								<input type="text" id="start_time"  placeholder="开始时间"   name="params[beginTime]"/>
+								<input type="text" id="startTime" placeholder="开始时间"   name="params[beginTime]"/>
 								<span>-</span>
-								<input type="text" id="end_time"  placeholder="结束时间" name="params[endTime]"/>
+								<input type="text" id="endTime"   placeholder="结束时间" name="params[endTime]"/>
 							</li>
 							<li>
 								<label>打印人：</label>
@@ -80,7 +80,38 @@
 	<script  type="text/javascript"> // 需要添加 th:inline 才能访问 model 中的属性
 	
 			var code = "${code!''}";
-			sessionstorage.set('code',code);
+			
+			 //设置时间插件
+		       var buttons = $.extend([], $.fn.datebox.defaults.buttons);
+			    buttons.splice(1, 0, {
+			    	text: '清空',
+			    	handler: function(target){
+			    		$(target).datebox('setValue','');
+			    	}
+			    });
+		       //开始时间插件
+		       var startTime = $('#startTime').datebox({  
+		       	   width:115,
+		           required : true,
+		           editable: false,
+		           buttons:buttons,
+		           showSeconds:false,
+		           onSelect: function(date){
+		        	   $('#startTime').val(date);
+		           }  
+		       });
+		       //设置结束插件
+		      var endTime= $('#endTime').datebox({
+		       	width:115,
+		           required : true,
+		           editable: false,
+		           buttons:buttons,
+		           showSeconds:false,
+		           onSelect: function(date){
+		        	   $('#endTime').val(date);
+		           }
+		       });
+			
 			
 	        window.onload = function () {
 	        // 获取ModelAndView中的paiangmawb对象}
@@ -98,7 +129,9 @@
 		    		 $(currentlabel_tab).datagrid('options').url=url;
 		    		 $(currentlabel_tab).datagrid('reload'); //加载网络数据
 	        	 }
+	        	 currentlabel.initDate(); //时间初始值
 	         };
+	         
 	         
 	        function tableSelectclick(id,url){
 		         /* layer 选择下拉框表格展示 */

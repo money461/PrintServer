@@ -31,7 +31,9 @@ public class UserInfo implements Serializable {
 	private List<String> usercorplist;
 	private int TZ;
 	private List<String> opidData; //当前操作id 所属下 操作及系统获取操作数据权限
-	private SortedSet<SecurityModel> menus; //菜单信息
+	private SortedSet<SecurityModel> menus; //菜单信息 排序过
+	private List<SecurityModel>  securityModels; //打印标签信息 未排序 
+	private List<String> pageCodes; //获取用户打印页面Code
 	
 	public String getCstoken() {
 		return cstoken;
@@ -131,6 +133,18 @@ public class UserInfo implements Serializable {
 		this.menus = menus;
 	}
 	
+	public List<SecurityModel> getSecurityModels() {
+		return securityModels;
+	}
+	public void setSecurityModels(List<SecurityModel> securityModels) {
+		this.securityModels = securityModels;
+	}
+	public List<String> getPageCodes() {
+		return pageCodes;
+	}
+	public void setPageCodes(List<String> pageCodes) {
+		this.pageCodes = pageCodes;
+	}
 	
 
 /*{

@@ -2,7 +2,6 @@ package com.bondex.dao.impl;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -15,7 +14,6 @@ import com.bondex.dao.base.BaseDao;
 import com.bondex.entity.log.Log;
 import com.bondex.entity.page.PageBean;
 import com.bondex.mapper.AdminDataCurrentMapper;
-import com.bondex.shiro.security.entity.SecurityModel;
 import com.bondex.util.StringUtils;
 import com.bondex.util.shiro.ShiroUtils;
 
@@ -37,7 +35,7 @@ public class LogInfoDaoImpl extends BaseDao<Log, Integer> implements LogInfoDao 
 	
 	
 	@Override
-	public List<Log> getlogDetail(Log log) {
+	public PageBean<Log> getlogDetail(Log log) {
 		String sql="SELECT * FROM `log` WHERE 1=1 ";
 		
 		if(StringUtils.isNotNull(log)){
@@ -76,17 +74,15 @@ public class LogInfoDaoImpl extends BaseDao<Log, Integer> implements LogInfoDao 
 		}
 		
 		MapSqlParameterSource map = new MapSqlParameterSource();
-		List<SecurityModel> model = ShiroUtils.getUserSecurityModel();
-		List<String> codes = model.stream().map(se -> se.getPageCode()).collect(Collectors.toList());
+		List<String> pageCodes = ShiroUtils.getUserInfo().getPageCodes();
 		map.addValue("status", log.getStatus());
-		map.addValue("code", codes);
+		map.addValue("code", pageCodes);
 		
 		//JDBC实现 查询 BeanPropertyRowMapper自动驼峰命名转换
 		PageBean<Log> pageBean = jdbcTemplateSupport.queryForPage(sql,true,null,map,new BeanPropertyRowMapper<Log>(Log.class));
-		List<Log> list = pageBean.getList();
 		//mybatis mapper实现
 		//List<Log> list = adminDataCurrentMapper.querylogDetail(sql);
-		return list;
+		return pageBean;
 	}
 
 	/**
@@ -100,6 +96,22 @@ public class LogInfoDaoImpl extends BaseDao<Log, Integer> implements LogInfoDao 
 		jdbcTemplate.update("insert into log(mawb,hawb,state,detail,handle_type,updateTime,json) VALUES('','',3,'','','"
 				+ new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()) + "','"
 				+ message.replaceAll("(')", "\\\\'") + "')"); //替换为标准的json数据
-        */}
+        */
+	}
+
+	
+	@Override
+	public Boolean checkCorrelationIdUnique(String correlationId) {
+		String sql="select ifnull((select correlation_id  from log where correlation_id=:correlationId limit 1 ), 0)";
+		MapSqlParameterSource map = new MapSqlParameterSource();
+		map.addValue("correlationId", correlationId);
+		String res = jdbcTemplateSupport.queryForObject(sql, map,String.class);
+		//结果为 1，则说明记录存在；结果为 0，则说明记录不存在。 
+		if("1".equals(res)){ 
+			return true;
+		}else{
+			return false;//不存在
+		}
+	}
 
 }

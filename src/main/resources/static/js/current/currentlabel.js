@@ -113,7 +113,6 @@ currentlabel.prototype.initDataGridTable=function(){
 					
 					var ed = $(this).datagrid('getEditor', {index:rowIndex,field:'templateName'}); //获取指定的编辑器， options 参数包含两个属性：index：行的索引。field：字段名。
 					
-					var code = sessionstorage.get('code');
 					
 					$(ed.target[0]).combobox({
 						url:"/labelPrint/label/getUserAuthtemplate?code="+code,
@@ -161,6 +160,7 @@ currentlabel.prototype.initDataGridTable=function(){
 				param['pageSize']=param.rows;
 				param['orderByColumn']=param.sort;
 				param['isAsc']=param.order;
+				param['code']=code;
 				console.info(param);
 	        },
 	        onBeforeEdit:function(index,row){
@@ -338,7 +338,9 @@ currentlabel.prototype.securityReload=function() {
 		 //$('#currentlabel_tab').datagrid('reload');
 		 $("#printButton").attr("disabled",false); //解除
 		 
-		 $(currentlabel_tab).datagrid('options').url=url;
+		 $(currentlabel_tab).datagrid('options').url=url; //设置url
+		 
+		 currentlabel.initDate(); //时间初始值
 		 //重新加载
 		 $(currentlabel_tab).datagrid('load',getQueryCondition()); //加载网络数据
 		 
@@ -824,31 +826,141 @@ currentlabel.prototype.dialogRegion =function(){
 	$('#region').dialog("close");
 }
 
-//设置时间插件
-var buttons = $.extend([], $.fn.datetimebox.defaults.buttons);
-$('#start_time').datetimebox({  
-	width:115,
-    required : false,  
-    editable:false,
-    buttons:buttons,
-    onShowPanel:function(){  
-        $(this).datetimebox("spinner").timespinner("setValue","00:00:00");  
-    },
-    onChange: function(newValue, oldValue){
-    }  
-});
-//设置时间插件
-$('#end_time').datetimebox({
-	width:115,
-    required : false,  
-    editable:false,
-    buttons:buttons,
-    onShowPanel:function(){
-        $(this).datetimebox("spinner").timespinner("setValue","23:59:59");  
-    },
-    onChange: function(newValue, oldValue){
-    }   
-});
+/**
+ * 初始化打印模板下拉
+ * @param callback
+ */
+currentlabel.prototype.initPrintTemplate = function(callback){
+	var url = "/labelPrint/label/getUserAuthtemplate?code="+code;
+	function getInitData(){
+	    var dataStore=[];
+	    
+	    $.ajax({
+	        dataType : 'json',
+	        type : 'GET',
+	        data : {'templateName':null}, //参数
+	        url : url,
+	        async : false,
+	        success: function(data){
+	        	 for (var i = 0; i < data.length; i++) {
+	        		 var tem={};
+	        		 tem.id = data[i].templateId;
+	        		 tem.text = data[i].templateName;
+	        		 dataStore.push(tem);
+	                }
+	        }
+	     });
+	    return dataStore;
+	}   
+	var initdata = getInitData();
+	
+	 var TemplateNameSelect2 = $("#templateName").select2({
+		 width : 'auto', //宽度自动
+		//这里就是解决modal对话框下，搜索输入框不显示的方法
+		 dropdownParent: $("#select2-ProductId241"),
+		 data:initdata,
+		  ajax: {
+		    url: url,
+		    type: "GET",
+		    dataType: 'json',
+		    delay: 250,
+		    data: function (params) {
+                return {
+                	templateName: params.term, // 搜索参数
+                };
+            },
+            processResults: function (data, params) {
+                for (var i = 0; i < data.length; i++) {
+                    data[i].id = data[i].templateId;
+                    data[i].text = data[i].templateName;
+                }
+                return {
+                    results: data
+                };
+            },
+            cache: true
+		  },
+		  placeholder: "请输入或者选择打印模板名称",
+          allowClear: true,    //选中之后，可手动点击删除
+          escapeMarkup: function (markup) { return markup; }, // 让template的html显示效果，否则输出代码
+          minimumInputLength: -1,    //搜索框至少要输入的长度，此处设置后需输入才显示结果
+          language: "zh-CN",         //中文
+          multiple:false, //是否多选
+          closeOnSelect:true,
+          tags: true,//允许手动添加
+          escapeMarkup: function (markup) { return markup; }, // 自定义格式化防止xss注入
+          formatResult: function formatRepo(repo){return repo.text;}, // 函数用来渲染结果
+	      formatSelection: function formatRepoSelection(repo){return repo.text;} // 函数用于呈现当前的选择
+		});
+	 return TemplateNameSelect2;
+}
+
+/**
+ * 批量修改
+ */
+currentlabel.prototype.batchAlertTemplate = function(){
+	var rows =  $(currentlabel_tab).datagrid('getSelections');// 获取所有选中行的数据
+	if(rows.length==0){
+		$.modal.alertWarning("请选择需要更新模板的标签数据！");
+		return;
+	}else{
+		$("#batchAlertTemplate").modal('show'); //显示模态框
+	}
+	$("#batchAlertTemplate").on('show.bs.modal',function(){
+		
+	});
+}
+
+/**
+ * 确认修改
+ */
+function confirmChangesTemplate() {
+	var res=$("#templateName").select2("data")[0] ; ////获取选中的模板
+	var templateId = res.id;
+	if($.common.isEmpty(templateId)){
+		$.modal.alertWarning("请选择更新的模板！");
+		return;
+	}
+	
+	$.modal.confirm("确定修改打印模板吗？", function() {
+		//关闭模态框
+		$("#batchAlertTemplate").modal('hide'); //隐藏模态框
+		//获取更新的模板
+		var templateName = res.text; //获取选中的模板
+		var url=prefix+"/update";
+		var rows =  $(currentlabel_tab).datagrid('getSelections');// 获取所有选中行的数据
+		$.each(rows, function(index, row){ 
+			row.templateId=templateId;
+			row.templateName=templateName;
+	    });
+		
+		 var rowstr = JSON.stringify(rows);
+		 var config={
+				url: url,
+		        type: "POST",
+		        dataType: "json",
+		        contentType:"application/json",
+		        data: rowstr,
+		        async: false, //同步加载
+		        beforeSend: function () {
+		        	$.modal.loading("正在处理中，请稍后...");
+		        },
+		        success: function(result) {
+		        	$.modal.closeLoading();
+		        	if('200'==result.status){
+		        		$.modal.msg(result.message);
+		        		 $(currentlabel_tab).datagrid('load',getQueryCondition()); //加载网络数据
+		        	}else{
+		        		 $.modal.msgError(result.message);
+		        	}
+		        }
+		    };
+		
+	$.ajax(config);
+		
+	});
+	
+}
 
 //删除
 currentlabel.prototype.deletedata = function(){
@@ -883,6 +995,21 @@ if (data) {
 		   layer.msg("已经取消删除操作！");
 	   }
 	});
+}
+/**
+ * 初始化时间
+ */
+currentlabel.prototype.initDate = function(){
+	  
+    function formatterDate(date) {
+        var day = date.getDate() > 9 ? date.getDate() : "0" + date.getDate();
+        var month = (date.getMonth() + 1) > 9 ? (date.getMonth() + 1) : "0" + (date.getMonth() + 1);
+        return date.getFullYear() + '-' + month + '-' + day;
+    };
+     var nowdate =  new Date();
+     $(endTime).datebox('setValue',formatterDate(nowdate));	// set datebox value
+     nowdate.setDate(nowdate.getDate()-30);
+     $(startTime).datebox('setValue',formatterDate(nowdate));	// set datebox value
 }
 
 var toolbar ={
@@ -1109,4 +1236,6 @@ $(document).ready(function(){
 	console.log("通用打印页面初始化");
 	//初始化表格
     currentlabel.initDataGridTable();
+  //初始化打印模板下拉
+    currentlabel.initPrintTemplate();
 });

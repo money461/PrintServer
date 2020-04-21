@@ -9,6 +9,7 @@ import com.bondex.annoation.dao.Column;
 import com.bondex.annoation.dao.Ignore;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 @Data
 public class BaseEntity {
@@ -44,6 +45,7 @@ public class BaseEntity {
 
     /** 请求参数 */ //params[endTime] params[beginTime]
     @Ignore
+    @ApiModelProperty(hidden = true)
     private Map<String, Object> params;
     
     

@@ -11,6 +11,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
@@ -20,8 +27,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import com.alibaba.fastjson.JSONArray;
@@ -32,9 +43,9 @@ import com.bondex.common.enums.NewPowerHttpEnum;
 import com.bondex.config.CacheManagerConfig;
 import com.bondex.config.restTemplate.HttpRestTemplateUtil;
 import com.bondex.entity.page.Datagrid;
-import com.bondex.shiro.security.entity.JsonResult;
+import com.bondex.shiro.security.entity.OperatorPagePermission;
 import com.bondex.shiro.security.entity.Opid;
-import com.bondex.shiro.security.entity.SecurityHead;
+import com.bondex.shiro.security.entity.PrintTemplatePremission;
 import com.bondex.shiro.security.entity.SecurityModel;
 import com.bondex.shiro.security.entity.TokenResult;
 import com.bondex.shiro.security.entity.UserInfo;
@@ -66,6 +77,9 @@ public class SecurityService {
 	private String frameworkapi;//framework权限获取地址
 	
 	private SpringCasAutoconfig springCasAutoconfig;
+	
+	@Resource(name="taskExecutor")
+	private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 	
 	public SecurityService(SpringCasAutoconfig springCasAutoconfig) {
 		super();
@@ -118,6 +132,9 @@ public class SecurityService {
 						JSONArray array = object2.getJSONArray("Data");
 						Type objectTypemenu = new TypeToken<List<SecurityModel>>() {}.getType();
 						List<SecurityModel> securityModels =  GsonUtil.getGson().fromJson(array.toJSONString(), objectTypemenu);
+						userInfo.setSecurityModels(securityModels);
+						List<String> pageCodes = securityModels.stream().filter(x ->x.getPageCode().endsWith(Common.PageCode_Suffix)).map(res -> res.getPageCode()).collect(Collectors.toList());
+						userInfo.setPageCodes(pageCodes); //页面code
 						list = securityModelTreeUtil(securityModels);
 						
 //							String  menu = (String)ReadTxtFile.readJsonFromClassPath("data/menu.json",String.class);
@@ -173,108 +190,87 @@ public class SecurityService {
 		userInfo.setOpid(opid);
 		userInfo.setOpname(userInfo.getOpids().get(opid));
 		
+		CompletableFuture<Object> future1 = CompletableFuture.supplyAsync(() -> {
+			 System.out.println("线程-"+Thread.currentThread().getName() +"执行获取功能权限");
+			// 获取用户功能权限 包括所有的按钮权限
+			JSONObject object = getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetOperatorPagePermission);
+			JSONArray array = object.getJSONArray("Data");
+			Type objectType = new TypeToken<List<OperatorPagePermission>>() {}.getType();
+			List<OperatorPagePermission> operatorpremission = GsonUtil.getGson().fromJson(array.toJSONString(), objectType);
+			
+			//获取所有的BtnNames 作为权限Code校验
+			List<String> pageCodes = operatorpremission.stream().map(x -> x.getPageCode()).collect(Collectors.toList());
+			premissionSet.addAll(pageCodes);
+			List<String> BtnNames = operatorpremission.stream().map(x -> x.getBtnNames()).collect(Collectors.toList());
+			premissionSet.addAll(BtnNames);
+			
+		   return operatorpremission;
+			
+		},threadPoolTaskExecutor);	
+	
+		
+		CompletableFuture<Object> future2 = CompletableFuture.supplyAsync(() -> {
+			 System.out.println("线程-"+Thread.currentThread().getName() +"执行获取打印模板权限");
+			//打印按钮权限
+			JSONObject object2 = getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetModulePrintButton);
+			JSONArray array2 = object2.getJSONArray("Data");
+			
+			//获取标签打印功能权限
+			JSONArray collect = array2.stream().filter(obj -> {
+				 JSONObject jsonObj = (JSONObject)obj;
+				 if(applicationId.equals(jsonObj.getString("ApplicationID"))){
+					return true;
+				 }else{
+					 return false;
+				 }
+				
+			}).collect(Collectors.toCollection(JSONArray::new));
+			
+			JSONObject printJsonObject = (JSONObject)collect.get(0);
+			LinkedHashMap<String, String> userReportMap = new LinkedHashMap<>();
+			userReportMap.put("OpId", opid); // 用户岗位操作号（必填
+			userReportMap.put("ApplicationId", applicationId); 
+			userReportMap.put("PageCode", printJsonObject.getString("PageCode")); //AirPrintLabel
+			userReportMap.put("BtnNames",  printJsonObject.getString("BtnNames")); // 打印按钮名称（必填 AirPrintLabel.label-print
+			
+			JSONObject userReportjsonObject = Axis2WebServiceClient.getWebServicePararm(userReportMap, "GetUserReport").getJSONObject("GetUserReportResult");
+			
+			JSONArray jsonArray = userReportjsonObject.getJSONArray("JsonResult");
+			
+			// 转json对象
+			Type printButton = new TypeToken<List<PrintTemplatePremission>>() {}.getType();
+			List<PrintTemplatePremission> printButtons =  GsonUtil.getGson().fromJson(jsonArray.toJSONString(), printButton);
+			
+			return printButtons;
+			
+		},threadPoolTaskExecutor);	
+		
 		//权限map
-		Map<String, Object> authorizationMap = new HashMap<String, Object>();
+		CompletableFuture<Map<String, Object>> future3 =
+                future1.thenCombine(future2, (t1Result, t2Result) -> {
+                	    System.out.println("线程-"+Thread.currentThread().getName() +"执行合并结果");
+	                	Map<String, Object> authorizationMap = new HashMap<String, Object>();
+	                	authorizationMap.put(opid + Common.UserSecurity_Model, t1Result);// 用户功能权限
+	                	authorizationMap.put(opid + Common.UserSecurity_PrintButton, t2Result);// 用户打印权限
+                        return authorizationMap;
+                });
 		
+		System.out.println("线程等待所有子线程执行完成-"+Thread.currentThread().getName());
+		Map<String, Object> map = null;
+		try {
+			map = future3.get(10L, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		} catch (TimeoutException e) {
+			e.printStackTrace();
+		}
 		
-			// 获取用户功能模块权限
-		/*	String rt = permissionService.getHasPermissionModuleList(applicationId, opid.getOpid());
-			System.err.println("用户功能模块权限：" + rt);*/
-			
-			// 查询菜单模块权限
-			LinkedHashMap<String, String> moduleMap = new LinkedHashMap<>();
-			moduleMap.put("ApplicationId", applicationId);
-			moduleMap.put("OperatorId", opid);
-			
-			JSONObject securityModeljsonObject = Axis2WebServiceClient.getWebServicePararm(moduleMap, "GetHasPermissionModuleList").getJSONObject("GetHasPermissionModuleListResult");
-			
-			Type objectType = new TypeToken<SecurityHead<SecurityModel>>() {}.getType();
-			SecurityHead<SecurityModel> securityHead = GsonUtil.getGson().fromJson(securityModeljsonObject.toJSONString(), objectType);
-			
-			List<SecurityModel> securityModels = securityHead.getJsonResult();
-			
-			if(null!=securityModels && securityModels.size()>0){
-				
-				List<List<String>> securityModel1 = new ArrayList<>();
-				List<List<JsonResult>> jsonResults = new ArrayList<>();
-				
-				// 获取用户功能模块按钮权限
-				for (SecurityModel securityModel : securityModels) {
-					String pageCode = securityModel.getPageCode();
-					//if (!pageCode.equals("AirExpHAWBList") && !securityModel.getPageCode().equals("AirExpMAWBList") && !securityModel.getPageCode().equals("AirExpOrder")) {
-						premissionSet.add(pageCode); //添加权限realm
-						LinkedHashMap<String, String> buttonMap = new LinkedHashMap<>();
-						buttonMap.put("ApplicationId", applicationId);
-						buttonMap.put("PageCode", securityModel.getPageCode());
-						buttonMap.put("PreButtonName", ""); // 模块名称（非必填）
-						buttonMap.put("OperatorId", opid); // 用户岗位操作号（必填）
-						// 返回功能模块按钮数组
-						JSONObject buttonjsonObject = Axis2WebServiceClient.getWebServicePararm(buttonMap, "GetHasPermissionPageButton").getJSONObject("GetHasPermissionPageButtonResult");
-						
-						
-//					String button = permissionService.getHasPermissionPageButton(applicationId, securityModel.getPageCode(), null, opid.getOpid());
-						
-						// 转json对象
-						Type objectTypebutton = new TypeToken<SecurityHead<String>>() {}.getType();
-						
-						SecurityHead<String> securityHead1 = GsonUtil.getGson().fromJson(buttonjsonObject.toJSONString(), objectTypebutton);
-						
-						securityModel1.add(securityHead1.getJsonResult());
-						
-						List<String> list = securityHead1.getJsonResult();
-						
-						for (String BtnName : list) {
-							premissionSet.add(BtnName); //按钮权限
-							LinkedHashMap<String, String> userReportMap = new LinkedHashMap<>();
-							userReportMap.put("OpId", opid); // 用户岗位操作号（必填
-							userReportMap.put("ApplicationId", applicationId);
-							userReportMap.put("PageCode", securityModel.getPageCode());
-							userReportMap.put("BtnNames", BtnName); // 打印按钮名称（必填
-							
-							JSONObject userReportjsonObject = Axis2WebServiceClient.getWebServicePararm(userReportMap, "GetUserReport").getJSONObject("GetUserReportResult");
-							
-//						String rtPrint = printPermissionService.getUserReport(opid.getOpid(), applicationId, securityModel.getPageCode(), string);
-							
-							// 转json对象
-							Type printButton = new TypeToken<SecurityHead<JsonResult>>() {}.getType();
-							SecurityHead<JsonResult> printButtons =  GsonUtil.getGson().fromJson(userReportjsonObject.toJSONString(), printButton);
-							if (printButtons.getJsonResult().size() > 0) {
-								List<JsonResult> jsonResult = printButtons.getJsonResult();
-								jsonResults.add(jsonResult);
-							}
-						}
-					}
-		
-				/*	try {
-						String menu = (String)ReadTxtFile.readJsonFromClassPath("data/menu.json",String.class);
-						Type objectTypemenu = new TypeToken<List<SecurityModel>>() {}.getType();
-						securityModels =  GsonUtil.getGson().fromJson(menu, objectTypemenu);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					*/
-					authorizationMap.put(opid + Common.UserSecurity_Model, securityModels);// 用户功能模块权限
-					authorizationMap.put(opid + Common.UserSecurity_PrintButton, jsonResults);// 用户打印权限
-					authorizationMap.put(opid + Common.UserSecurity_Button, securityModel1);// 用户功能模块按钮权限
-			
-			}
-			
-			//校验是否是系统管理员
-			/*String isAdmin = CheckSystemAdmin(userInfo);
-			String activeProfile = ApplicationContextProvider.getActiveProfile();
-			if("1".equals(isAdmin) || !"prod".equals(activeProfile)){
-				try {
-					Set<String> adminpremission= ReadTxtFile.readJsonFromClassPath("data/premissionSet.json", Set.class);
-					premissionSet.addAll(adminpremission);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}*/
-		
-		return authorizationMap;
+		return map;
 	}
-
-
+	
+	
 
 	/**
 	 * 获取数据
@@ -321,7 +317,7 @@ public class SecurityService {
 		case GetOperatorPagePermission:
 			rootUrlStr.append(NewPowerHttpEnum.GetOperatorPagePermission.url);
 			param.put("ApplicationID", applicationId);
-			param.put("PageCode", paramap.get("PageCode")); //页面代码code
+			//param.put("PageCode", paramap.get("PageCode")); //页面代码code
 			param.put("OperatorID", userInfo.getOpid()); //操作id
 			urlGetMethodFrameWork(rootUrlStr, param);
 			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
@@ -355,6 +351,15 @@ public class SecurityService {
 			rootUrlStr.append(NewPowerHttpEnum.GetOperator.url);
 			urlGetMethodFrameWork(rootUrlStr, param);
 			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
+			return jsonObject;
+			
+		case GetModulePrintButton:
+			rootUrlStr.append(NewPowerHttpEnum.GetModulePrintButton.url);
+			HttpHeaders headers = new HttpHeaders();
+		    headers.add("Accept", MediaType.ALL_VALUE);
+		    headers.add("Token",userInfo.getToken());
+		    headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+			jsonObject = HttpRestTemplateUtil.doPost(rootUrlStr.toString(),new LinkedMultiValueMap<>(), headers,JSONObject.class);
 			return jsonObject;
 		default:
 			break;

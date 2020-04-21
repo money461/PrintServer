@@ -31,4 +31,9 @@ public class UserDefaultRegionImpl implements UserDefaultRegionService {
 		return userDefaultRegionDao.updateOrAddUserRegion(userDefaultRegion);
 	}
 
+	@Override
+	public Integer changeStatus(UserDefaultRegion userDefaultRegion) {
+		return userDefaultRegionDao.changeStatus(userDefaultRegion);
+	}
+
 }

@@ -162,27 +162,7 @@ public class LoginController {
 		return buffer.toString();
 	}
 
-	/**
-	 * 获取按钮权限
-	 * @param request
-	 * @param session
-	 * @param response
-	 * @param opid
-	 * @return
-	 */
-	@RequestMapping("getOpidSecurityButton")
-	@ResponseBody
-	public String getOpidSecurityButton(HttpServletRequest request, HttpServletResponse response, String opid) {
-		HttpSession session = request.getSession();
-		Map<String, Object> map = (Map<String, Object>) session.getAttribute(Common.Session_UserSecurity);
-		List<List<String>> button = (List<List<String>>) map.get(opid + Common.UserSecurity_Button);
-		StringBuffer buffer = new StringBuffer();
-		for (List<String> list : button) {
-			System.out.println(list);
-		}
-
-		return buffer.toString();
-	}
+	
 	/**
 	 * 获取菜单数据
 	 * @param request

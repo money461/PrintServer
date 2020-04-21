@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 
 import com.alibaba.fastjson.JSONObject;
 import com.bondex.common.ComEnum;
@@ -38,7 +39,6 @@ import com.bondex.util.shiro.ShiroUtils;
 import com.google.gson.JsonSyntaxException;
 
 @Service(value="labelInfoServiceImpl")
-@Transactional(rollbackFor = Exception.class)
 public class LabelInfoServiceImpl implements LabelInfoService {
 
 	/**
@@ -55,13 +55,17 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 
 	//保存标签数据
 	@Override
-	public boolean labelInfoSave(String messge) {
+	public boolean labelInfoSave(String messge,String correlationId) {
+		Boolean flag = logInfoDao.checkCorrelationIdUnique(correlationId);
+		if(flag){return false;} //重复消费 消息自动应答Ack,结束此次消费
+		
 		Log log = new Log();
 		Date date=  Date.from(LocalDateTime.now().toInstant(ZoneOffset.of("+8"))); //默认时区为东8区
 		log.setUpdateTime(date);
 		log.setCreateTime(date);
 		log.setJson(messge);
 		log.setStatus(1);
+		log.setCorrelationId(correlationId);//消息唯一标识
 		log.setCode(ComEnum.AirLabel.code); //监听业务固定 所以标签固定写死 
 		log.setCodeName(ComEnum.AirLabel.codeName);
 		Integer i=0;
@@ -82,6 +86,8 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 			i =labelInfoDao.saveLabel(main,log);
 			if(i <= 0){
 				log.setDetail("入库未抛异常，但结果返回小于1");
+			}else{
+				log.setDetail("入库成功！");
 			}
 			
 		}catch (JsonSyntaxException e){
@@ -92,6 +98,8 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 			log.setStatus(3);
 			log.setDetail(e.getMessage());
 			
+		} catch (HttpClientErrorException e) {
+			log.setDetail("获取部门信息接口失败异常！");
 		} catch (Exception e) {
 			log.setDetail("数据入库未知异常！");
 			
@@ -205,17 +213,20 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 	 }
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void updateLabel(Label label) {
 		labelInfoDao.update(label);
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void deleteLabel(List<Label> label) {
 		labelInfoDao.delete(label);
 	}
 
 
+	
 	@Override
 	public List<Template> getUserAuthtemplate(Template template) {
 		return labelInfoDao.getUserAuthtemplate(template);

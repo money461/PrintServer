@@ -135,7 +135,7 @@ public class CasConfig {
         registration.setInitParameters(initParameters);
         //设定加载的顺序
         registration.setOrder(3);
-		registration.setName("CASAuthenticationFilterFilter"); //名称
+		registration.setName("CAS Authentication Filter"); //名称
 		return registration;
 	}
 	

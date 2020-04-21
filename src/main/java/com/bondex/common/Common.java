@@ -23,7 +23,7 @@ public class Common {
 	public final static String UserSecurity_PrintButton = "printButton"; //用户打印按钮权限 opid+后缀
 	
 	
-	public final static String UserSecurity_Button = "button"; //用户功能模块按钮权限 opid+后缀
+//	public final static String UserSecurity_Button = "button"; //用户功能模块按钮权限 opid+后缀   合并在  "model" 中功能权限
  	
 	
 	/**
@@ -36,6 +36,11 @@ public class Common {
 	 */
 	public final static String SEPARATOR_COMMA = ",";
 	
+	
+	public static final String POINT = ".";
+
+	public static final String SPACE = " ";
+	
 	/**
 	 * 发送内网
 	 */
@@ -46,8 +51,9 @@ public class Common {
 	 */
 	public final static String MQAddress_OUTNET = "outnet";
 	
-	
-	public final static String PAIANNGKEY = "PAIANGData";
-	
+	/**
+	 * 页面Code  后缀
+	 */
+	public final static String PageCode_Suffix = "_label";
 	
 }

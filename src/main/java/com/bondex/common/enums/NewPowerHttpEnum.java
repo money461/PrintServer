@@ -9,6 +9,7 @@ public enum NewPowerHttpEnum implements BaseEnum  {
 		GetPageButtonByPermissionValue("GET","/Api/ModuleExtPermission/GetPageButtonByPermissionValue","获取页面有权限的按钮"),
 		GetCompanyInfoOfDeptByOperatorID("GET","/Api/Department/GetCompanyInfoOfDeptByOperatorID","根据当前登录用户的操作ID获取所在部门信息"),
 		GetOperatorPagePermission("GET","/Api/ModuleExtPermission/GetOperatorPagePermission","获取功能权限"),
+		GetModulePrintButton("POST","/Api/ModulePrintButton/GetModulePrintButton","获取打印功能权限"),
 		GetOperator("POST","/Api/Operator/GetOperator","获取操作");
 		
 	    public String method;

@@ -8,8 +8,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import org.apache.shiro.authz.annotation.Logical;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -43,13 +41,6 @@ public class AirLabelController extends BaseController {
 	
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
-
-	@RequestMapping("save")
-	@ResponseBody
-	public boolean saveLabel() {
-		labelInfoService.labelInfoSave(null);
-		return false;
-	}
 
 	
 	/**

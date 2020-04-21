@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,8 +24,12 @@ import com.bondex.util.GsonUtil;
 import com.bondex.util.StringUtils;
 import com.bondex.util.shiro.ShiroUtils;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
 @Controller
 @RequestMapping(value="/region")
+@Api(tags={"接口分组1"})
 public class RegionController extends BaseController{
 	
 	@Autowired
@@ -220,5 +225,14 @@ public class RegionController extends BaseController{
 		List<TreeBean> treeRegion = regionService.getTreeRegionByOpid(userInfo.getOpid());
 		return treeRegion;
 	}
+	
+	 //添加打印机
+	@ApiOperation(value = "添加打印机", notes = "打印机名称必须填写", httpMethod = "GET/POST", tags = "接口分组1")
+	@RequestMapping(value="/addprinter",method={RequestMethod.POST,RequestMethod.GET})
+    @ResponseBody
+    public Object addprinter(@Validated Region Region ){
+    	return regionService.saveOrUpdateRegion(Region);
+    }
+	
 
 }

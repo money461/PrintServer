@@ -10,11 +10,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.bondex.common.enums.ResEnum;
 import com.bondex.controller.BaseController;
 import com.bondex.entity.UserDefaultRegion;
 import com.bondex.entity.page.TableDataInfo;
 import com.bondex.entity.res.AjaxResult;
 import com.bondex.service.UserDefaultRegionService;
+import com.bondex.util.GsonUtil;
 @Controller
 @RequestMapping(value="/user")
 public class UserDefaultRegionController extends BaseController {
@@ -47,6 +49,19 @@ public class UserDefaultRegionController extends BaseController {
 		return modelAndView;
 	}
 	
+	@RequestMapping(value={"/edit/{code}/{id}","/edit/{id}"},method = RequestMethod.GET)
+	@ResponseBody
+//	@RequiresPermissions(value={"viewdata","look"},logical=Logical.OR)
+	public ModelAndView editpage(@PathVariable(name="code",required=false) String code,@PathVariable(name="id",required=false) Integer id,ModelAndView modelAndView){
+		UserDefaultRegion userDefaultRegion = new UserDefaultRegion();
+		userDefaultRegion.setId(id);
+		List<UserDefaultRegion> list = userDefaultRegionService.selectUserDefaultRegion(userDefaultRegion);
+		modelAndView.addObject("user",list.get(0));
+		modelAndView.addObject("code", code);
+		modelAndView.setViewName("/admin/user/edit"); //页面展示
+		return modelAndView;
+	}
+	
 	
 	@RequestMapping("/list")
 	@ResponseBody
@@ -58,6 +73,7 @@ public class UserDefaultRegionController extends BaseController {
 			info.setCode(1);
 			info.setMsg("没有找到匹配的操作人员！");
 		}*/
+		System.out.println(GsonUtil.GsonString(info));
 		return info;
 		
 	}
@@ -85,11 +101,19 @@ public class UserDefaultRegionController extends BaseController {
 	@ResponseBody
 	public Object saveOrUpdateUserDefault(UserDefaultRegion userDefaultRegion){
 		Integer i = (Integer)userDefaultRegionService.updateOrAddUserRegion(userDefaultRegion);
-		if(1==i){
-			return AjaxResult.success();
-		}else{
-			return AjaxResult.error("操作失败！");
-		}
+		return AjaxResult.success();
+	}
+	
+	/*
+	 * 
+	 * 是否停用用户
+	 */
+	@RequestMapping(value="/changeStatus",method=RequestMethod.POST)
+	@ResponseBody
+	public Object changeStatus(UserDefaultRegion userDefaultRegion){
+		Integer i = (Integer)userDefaultRegionService.changeStatus(userDefaultRegion);
+		TableDataInfo info = new TableDataInfo(0,ResEnum.SUCCESS.MESSAGE);
+		return info;
 	}
 	
 	

@@ -13,6 +13,7 @@ user.prototype.saveOrupdateUser = function(url, data, callback) {
 	        	$.modal.loading("正在处理中，请稍后...");
 	        },
 	        success: function(result) {
+	        	$.modal.closeLoading();
 	        	if('200'==result.status){
 	        		var topWindow = $(window.parent.document);
     	            var currentId = $('.page-tabs-content', topWindow).find('.active').attr('data-panel');
@@ -24,6 +25,8 @@ user.prototype.saveOrupdateUser = function(url, data, callback) {
     	        		$contentWindow.$.table.refresh();
     	        	}
     	            $.modal.closeTab();
+	        	}else{
+	        		$.modal.msgError(result.message);
 	        	}
 	        }
 	    };

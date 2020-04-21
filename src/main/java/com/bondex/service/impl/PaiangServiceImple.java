@@ -39,7 +39,6 @@ import com.bondex.util.StringUtils;
 import com.bondex.util.shiro.ShiroUtils;
 
 @Service(value="paiangServiceImple")
-@Transactional(rollbackFor = Exception.class)
 public class PaiangServiceImple implements PaiangService {
 	
 	@Autowired
@@ -63,17 +62,18 @@ public class PaiangServiceImple implements PaiangService {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public List<LabelAndTemplate> selectPaiangLabelByPage(Label label) {
-		
+		/*
 			UserInfo userInfo = ShiroUtils.getUserInfo();
 			String opid = userInfo.getOpid();
 			List<String> opidData = userInfo.getOpidData();
 			String opids = opidData.stream().collect(Collectors.joining("','")); //获取用户部门所有的opid
-
+*/
 			//拼接SQL语句
 			StringBuffer sql = new StringBuffer();
-			sql.append("select label.*, t.template_id,	t.template_name  from label LEFT JOIN template t  on t.id = label.reserve3 where label.opid in ( '" + opids + "') ");
+//			sql.append("select label.*, t.template_id,	t.template_name  from label LEFT JOIN template t  on t.id = label.reserve3 where label.reserve1 = '0' and label.opid in ( '" + opids + "') ");
+			sql.append("select label.*, t.template_id,	t.template_name  from label LEFT JOIN template t  on t.id = label.reserve3 where label.reserve1 = '0'  ");
 			sql.append(" and label.business_type = 0 "); //是派昂医药的数据
-			sql.append(" and label.reserve1 = '0' "); //未删除
+			sql.append(" and label.code = '"+ label.getCode()+"'"); //是派昂医药的数据
 		
 			Map<String, Object> params = label.getParams();
 			if(StringUtils.isNotEmpty(params)&& StringUtils.isNotBlank((String)params.get("startTime"))){
@@ -174,15 +174,18 @@ public class PaiangServiceImple implements PaiangService {
 	/**
 	 * 保存入库
 	 */
-	@Transactional(rollbackFor=Exception.class)
 	@Override
-	public void paiangSaveService(String message) {
+	public void paiangSaveService(String message,String correlationId) {
+		Boolean flag = logInfoDao.checkCorrelationIdUnique(correlationId);
+		if(flag){return;} //重复消费 消息自动应答Ack,结束此次消费
+		
 		Log log = new Log();
 		Date date=  Date.from(LocalDateTime.now().toInstant(ZoneOffset.of("+8"))); //默认时区为东8区
 		log.setUpdateTime(date);
 		log.setCreateTime(date);
 		log.setJson(message);
 		log.setStatus(1);
+		log.setCorrelationId(correlationId);//消息唯一标识
 		log.setCode(ComEnum.PaiangLabel.code); //监听业务固定 所以标签固定写死 
 		log.setCodeName(ComEnum.PaiangLabel.codeName);
 		try {
@@ -251,6 +254,7 @@ public class PaiangServiceImple implements PaiangService {
 			paiangDao.savePaiangData(list);
 			log.setHandleType("新增");
 			log.setStatus(0); //成功
+			log.setDetail("入库成功！");
 			
 		} catch (JSONException e) {
 			//JSON转换异常
@@ -269,6 +273,7 @@ public class PaiangServiceImple implements PaiangService {
 		
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void updatePaiangData(List<Label> datalist) {
 		paiangDao.updatePaiangData(datalist);

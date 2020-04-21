@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bondex.config.jdbc.JdbcTemplateSupport;
 import com.bondex.dao.PaiangDao;
@@ -36,6 +37,7 @@ public class PaiangDaoImpl extends  BaseDao<Label, String> implements PaiangDao 
 }
 	
 	//保存数据
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void savePaiangData(List<Label> list) {
 		

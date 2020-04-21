@@ -61,8 +61,8 @@ public class Label implements Serializable {
 	@Column(name="print_user")
 	private String printUser; //打印人
 	
-	@Column(name="list_id")
-	private String listId; //mq报文id，用于判断报文是否重复
+	@Column(name="correlation_id")
+	private String correlationId; //mq报文id，用于判断报文是否重复
 	
 	@Column(name="code")
 	private String code; //业务code
@@ -321,12 +321,12 @@ public class Label implements Serializable {
 		this.printUser = printUser;
 	}
 
-	public String getListId() {
-		return listId;
+	public String getCorrelationId() {
+		return correlationId;
 	}
 
-	public void setListId(String listId) {
-		this.listId = listId;
+	public void setCorrelationId(String correlationId) {
+		this.correlationId = correlationId;
 	}
 
 	public String getOpid() {

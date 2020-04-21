@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
-import java.util.stream.Collectors;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.mgt.RealmSecurityManager;
@@ -14,10 +13,9 @@ import org.apache.shiro.subject.Subject;
 
 import com.bondex.common.Common;
 import com.bondex.shiro.realm.ShiroRealm;
-import com.bondex.shiro.security.entity.JsonResult;
+import com.bondex.shiro.security.entity.PrintTemplatePremission;
 import com.bondex.shiro.security.entity.SecurityModel;
 import com.bondex.shiro.security.entity.UserInfo;
-import com.bondex.util.CommonTool;
 import com.bondex.util.GsonUtil;
 import com.google.gson.reflect.TypeToken;
 
@@ -46,30 +44,15 @@ public class ShiroUtils
      * 打印模块权限
      * @return
      */
-    public static List<JsonResult> getUserPrintTemplateInfo(){
+    public static List<PrintTemplatePremission> getUserPrintTemplateInfo(){
     	Session session = getSession();
 		UserInfo userInfo = ShiroUtils.getUserInfo();
 		Map<String, Object> map = (Map<String, Object>) session.getAttribute(Common.Session_UserSecurity);
          Object object = map.get(userInfo.getOpid() + Common.UserSecurity_PrintButton);
 		//标签权限
-		Type objectType = new TypeToken<List<List<JsonResult>>>() {}.getType();
-		List<List<JsonResult>> jsonResultsList = GsonUtil.getGson().fromJson(GsonUtil.GsonString(object), objectType);
-		List<JsonResult> jsonResults =jsonResultsList.get(0);	
-		return jsonResults;
-    }
-    /**
-     * 菜单模块权限(未排序)
-     * @return
-     */
-    public static List<SecurityModel> getUserSecurityModel(){
-    	Session session = getSession();
-    	UserInfo userInfo = ShiroUtils.getUserInfo();
-    	Map<String, Object> map = (Map<String, Object>) session.getAttribute(Common.Session_UserSecurity);
-    	Object object = map.get(userInfo.getOpid() + Common.UserSecurity_Model);
-    	Type objectTypemenu = new TypeToken<List<SecurityModel>>() {}.getType();
-		List<SecurityModel>  securityModels =  GsonUtil.getGson().fromJson(GsonUtil.GsonString(object), objectTypemenu);
-		List<SecurityModel> list = securityModels.stream().filter(x ->	x.getPageCode().endsWith("_label")).collect(Collectors.toList());
-    	return list;
+		Type objectType = new TypeToken<List<PrintTemplatePremission>>() {}.getType();
+		List<PrintTemplatePremission> jsonResultsList = GsonUtil.getGson().fromJson(GsonUtil.GsonString(object), objectType);
+		return jsonResultsList;
     }
     
     /**

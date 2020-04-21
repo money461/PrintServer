@@ -34,11 +34,11 @@
 								</select>
 								
 							</li>
-							<li class="select-time">
+							<li>
 								<label>处理时间： </label>
-								<input type="text" class="time-input" id="startTime" placeholder="开始时间" name="params[beginTime]"/>
+								<input type="text" class=""  id="startDate"  placeholder="开始时间" name="params[beginTime]"/>
 								<span>-</span>
-								<input type="text" class="time-input" id="endTime" placeholder="结束时间" name="params[endTime]"/>
+								<input type="text" class="" id="endDate"  placeholder="结束时间" name="params[endTime]"/>
 							</li>
 							
 							<li>
@@ -62,16 +62,19 @@
 	</div>
 <!-- 引入通用js -->
 	<@commonjs/>
-	<!-- 模板js -->
+	<!-- 自定义js -->
 	<script src="${request.contextPath}/js/admin/log.js"></script>
 	<script  type="text/javascript">
         var prefix = ctx + "/log";
 
+        //回调函数
         function selected(data){
 			$("#code").val(data.id);
 		}
         
         $(function() {
+        	
+        	log.initdate(); //初始化时间
         	
         	log.select2(null,selected);
         	
@@ -212,5 +215,6 @@
         });
         
     </script>
+
 </body>
 </html>

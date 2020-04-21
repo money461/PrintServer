@@ -12,6 +12,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.bondex.controller.BaseController;
 import com.bondex.entity.log.PrintLog;
+import com.bondex.entity.page.PageBean;
 import com.bondex.entity.page.TableDataInfo;
 import com.bondex.service.PrintLogService;
 
@@ -49,8 +50,8 @@ public class PrintLogController extends BaseController{
 	@ResponseBody
 	public Object getlogDetail(PrintLog printLog){
 		//startPage(Constants.Bootstrap_TableStyle,true);//设置分页pagehelper
-		List<PrintLog> pageBean = printLogService.getPrintlogDetail(printLog);
-		TableDataInfo dataTable = getDataTable(pageBean);
+		PageBean<PrintLog> pageBean = printLogService.getPrintlogDetail(printLog);
+		TableDataInfo dataTable = getDataPageBeanTable(pageBean);
 		return dataTable;
 	}
 	

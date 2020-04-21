@@ -11,5 +11,7 @@ public interface UserDefaultRegionService {
 	Integer checkOpidUnique(String opid);
 
 	Integer updateOrAddUserRegion(UserDefaultRegion userDefaultRegion);
+
+	Integer changeStatus(UserDefaultRegion userDefaultRegion);
 	
 }

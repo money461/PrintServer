@@ -36,11 +36,13 @@ $(function() {
 	if ($(".select-time").length > 0) {
 		layui.use('laydate', function() {
 		    var laydate = layui.laydate;
-		    var startDate = laydate.render({
+		  var startDate = laydate.render({
 		        elem: '#startTime',
 		        max: $('#endTime').val(),
 		        theme: 'molv',
 		        trigger: 'click',
+		        isInitValue: true,
+		        value: null,
 		        done: function(value, date) {
 		            // 结束时间大于开始时间
 		            if (value !== '') {
@@ -54,11 +56,13 @@ $(function() {
 		            }
 		        }
 		    });
-		    var endDate = laydate.render({
+		  var endDate = laydate.render({
 		        elem: '#endTime',
 		        min: $('#startTime').val(),
 		        theme: 'molv',
 		        trigger: 'click',
+		        isInitValue: true,
+		        value: null,
 		        done: function(value, date) {
 		            // 开始时间小于结束时间
 		            if (value !== '') {
@@ -110,6 +114,8 @@ $(function() {
 					trigger: 'click',
 					type: type,
 					format: format,
+					isInitValue: true,
+					value:null,
 					btns: newBtnArr,
 					done: function (value, data) {
 						if (typeof window[callback] != 'undefined'

@@ -4,12 +4,12 @@
 package com.bondex.shiro.security.entity;
 
 /**
- * Auto-generated: 2018-05-30 9:30:38
- *
- * @author bejson.com (i@bejson.com)
- * @website http://www.bejson.com/java2pojo/
+ * 获取打印模板的权限
+ * @author Qianli
+ * 
+ * 2020年4月13日 上午11:13:08
  */
-public class JsonResult {
+public class PrintTemplatePremission {
 
 	private int Recordindex;
 	private String Roleid;

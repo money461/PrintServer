@@ -723,6 +723,7 @@ label.prototype.initLabelDatagrid = function(isPrint2) {
 				param['pageSize']=param.rows;
 				param['orderByColumn']=param.sort;
 				param['isAsc']=param.order;
+				param['code']=code;
 				console.info(param);
 	        },
 			/*onUnselect:function(rowIndex, rowData){
@@ -755,7 +756,6 @@ label.prototype.initLabelDatagrid = function(isPrint2) {
 			        
 						var ed = $(this).datagrid('getEditor', {index:rowIndex,field:'templateName'});
 						
-						var code  = sessionstorage.get('code');
 						
 						$(ed.target[0]).combobox({
 							url:"/labelPrint/label/getUserAuthtemplate?code="+code,
@@ -764,7 +764,8 @@ label.prototype.initLabelDatagrid = function(isPrint2) {
 						    valueField:'templateName',
 						    onSelect: function(rec){
 						    	row.reserve3=rec.id;//修改label外键id
-						    	row.template_id=rec.template_id;//修改模板id
+						    	row.templateId=rec.templateId;//修改模板id
+						    	row.templateName = rec.templateName;
 						    	row.width=rec.width; //修改宽度
 						    	row.height=rec.height; //修改高度
 						    }

@@ -3,6 +3,7 @@ package com.bondex.entity;
 import com.bondex.annoation.dao.Column;
 import com.bondex.annoation.dao.Pk;
 import com.bondex.annoation.dao.Table;
+import com.bondex.util.StringUtils;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -41,5 +42,6 @@ public class Template extends BaseEntity{
 	
 	@Column(name="create_name")
 	private String createName; //姓名
+
 	
 }

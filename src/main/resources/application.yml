@@ -155,6 +155,23 @@ spring:
       allow_unquoted_control_chars: true
       #允许出现单引号
       allow_single_quotes: true
+###################文件上传配置###########################
+#MULTIPART （MultipartProperties）
+#是否启用对分段上传的支持。
+    servlet:
+        multipart:
+             enabled: true
+             #将文件写入磁盘的阈值。值可以使用后缀“MB”或“KB”分别表示兆字节或千字节。
+             file-size-threshold: 0
+              #＃上传文件的临时目录 不设置 默认 [/tmp/tomcat.1428942566812653608.8090/work/Tomcat/localhost/ROOT]，不存在导致的
+              #system.getProperty("java.io.tmpdir") 是获取操作系统的缓存临时目录 C:\Users\登录用户~1\AppData\Local\Temp\
+             location: ${java.io.tmpdir}
+              # ＃最大文件大小。值可以使用后缀“MB”或“KB”分别表示兆字节或千字节。 指定文件不受限制 -1
+             max-file-size: 100MB
+              #＃最大请求大小。值可以使用后缀“MB”或“KB”分别表示兆字节或千字节。
+             max-request-size: 1000MB
+              #是否在文件或参数访问时懒惰地解析多部分请求。
+             resolve-lazily: false
       
 #################MyBatis#######################
 mybatis:

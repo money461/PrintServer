@@ -25,7 +25,7 @@
                         <label class="col-sm-4 control-label"><span style="color: red; ">*</span>打印办公室：</label>
                         <div class="col-sm-8">
                             <div class="input-group">
-                            	<input name="regionName" onclick="selectDeptTree()" id="treeName" type="text" placeholder="请选择打印办公室" class="form-control" required>
+                            	<input name="regionName" onclick="selectDeptTree()" id="treeName" type="text" placeholder="请选择打印办公室" class="form-control" readonly="true" required>
                                 <span class="input-group-addon"><i class="fa fa-search"></i></span>
                             </div>
                         </div>
@@ -120,7 +120,7 @@
         	var region_code = $.common.isEmpty(treeId) ? "chengdu" : treeId;
         	var url = ctx + "/region/selectregionTree/" + region_code;
 			var options = {
-				title: '选择部门',
+				title: '选择打印办公室',
 				width: "380",
 				url: url,
 				callBack: doSubmit

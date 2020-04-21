@@ -6,16 +6,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import com.bondex.config.jdbc.JdbcTemplateSupport;
 import com.bondex.dao.RegionDao;
 import com.bondex.dao.UserDefaultRegionDao;
+import com.bondex.dao.base.BaseDao;
 import com.bondex.entity.Region;
 import com.bondex.entity.UserDefaultRegion;
 import com.bondex.mapper.AdminDataCurrentMapper;
 import com.bondex.util.StringUtils;
 
 @Component
-public class UserDefaultRegionDaoImpl implements UserDefaultRegionDao {
+public class UserDefaultRegionDaoImpl extends BaseDao<UserDefaultRegion, Integer> implements UserDefaultRegionDao {
 	
+	private JdbcTemplateSupport jdbcTemplateSupport;
+	
+	@Autowired
+	public UserDefaultRegionDaoImpl(JdbcTemplateSupport jdbcTemplate) {
+		super(jdbcTemplate);
+		this.jdbcTemplateSupport  = jdbcTemplate;
+	}
+
+
+
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 	
@@ -31,7 +43,13 @@ public class UserDefaultRegionDaoImpl implements UserDefaultRegionDao {
 		if(StringUtils.isNull(userDefaultRegion)){
 			return null;
 		}
-		String sql="SELECT	d.id, d.opid, d.opid_name,	d.default_region, d.type,d.create_time,r.region_id,r.region_code,	r.region_name,	r.parent_code,	r.parent_name FROM 	default_region d LEFT JOIN region r   ON	d.default_region=r.region_code	 WHERE	1=1 ";
+		String sql="SELECT	d.id, d.opid, d.opid_name,	d.default_region, d.type,d.create_time,d.update_time,r.region_id,r.region_code,	r.region_name,	r.parent_code,	r.parent_name FROM 	default_region d LEFT JOIN region r   ON	d.default_region=r.region_code	 WHERE	1=1 ";
+		
+		Integer id = userDefaultRegion.getId();
+		if(StringUtils.isNotNull(id)){
+			sql+="and d.id = "+id;
+		}
+		
 		String opid = userDefaultRegion.getOpid();
 		if(StringUtils.isNotBlank(opid)){
 			sql+="and d.opid = '"+opid+"' ";
@@ -61,7 +79,9 @@ public class UserDefaultRegionDaoImpl implements UserDefaultRegionDao {
 			sql+="and r.parent_name like '%"+userDefaultRegion.getParentName()+"%' ";
 		}
 		
-		 sql+="and d.type = '"+userDefaultRegion.getType()+"' "; //默认值0
+		if(StringUtils.isNotNull(userDefaultRegion.getType())){
+			sql+="and d.type = '"+userDefaultRegion.getType()+"' "; //默认值0
+		}
 		
 		 List<UserDefaultRegion> defaultRegions =  adminDataCurrentMapper.selectUserDefaultRegion(sql);
 		 
@@ -97,6 +117,17 @@ public class UserDefaultRegionDaoImpl implements UserDefaultRegionDao {
 		String  sql = "select count(*) from  default_region WHERE opid =?";
 		Integer i = jdbcTemplate.queryForObject(sql, new Object[]{opid},Integer.class);
 		return i;
+	}
+
+
+
+	@Override
+	public Integer changeStatus(UserDefaultRegion userDefaultRegion) {
+		
+		UserDefaultRegion user = super.findOneById(userDefaultRegion.getId());
+		user.setType(userDefaultRegion.getType());
+		Integer integer = super.insertforUpdate(user, true);
+		return integer;
 	}
 
 	

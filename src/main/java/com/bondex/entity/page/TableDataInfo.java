@@ -31,7 +31,17 @@ public class TableDataInfo implements Serializable
     {
     }
 
-    /**
+    
+    public TableDataInfo( int code, String msg) {
+		super();
+		this.code = code;
+		this.msg = msg;
+	}
+
+
+
+
+	/**
      * 分页
      * 
      * @param list 列表数据

@@ -9,12 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bondex.config.jdbc.JdbcTemplateSupport;
 import com.bondex.dao.CurrentLabelDao;
 import com.bondex.dao.base.BaseDao;
 import com.bondex.entity.current.BaseLabelDetail;
-import com.bondex.entity.page.PageBean;
+import com.bondex.mapper.TemplateDataMapper;
 import com.bondex.shiro.security.entity.UserInfo;
 import com.bondex.util.CollectionUtils;
 import com.bondex.util.StringUtils;
@@ -30,6 +31,9 @@ public class CurrentLabelDaoImpl extends BaseDao<BaseLabelDetail, String> implem
 		this.jdbcTemplateSupport = jdbcTemplateSupport;
 	}
 	
+	@Autowired
+	private TemplateDataMapper TemplateDataMapper;
+	
 	/**
 	 * String rt = list.stream().map(res -> res.getString()).collect(Collectors.joining("','"));
 	 * String opids = list.stream().collect(Collectors.joining(",")); //获取用户部门所有的opid
@@ -37,12 +41,10 @@ public class CurrentLabelDaoImpl extends BaseDao<BaseLabelDetail, String> implem
 	@Override
 	public List<BaseLabelDetail> selectBaseLabelList(BaseLabelDetail baseLabelDetail,Boolean authorization) {
 		UserInfo userInfo = ShiroUtils.getUserInfo();
-		String sql="SELECT	base_label.id,	base_label.show_num as showNum,	base_label.code as code,IFNULL(base_label.template_id,template.template_id) AS templateId,	IFNULL(base_label.template_name,template.template_name) AS templateName, base_label.doctype_id as  doctypeId,	base_label.doctype_name as doctypeName,	base_label.copies as copies, base_label.print_status AS printStatus, base_label.json_data as jsonData,base_label.opid as opid,base_label.opid_name as opidName,	base_label.alert_name as alertName,	base_label.print_name as print_name,	base_label.update_time as updateTime,	base_label.create_time as createTime	FROM	base_label	LEFT JOIN template  ON base_label.code = template.code and template.is_default='0' and template.code= ?  where 1=1 ";
-		
 		String code = baseLabelDetail.getCode();
-		if(StringUtils.isNotBlank(code)){
-			sql+=" and base_label.code =  '"+code +"'";
-		}
+		String sql="SELECT	base_label.id,	base_label.show_num as showNum,	base_label.code as code,IFNULL(base_label.template_id,template.template_id) AS templateId,	IFNULL(base_label.template_name,template.template_name) AS templateName, base_label.doctype_id as  doctypeId,	base_label.doctype_name as doctypeName,	base_label.copies as copies, base_label.print_status AS printStatus, base_label.json_data as jsonData,base_label.opid as opid,base_label.opid_name as opidName,	base_label.alert_name as alertName,	base_label.print_name as print_name,	base_label.update_time as updateTime,	base_label.create_time as createTime	FROM	base_label	LEFT JOIN template  ON base_label.code = template.code and template.is_default='0' and template.code= '"+code+"'  where 1=1 ";
+		
+		sql+=" and base_label.code =  '"+code +"'";
 		
 		String id = baseLabelDetail.getId();
 		if(StringUtils.isNotBlank(id)){
@@ -101,8 +103,7 @@ public class CurrentLabelDaoImpl extends BaseDao<BaseLabelDetail, String> implem
 			sql+=" AND date_format(base_label.update_time,'%y%m%d') <= date_format('"+params.get("endTime")+"','%y%m%d')";
 		}
 		
-		PageBean<BaseLabelDetail> result= jdbcTemplateSupport.queryForPage(sql,true,"base_label",new Object[]{baseLabelDetail.getCode()}, new BeanPropertyRowMapper<BaseLabelDetail>(BaseLabelDetail.class));
-		List<BaseLabelDetail> list = result.getList();
+		List<BaseLabelDetail> list = TemplateDataMapper.queryBaseLabelDetail(sql);
 		return list;
 	}
 
@@ -133,6 +134,7 @@ public class CurrentLabelDaoImpl extends BaseDao<BaseLabelDetail, String> implem
 		return super.updateById(baseLabelDetail, baseLabelDetail.getId(), true);
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void insertBaseLabel(List<BaseLabelDetail> list) {
 		for (BaseLabelDetail baseLabelDetail : list) {

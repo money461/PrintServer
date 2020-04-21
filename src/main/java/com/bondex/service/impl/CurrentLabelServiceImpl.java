@@ -72,14 +72,18 @@ public class CurrentLabelServiceImpl implements CurrentLabelService {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class)
-	public Object saveBaseLabelMsg(String message) {
+	public Object saveBaseLabelMsg(String message,String correlationId) {
+		AjaxResult result = null;
+		Boolean flag = logInfoDao.checkCorrelationIdUnique(correlationId);
+		if(flag){return   AjaxResult.error("消息重复消费！");} //重复消费 消息自动应答Ack,结束此次消费
+		
 		Log log = new Log();
 		Date date=  Date.from(LocalDateTime.now().toInstant(ZoneOffset.of("+8"))); //默认时区为东8区
 		log.setUpdateTime(date);
 		log.setCreateTime(date);
 		log.setJson(message);
 		log.setStatus(1); //入库失败
+		log.setCorrelationId(correlationId);//消息唯一标识
 		String showNumLog="";
 		String docTypeNameLog="";
 		try {
@@ -134,7 +138,6 @@ public class CurrentLabelServiceImpl implements CurrentLabelService {
 			
 		}
 		int i = log.getStatus();
-		AjaxResult result = null;
 		if(0==i){
 			result = AjaxResult.success(log.getDetail());
 		}else{

@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.SelectProvider;
 import org.springframework.stereotype.Repository;
 
 import com.bondex.entity.LabelAndTemplate;
+import com.bondex.entity.current.BaseLabelDetail;
 import com.bondex.mapper.provider.TemplateDataProvider;
 import com.bondex.shiro.security.entity.Opid;
 
@@ -20,4 +21,6 @@ public interface TemplateDataMapper {
 	@SelectProvider(type=TemplateDataProvider.class,method="getqueryLabelAndTemplateSQL")
 	public List<Opid> queryOpidName(String sql);
 	
+	@SelectProvider(type=TemplateDataProvider.class,method="getqueryLabelAndTemplateSQL")
+	public List<BaseLabelDetail> queryBaseLabelDetail(String sql);
 }

@@ -2,6 +2,7 @@ package com.bondex.controller;
 
 import java.util.List;
 
+import com.bondex.entity.page.PageBean;
 import com.bondex.entity.page.PageDomain;
 import com.bondex.entity.page.TableDataInfo;
 import com.bondex.entity.page.TableSupport;
@@ -43,10 +44,19 @@ public class BaseController
     @SuppressWarnings({ "rawtypes", "unchecked" })
     protected TableDataInfo getDataTable(List<?> list)
     {
+    	TableDataInfo rspData = new TableDataInfo();
+    	rspData.setCode(0);
+    	rspData.setRows(list);
+    	rspData.setTotal(new PageInfo(list).getTotal());
+    	return rspData;
+    }
+    
+    protected TableDataInfo getDataPageBeanTable(PageBean<?> pageBean)
+    {
         TableDataInfo rspData = new TableDataInfo();
         rspData.setCode(0);
-        rspData.setRows(list);
-        rspData.setTotal(new PageInfo(list).getTotal());
+        rspData.setRows(pageBean.getList());
+        rspData.setTotal(pageBean.getTotal());
         return rspData;
     }
     

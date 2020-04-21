@@ -33,8 +33,8 @@ import com.bondex.entity.res.AjaxResult;
 import com.bondex.entity.res.MsgResult;
 import com.bondex.service.ClientService;
 import com.bondex.service.UserDefaultRegionService;
-import com.bondex.shiro.security.entity.JsonResult;
 import com.bondex.shiro.security.entity.Opid;
+import com.bondex.shiro.security.entity.PrintTemplatePremission;
 import com.bondex.shiro.security.entity.UserInfo;
 import com.bondex.util.GsonUtil;
 import com.bondex.util.StringUtils;
@@ -185,7 +185,7 @@ public class ClientController {
 	@RequestMapping("getPrint")
 	@ResponseBody
 	public String getPrint(HttpServletRequest request) {
-		List<JsonResult> list = ShiroUtils.getUserPrintTemplateInfo();
+		List<PrintTemplatePremission> list = ShiroUtils.getUserPrintTemplateInfo();
 		return GsonUtil.GsonString(list);
 	}
 

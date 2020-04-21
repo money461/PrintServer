@@ -129,6 +129,67 @@ printlog.prototype.select2=function(code,callback){
 	
 }
 
+printlog.prototype.initdate = function(){
+	$('#startDate').attr('style','width: 93px;');
+	$('#endDate').attr('style','width: 93px;');
+	
+	 function formatterDate(date) {
+	        var day = date.getDate() > 9 ? date.getDate() : "0" + date.getDate();
+	        var month = (date.getMonth() + 1) > 9 ? (date.getMonth() + 1) : "0" + (date.getMonth() + 1);
+	        return date.getFullYear() + '-' + month + '-' + day;
+	    };
+	
+	var beforedate = new Date();
+	beforedate.setDate(beforedate.getDate()-30)
+	var startDateConfig={
+			elem: '#startDate',
+	        max: $('#endDate').val(),
+	        theme: 'molv',
+	        trigger: 'click',
+	        isInitValue: true,
+	        value: beforedate,
+	        done: function(value, date) {
+	            // 结束时间大于开始时间
+	            if (value !== '') {
+	                endDate.config.min.year = date.year;
+	                endDate.config.min.month = date.month - 1;
+	                endDate.config.min.date = date.date;
+	            } else {
+	                endDate.config.min.year = '';
+	                endDate.config.min.month = '';
+	                endDate.config.min.date = '';
+	            }
+	        }
+	};
+	var nowdate = new Date();
+	var endDateConfig={
+			elem: '#endDate',
+	        min: formatterDate(beforedate),
+	        theme: 'molv',
+	        trigger: 'click',
+	        isInitValue: true,
+	        value: nowdate,
+	        done: function(value, date) {
+	            // 开始时间小于结束时间
+	            if (value !== '') {
+	                startDate.config.max.year = date.year;
+	                startDate.config.max.month = date.month - 1;
+	                startDate.config.max.date = date.date;
+	            } else {
+	                startDate.config.max.year = '';
+	                startDate.config.max.month = '';
+	                startDate.config.max.date = '';
+	            }
+	        }
+	};
+	
+	var laydate = layui.laydate;
+	var startDate =laydate.render(startDateConfig);
+	var endDate = laydate.render(endDateConfig);
+	
+}
+
+
 var printlog = new printlog();
 
 $(document).ready(function(){

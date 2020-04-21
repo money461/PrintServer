@@ -1,5 +1,7 @@
 package com.bondex.entity;
 
+import com.bondex.annoation.dao.Column;
+import com.bondex.annoation.dao.Pk;
 import com.bondex.annoation.dao.Table;
 /**
  * 用户办公室信息表
@@ -9,11 +11,14 @@ import com.bondex.annoation.dao.Table;
  */
 @Table(name="default_region")
 public class UserDefaultRegion extends Region {
+	@Pk
 	private Integer id; //自增id
 	private String opid; //用户opid
+	@Column(name="opid_name")
 	private String opidName; //用户名称
+	@Column(name="default_region")
 	private String defaultRegion; //默认区域
-	private int type;
+	private Integer type;
 	public Integer getId() {
 		return id;
 	}
@@ -38,14 +43,12 @@ public class UserDefaultRegion extends Region {
 	public void setDefaultRegion(String defaultRegion) {
 		this.defaultRegion = defaultRegion;
 	}
-	public int getType() {
+	public Integer getType() {
 		return type;
 	}
-	public void setType(int type) {
+	public void setType(Integer type) {
 		this.type = type;
 	}
-	
-	
 	
 	
 

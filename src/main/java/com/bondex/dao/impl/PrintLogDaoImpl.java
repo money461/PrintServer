@@ -1,9 +1,7 @@
 package com.bondex.dao.impl;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;import java.util.stream.Collector;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -15,7 +13,6 @@ import com.bondex.dao.PrintLogDao;
 import com.bondex.dao.base.BaseDao;
 import com.bondex.entity.log.PrintLog;
 import com.bondex.entity.page.PageBean;
-import com.bondex.shiro.security.entity.SecurityModel;
 import com.bondex.util.StringUtils;
 import com.bondex.util.shiro.ShiroUtils;
 
@@ -38,7 +35,7 @@ public class PrintLogDaoImpl extends BaseDao<PrintLog, Integer> implements Print
 
 	//拼装成父子表格形式
 	@Override
-	public List<PrintLog> getPrintlogDetail(PrintLog printLog) {
+	public PageBean<PrintLog> getPrintlogDetail(PrintLog printLog) {
 		String sql="SELECT * FROM `print_log` WHERE 1=1 ";
 		
 		if(StringUtils.isNotNull(printLog)){
@@ -84,13 +81,12 @@ public class PrintLogDaoImpl extends BaseDao<PrintLog, Integer> implements Print
 			
 		}
 		MapSqlParameterSource map = new MapSqlParameterSource();
-		List<SecurityModel> model = ShiroUtils.getUserSecurityModel();
-		List<String> codes = model.stream().map(se -> se.getPageCode()).collect(Collectors.toList());
+		List<String> pageCodes = ShiroUtils.getUserInfo().getPageCodes();
 		map.addValue("status", printLog.getStatus());
-		map.addValue("code", codes);
+		map.addValue("code", pageCodes);
 		
 		PageBean<PrintLog> pageBean = jdbcTemplateSupport.queryForPage(sql, true, null, map, new BeanPropertyRowMapper<PrintLog>(PrintLog.class));
-		return pageBean.getList();
+		return pageBean;
 	}
 
 

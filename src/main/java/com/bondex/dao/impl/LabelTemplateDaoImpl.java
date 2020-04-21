@@ -4,18 +4,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Repository;
 
+import com.bondex.cas.SpringCasAutoconfig;
 import com.bondex.config.jdbc.JdbcTemplateSupport;
 import com.bondex.dao.LabelTemplateDao;
 import com.bondex.dao.base.BaseDao;
+import com.bondex.dao.rowmapper.TemplateRowMapper;
 import com.bondex.entity.Template;
 import com.bondex.entity.page.PageBean;
 import com.bondex.mapper.AdminDataCurrentMapper;
-import com.bondex.shiro.security.entity.JsonResult;
+import com.bondex.shiro.security.entity.PrintTemplatePremission;
 import com.bondex.shiro.security.entity.UserInfo;
+import com.bondex.util.CollectionUtils;
 import com.bondex.util.StringUtils;
 import com.bondex.util.context.ApplicationContextProvider;
 import com.bondex.util.shiro.ShiroUtils;
@@ -28,6 +30,9 @@ public class LabelTemplateDaoImpl extends BaseDao<Template,String> implements La
 	@Autowired
 	private AdminDataCurrentMapper adminDataCurrentMapper;
 	
+	@Autowired
+	private SpringCasAutoconfig springCasAutoconfig;
+	
 	private JdbcTemplateSupport jdbcTemplateSupport;
 	
 	@Autowired
@@ -35,12 +40,52 @@ public class LabelTemplateDaoImpl extends BaseDao<Template,String> implements La
 		super(jdbcTemplateSupport);
 		this.jdbcTemplateSupport = jdbcTemplateSupport;
 	}
-
+	
 	/**
-	 * 获取数据库中的模板信息
+	 * 获取数据库中所有的模板
 	 */
 	@Override
 	public List<Template> getALLTemplate(Template template) {
+		String sql= "select * from template where 1=1 ";
+		MapSqlParameterSource map = new MapSqlParameterSource();
+		
+		if(StringUtils.isNotBlank(template.getId())){
+			sql+=" and id = '"+template.getId()+"'";
+		}
+		
+		if(StringUtils.isNotBlank(template.getCode())){
+			sql+=" and code = '"+template.getCode()+"'";
+		}
+		
+		if(StringUtils.isNotBlank(template.getTemplateId())){
+			sql+=" and template_id  in (:templateId) ";
+			String templateId = template.getTemplateId();
+			List<String> rtList = CollectionUtils.array2List(templateId.split(","));
+			map.addValue("templateId", rtList);
+		}
+		if(StringUtils.isNotBlank(template.getTemplateName())){
+			sql+=" and template_name like '%"+template.getTemplateName()+"%'";
+		}
+		if(StringUtils.isNotBlank(template.getStatus())){
+			sql+=" and status ="+template.getStatus();
+		}
+		
+		if(ObjectUtil.isNotNull(template.getIsDefault())){
+			sql+=" and is_default ="+template.getIsDefault();
+		}
+		
+		PageBean<Template> pageBean = jdbcTemplateSupport.queryForPage(sql,true,null,map, new TemplateRowMapper(springCasAutoconfig.getExportFileUrl()));
+		List<Template> list = pageBean.getList();
+		return list;
+	}
+
+
+	/**
+	 * 获取数据库中用户可以使用的模板信息
+	 */
+	@Override
+	public PageBean<Template> getALLTemplateByUserAuth(Template template) {
+		MapSqlParameterSource map = new MapSqlParameterSource();
 		
 		String sql= "select * from template where 1=1 ";
 		
@@ -53,7 +98,10 @@ public class LabelTemplateDaoImpl extends BaseDao<Template,String> implements La
 		}
 		
 		if(StringUtils.isNotBlank(template.getTemplateId())){
-			sql+=" and template_id  = '"+template.getTemplateId()+"'";
+			sql+=" and template_id  in (:templateId) ";
+			String templateId = template.getTemplateId();
+			List<String> rtList = CollectionUtils.array2List(templateId.split(","));
+			map.addValue("templateId", rtList);
 		}
 		if(StringUtils.isNotBlank(template.getTemplateName())){
 			sql+=" and template_name like '%"+template.getTemplateName()+"%'";
@@ -67,17 +115,16 @@ public class LabelTemplateDaoImpl extends BaseDao<Template,String> implements La
 		}
 		
 		String activeProfile = ApplicationContextProvider.getActiveProfile();
-		MapSqlParameterSource map = new MapSqlParameterSource();
+		
 		if(!"dev".equals(activeProfile)){
-			List<JsonResult> securitylist = ShiroUtils.getUserPrintTemplateInfo();
+			List<PrintTemplatePremission> securitylist = ShiroUtils.getUserPrintTemplateInfo();
 			List<String> rtList = securitylist.stream().map(res -> res.getReportid()).collect(Collectors.toList());
-			map.addValue("templateId", rtList);
-			sql+=" and template_id  in (:templateId) ";
+			map.addValue("templateIdauth", rtList);
+			sql+=" and template_id  in (:templateIdauth) ";
 		}
 		
-		PageBean<Template> pageBean = jdbcTemplateSupport.queryForPage(sql,true,null,map, new BeanPropertyRowMapper<Template>(Template.class) );
-		List<Template> list = pageBean.getList();
-		return list;
+		PageBean<Template> pageBean = jdbcTemplateSupport.queryForPage(sql,true,null,map, new TemplateRowMapper(springCasAutoconfig.getExportFileUrl()));
+		return pageBean;
 	}
 
 	/**

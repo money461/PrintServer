@@ -62,7 +62,7 @@ public class MessageHelper {
 			//重回队列
 			//重新发送消息到队尾
 	          //创建消息属性 
-			BasicProperties basicProperties = com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN //priority==0 保证回到队
+			BasicProperties basicProperties = com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN //priority==0 保证回到队尾
 																					.builder() 
 																					.deliveryMode(2)
 																	        		.contentType("text/plain")

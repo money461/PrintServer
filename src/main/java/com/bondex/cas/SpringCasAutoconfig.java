@@ -63,6 +63,10 @@ public class SpringCasAutoconfig {
 
 	private String casPublicUrl; // CAS 公共账户登陆地址
 	
+	private String uploadAndStoreFileUrl; //文件上传并归档
+	
+	private String exportFileUrl; //文件下载预览地址
+	
 	private String loadMore; // 获取opids接口url
 	
 	private String isadmin; //是否为系统管理员
@@ -235,6 +239,22 @@ public class SpringCasAutoconfig {
 
 	public void setFrameworkapi(String frameworkapi) {
 		this.frameworkapi = frameworkapi;
+	}
+	
+	public String getUploadAndStoreFileUrl() {
+		return uploadAndStoreFileUrl;
+	}
+
+	public void setUploadAndStoreFileUrl(String uploadAndStoreFileUrl) {
+		this.uploadAndStoreFileUrl = uploadAndStoreFileUrl;
+	}
+
+	public String getExportFileUrl() {
+		return exportFileUrl;
+	}
+
+	public void setExportFileUrl(String exportFileUrl) {
+		this.exportFileUrl = exportFileUrl;
 	}
 
 	public String getIsadmin() {

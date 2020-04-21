@@ -23,6 +23,10 @@ public class Log  extends BaseEntity implements Serializable{
 	 */
 	@Pk
 	private Integer id;
+	
+	@Column(name="correlation_id")
+	private String correlationId; //消息唯一标识
+	
 	@Column(name="seq_no")
 	private String seqNo; //消息ID
 	@Column(name="sender_name")

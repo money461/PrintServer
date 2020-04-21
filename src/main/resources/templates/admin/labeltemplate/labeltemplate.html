@@ -16,12 +16,14 @@
 								模板编码：<input type="text" name="templateId"/>
 							</li>
 							<li>
-								模板名称：<input type="text" name="templateName"/>
+								模板名称：
+								<input class="form-control" type="text" name="templateName" id="templateName" style="display: none;" required>
+					            <input class="select2 form-control" type="text" id='moban' href='/labelPrint/template/getUserAuthenTemplate' inputMessage="请输入或选择打印模板" >
 							</li>
 							<li>
 								<input type="hidden" id='code' name="code"/>
 								<input type="hidden" id='codeName' name="codeName"/>
-								打印标签：<input class="select2 form-control" id='1' href="/labelPrint/template/getAllCode" inputMessage="请输入选择打印标签" ></input>
+								打印标签：<input class="select2 form-control" id='biaoqian' href="/labelPrint/template/getAllCode" inputMessage="请输入选择打印标签" ></input>
 							</li>
 							<li>
 								默认绑定：						
@@ -43,7 +45,7 @@
 								<@shiro.hasAnyPermissions  name="${code}.btn-search">
 								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
 								</@shiro.hasAnyPermissions>
-								<@shiro.hasAnyPermissions name="${code}.${code}.btn-realod">
+								<@shiro.hasAnyPermissions name="${code}.btn-realod">
 							    <a class="btn btn-warning btn-rounded btn-sm" onclick="labeltemplate.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
 								</@shiro.hasAnyPermissions>
 							</li>
@@ -55,9 +57,9 @@
 			<div class="btn-group-sm" id="toolbar" role="group">
 				<@shiro.hasAnyPermissions name="${code}.btn-add">
 				<a class="btn btn-success" onclick="$.operate.add()">
-	                <i class="fa fa-plus"></i> 新增
+	                <i class="fa fa-plus"></i> 新增模板
 	            </a>
-				</@shiro.hasAnyPermissions>
+			     </@shiro.hasAnyPermissions>
 				<a class="btn btn-primary single disabled" style="display: none;" onclick="$.operate.edit()">
 		            <i class="fa fa-edit"></i> 修改
 		        </a>
@@ -85,19 +87,21 @@
 		var datas ="";
 		var prefix = ctx + "/template";
 
+		//回调函数
 		function selected(data,id){
-			if('1'==id){
+			if('moban'==id){
+				$("#templateId").val(data.id);
+				$("#templateName").val(data.text);
+			}else if('biaoqian'==id){
 				$("#code").val(data.id);
 				$("#codeName").val(data.text);
 			}
 		}
 		
 		$(function() {
-			
-			$('.select2').each(function(){
-				var id = $(this).attr('id');
-			    labeltemplate.select2(id,null,selected);
-			});
+			//初始化下拉
+		    labeltemplate.select2('moban',null,selected);
+		    labeltemplate.select2('biaoqian',null,selected);
 			
 		    var options = {
 		        url: prefix + "/getAlltemplate",
@@ -105,6 +109,8 @@
 		        updateUrl: prefix + "/edit/{id}",
 		        removeUrl: prefix + "/remove",
 		        exportUrl: prefix + "/export",
+		        importTemplateUrl: prefix + "/importTemplate",
+		        exportTemplateUrl: prefix + "/exportTemplate",
 		        showExport:true, //是否显示导出
 		        exportDataType:'selected',
 		        sortName: "updateTime",
@@ -157,7 +163,14 @@
 		        {
 		        	field: 'templateUrl',
 		        	title: '模板样式',
-		        	visible:false
+		        	visible:true,
+		        	formatter: function(value, row, index){
+		        		if($.common.isEmpty(row.templateUrl)){
+		        		 return "<a style='color:red'>未上传打印模板文件</a>";
+		        		}else{
+		        		 return "<a  title='预览查看标签' href='"+row.templateUrl+"'  target='_blank' >"+row.templateName+"</a>";
+		        		}
+		        	}
 		        },
 		        {
 		            field: 'isDefault',
@@ -202,7 +215,10 @@
 		        }]
 		    };
 		    $.table.init(options);
+		    $(".columns").append($('#btn-exportAndImport').html()); //追加导入导出html
 		});
+		
+		
 		
 		/* 模板管理-停用绑定 */
 		function disable(id) {
@@ -245,8 +261,38 @@
         	    };
         	    $.ajax(config)
             };	
-		
-		
+            
 	</script>
 </body>
+
+   <!-- 导入区域 -->
+   <script id="importTpl" type="text/template">
+   <form id="importTemplateForm" enctype="multipart/form-data" class="mt20 mb10">
+   	<div class="col-xs-offset-1">
+   		<input type="file" id="file" name="file" value="选择数据文件" multiple/>
+   		<div class="mt10 pt5">
+   			<input type="checkbox" id="updateSupport" name="updateSupport" title="如果模板已经存在，更新这条数据。"> 是否更新已经存在的模板数据
+   			<input style="display:none;" type="text" id="batchUploadSupport" name="batchUploadSupport" value="true">
+   			 &nbsp;	<a style="display:none;" onclick="$.table.importTemplate()" class="btn btn-default btn-xs"><i class="fa fa-file-excel-o"></i> 下载模板</a>
+   		</div>
+		<div id='file-list-display'></div>
+   		<font color="red" class="pull-left mt10">
+   			提示：仅允许导入“repx”格式文件！
+   		</font>
+   	</div>
+   </form>	
+  </script>
+  
+  <script id="btn-exportAndImport" type="text/template">
+	<@shiro.hasAnyPermissions name="${code}.btn-import,${code}.btn-export">
+	  <div  class="btn-group">
+				<a href="javascript:" title="导出导入模板" class="btn btn-default dropdown-toggle" 	data-toggle="dropdown"> <i class="fa fa-navicon"></i> <span	class="caret"></span></a>
+				<ul class="dropdown-menu">
+					<li><a href="javascript:void(0);" id="exportrepx" onclick="labeltemplate.exportrepx();"><i class="glyphicon glyphicon-export"></i> 批量导出模板</a></li>
+					<li><a href="javascript:void(0);" id="importrepx" onclick="labeltemplate.importrepx();"><i class="glyphicon glyphicon-import"></i> 批量导入模板</a></li>
+				</ul>
+	  </div>  
+	</@shiro.hasAnyPermissions>
+  </script>
+  
 </html>

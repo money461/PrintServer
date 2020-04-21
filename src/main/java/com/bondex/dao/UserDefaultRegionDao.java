@@ -15,5 +15,7 @@ public interface UserDefaultRegionDao {
 	//当前操作更新或者添加办公室绑定
 	public Integer updateOrAddUserRegion(UserDefaultRegion userDefaultRegion); //需要修改
 
+	public Integer changeStatus(UserDefaultRegion userDefaultRegion);
+
 	
 }

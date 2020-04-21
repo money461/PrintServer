@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import com.bondex.config.redis.redisLock.RedisLockUtil;
+import com.bondex.dao.LogInfoDao;
 import com.bondex.rabbitmq.multiconfig.MessageHelper;
 import com.bondex.service.CurrentLabelService;
 import com.bondex.service.LabelInfoService;
@@ -53,9 +53,6 @@ public class Consumer {
 	@Autowired
 	private CurrentLabelService currentLabelService;
 
-	
-	@Resource(name="redisLockUtil")
-	private RedisLockUtil redisLockUtil;
 	/**
 	 * 原始做法
 	 * @param msg
@@ -65,7 +62,7 @@ public class Consumer {
 		String correlationId;
 		try {
 			correlationId = MessageHelper.CheckbackQueueMessage(msg, channel);
-			if(StringUtils.isBlank(correlationId)){return;}//结束此次消费
+			if(StringUtils.isBlank(correlationId)){return;}//消息自动应答Ack,结束此次消费
 			String string = MessageHelper.msgToObj(msg,String.class);
 			List<Map<String, Object>> list = GsonUtil.GsonToListMaps(string);
 			for (Map<String, Object> map : list) {
@@ -119,11 +116,11 @@ public class Consumer {
 		String message = null;
 		try {
 			String correlationId = MessageHelper.CheckbackQueueMessage(msg, channel);
-			if(StringUtils.isBlank(correlationId)){return;}//结束此次消费
+			if(StringUtils.isBlank(correlationId)){return;}//消息自动应答Ack,结束此次消费
 			message = MessageHelper.msgToObj(msg, String.class);
 			logger.debug("队列名称：[{}]监听到的消息：[{}]", "PaiAngPrintQueue", message);
 			//保存标签数据
-			paiangService.paiangSaveService(message);
+			paiangService.paiangSaveService(message,correlationId);
 			
 		} catch (Exception e) {
 			System.err.println(message);
@@ -145,11 +142,12 @@ public class Consumer {
 		String message = null;
 		try {
 			String correlationId = MessageHelper.CheckbackQueueMessage(msg, channel);
-			if(StringUtils.isBlank(correlationId)){return;}//结束此次消费
+			if(StringUtils.isBlank(correlationId)){return;}//消息自动应答Ack,结束此次消费
 			message = MessageHelper.msgToObj(msg, String.class);
 			logger.debug("队列名称：[{}]监听到的消息：[{}]", "air_label_queue_o", message);
+			
 			//保存标签数据
-			labelInfoService.labelInfoSave(message);
+			labelInfoService.labelInfoSave(message,correlationId);
 			
 		} catch (Exception e) {
 			System.err.println(message);
@@ -170,23 +168,19 @@ public class Consumer {
 		String message = null;
 		try {
 			String correlationId = MessageHelper.CheckbackQueueMessage(msg, channel);
-			if(StringUtils.isBlank(correlationId)){return;}//结束此次消费
+			if(StringUtils.isBlank(correlationId)){return;}//消息自动应答Ack,结束此次消费
 			MessageProperties messageProperties = msg.getMessageProperties();
 			message = MessageHelper.msgToObj(msg, String.class);
 			logger.debug("队列名称：[{}]监听到的消息：[{}];消息属性：[{}]", "current_labelPrint_queue", message,messageProperties);
 			
-			boolean lock = redisLockUtil.tryredisLock(correlationId, correlationId, 1000*10*24L); //防止重复消费
-			if (lock) {
-				//保存数据
-				Object object = currentLabelService.saveBaseLabelMsg(message);
-				byte[] body = JsonUtil.objToStr(object).getBytes("utf-8");
-				String replyTo = messageProperties.getReplyTo(); //用于指定回复的队列的名称
-				BasicProperties replyProperties = new BasicProperties.Builder().correlationId(correlationId).build();
-				channel.basicPublish("", replyTo, replyProperties, body); //发送回执消息
-				redisLockUtil.unLock(correlationId, correlationId); //释放锁
-			}else{
-				logger.debug("重复消费！队列名称：[{}]监听到的消息：[{}];消息属性：[{}]", "current_labelPrint_queue", message,messageProperties);
-			}
+			//保存数据
+			Object object = currentLabelService.saveBaseLabelMsg(message,correlationId);
+			
+			//返回保存情况
+			byte[] body = JsonUtil.objToStr(object).getBytes("utf-8");
+			String replyTo = messageProperties.getReplyTo(); //用于指定回复的队列的名称
+			BasicProperties replyProperties = new BasicProperties.Builder().correlationId(correlationId).build();
+			channel.basicPublish("", replyTo, replyProperties, body); //发送回执消息
 			
 		} catch (Exception e) {
 			System.err.println(message);

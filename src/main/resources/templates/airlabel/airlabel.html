@@ -32,8 +32,8 @@
 		     	  	 <li>
 		     	  	 	<label>录入时间：</label>
 		     	  	 		<input type="text" id="startTime"  placeholder="开始时间" name="params[startTime]"/>
-								<span>-</span>
-							<input type="text" id="endTime"  placeholder="结束时间" name="params[endTime]"/>
+							 <span>-</span>
+							<input type="text" id="endTime"    placeholder="结束时间" name="params[endTime]"/>
 		     	  	 </li>
 		     	  	 <li>
 		     	  	 	<label>航班日期：</label>
@@ -221,7 +221,6 @@
 	<script  type="text/javascript">
 	
 	var code = "${code!''}";
-	sessionstorage.set('code',code);
 	
 	$(function () {
 		//var thisOpid =  ${userInfo.opid};

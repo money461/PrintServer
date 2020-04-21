@@ -66,6 +66,7 @@ public class CurrentLabelController extends BaseController {
 	@RequestMapping(value="/all",method={RequestMethod.GET,RequestMethod.POST})
 	@ResponseBody
 	public Object selectBaseLabelList(BaseLabelDetail baseLabelDetail){
+		startPage(true, "base_label");
 		List<BaseLabelDetail> list = currentLabelService.selectBaseLabelList(baseLabelDetail);
 		TableDataInfo info = getDataTable(list);
 		if(StringUtils.isEmpty(list)){

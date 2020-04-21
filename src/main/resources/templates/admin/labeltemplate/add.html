@@ -77,6 +77,16 @@
 					</div>
 				</div>
 			</div>
+			
+			<div class="form-group">
+				<label class="col-sm-3 control-label">模板在线：</label>
+				<div class="col-sm-8">
+				     <a  class="form-control"  id ="thistemplateUrl" title="预览查看标签" href="javascript:void(0);" style="color:red;" target="_blank" > 未上传打印模板 </a>
+				     <a  class="btn btn-info btn-xs" style="text-align:right; float:right;" href="javascript:void(0);" onclick="importTemplate();"> <i class="fa fa-upload"></i> 导入模板  </a> 
+				</div>
+					<input class="form-control" type="text"   id='templateUrl' name="templateUrl" style="display: none;" ></input>
+			</div> 
+			
 		</form>
 	</div>
 		<!-- 引入通用js -->
@@ -153,8 +163,49 @@
 			  labeltemplate.select2('moban',null,selected);
 			  labeltemplate.select2('biaoqian',null,selected);
 			 //labeltemplate.initCode2(prefix+'/getAllCode',null,null);
+			 
+			  var options={
+			   		    importTemplateUrl: prefix + "/importTemplate",
+				        exportTemplateUrl: prefix + "/exportTemplate",
+				        modalName: "打印模板",
+				     };
+		      $.table.init(options);
 		});
 		
+		//导入模板回调
+		var importTemplateCallback  = function importTemplateCallback(result){
+			if(result.status=="200"){
+				var url = result.data;
+				$("#thistemplateUrl").attr('href',url.downloadUrl);
+				$("#thistemplateUrl").html(url.fileName);
+				$("#thistemplateUrl").removeAttr("style");
+				$("#templateUrl").val(url.templateUrl);
+			}						
+			
+		}
+		 //初始化导入
+	     function importTemplate(){
+			 labeltemplate.importrepx('importTpl',importTemplateCallback);
+	     }
+		
 	</script>
+	
+	 <!-- 导入区域 -->
+   <script id="importTpl" type="text/template">
+   <form id="importTemplateForm" enctype="multipart/form-data" class="mt20 mb10">
+   	<div class="col-xs-offset-1">
+   		<input type="file" id="file" name="file" value="选择数据文件"/>
+   		<div style="display:none;" class="mt10 pt5">
+   			<input  type="checkbox" id="updateSupport" name="updateSupport" title="如果模板已经存在，更新这条数据。"> 是否更新已经存在的模板数据
+   			 &nbsp;	<a style="display:none;" onclick="$.table.importTemplate()" class="btn btn-default btn-xs"><i class="fa fa-file-excel-o"></i> 下载模板</a>
+   		</div>
+		<div id='file-list-display'></div>
+   		<font color="red" class="pull-left mt10">
+   			提示：仅允许导入“repx”格式文件！
+   		</font>
+   	</div>
+   </form>	
+  </script>
+	
 </body>
 </html>

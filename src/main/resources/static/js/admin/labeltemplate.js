@@ -39,7 +39,7 @@ labeltemplate.prototype.initCode = function(url, data, callback){
 	        		$("#code").append( options.join('')); 
 	        		
 	        	}else{
-	        		
+	        		 $.modal.msgError(result.message);
 	        	}
 	        }
 	    };
@@ -299,8 +299,143 @@ labeltemplate.prototype.reset = function(formId, tableId) {
 	$("#" + table.options.id).bootstrapTable('refresh');
 }
 
+/**
+ * 导入数据
+ */
+labeltemplate.prototype.importrepx = function(formId,callback) {
+    	table.set();
+    	var fileList = [];
+    	var currentId = $.common.isEmpty(formId) ? 'importTpl' : formId;
+    	layer.open({
+    		type: 1,
+    		area: ['400px', '230px'],
+    		fix: false,
+    		//不固定
+    		maxmin: true,
+    		shade: 0.3,
+    		title: '导入' + table.options.modalName + '数据',
+    		content: $('#' + currentId).html(),
+    		btn: ['<i class="fa fa-check"></i> 导入', '<i class="fa fa-remove"></i> 取消'],
+    		// 弹层外区域关闭
+    		shadeClose: true,
+    		btn1: function(index, layero){
+    			/*var file = layero.find('#file').val();*/
+    			//校验文件
+    			if(fileList.length==0){
+    				$.modal.msgWarning("请选择后缀为 “repx”的文件。");
+    				return false;
+    			}
+    			if(fileList.length>7){
+    				$.modal.msgWarning("上传文件数量不能超过6份!。");
+    				return false;
+    			}
+    			fileList.forEach(function (file) {
+    				if (file == '' || !$.common.endWith(file.name, '.repx')){
+    					$.modal.msgWarning("请选择后缀为 “repx”的文件。");
+    					throw new Error("请选择后缀为 “repx”的文件。");
+    				}
+    			});
+    			var formDataform = new FormData($('#importTemplateForm')[0]); //jquery1.8以上
+    			/*var formData = new FormData();
+    			var fileList2 = $('#file')[0].files;
+    			for(var i=0;i<fileList2.length;i++){ //也可以使用 fileList遍历
+    				var file = fileList2[i];
+    				formData.append("file",file, file.name );
+    			}*/
+    			formDataform.append("updateSupport", $("input[name='updateSupport']").is(':checked'));
+    			var index = layer.load(2, {shade: false}); //加载动画
+    			$.ajax({
+    				url: table.options.importTemplateUrl,
+    				data: formDataform,
+    				cache: false, //cache设置为false，上传文件不需要缓存。
+    				contentType: false, //contentType设置为false。因为是由<form>表单构造的FormData对象，且已经声明了属性enctype="multipart/form-data"，所以这里设置为false。
+    				processData: false, //processData设置为false。因为data值是FormData对象，不需要对数据做处理。
+    				type: 'POST',
+    				beforeSend: function () {
+    		        	$.modal.loading("正在上传中，请稍后...");
+    		        	$.modal.disable();
+    		        },
+    				success: function (result) {
+    					$.modal.closeLoading();
+    					if (result.status == "200") {
+    						$.modal.closeAll();
+    						$.modal.alertSuccess(result.message);
+    						if (typeof callback == "function") {
+            	        	    callback(result);
+            	        	    $.modal.enable();
+            	        	}else{
+            	        		$.table.refresh();
+            	        	}
+    						
+    					} else {
+    						layer.close(index); //关闭加载动画
+    						$.modal.enable();
+    						$.modal.alertError(result.message);
+    					}
+    				}
+    			});
+    		},
+    		 cancel: function(index) {
+    			 alert("取消导入");
+    			 layer.close(index); //关闭加载动画
+     	       //清除表单数据
+     	       $('#importTemplateForm')[0].reset();
+     	        //清除页面数据
+     	       $('#file-list-display').html('');
+     	        //清除数组数据
+     	       fileList.length=0;
+     	    }
+    	});
+    	
+    	labeltemplate.initaddEventListener(fileList);
+}
 
-	
+/**
+ * 导出模板
+ */
+labeltemplate.prototype.exportrepx = function() {
+	table.set();
+	var rowarray = $("#" + table.options.id).bootstrapTable('getSelections');
+	if ($.common.isEmpty(rowarray)) {
+		$.modal.alertWarning("请选择需要导出的模板！");
+		return false;
+	}
+	var json=[];
+	rowarray.forEach(function (currentValue,index,arr) {
+		json.push(currentValue.templateId);
+	});
+	$.modal.confirm("确定导出选择的" + table.options.modalName + "吗？", function() {
+		var data = json.join(",");
+		window.location.href = table.options.exportTemplateUrl+"?templateId=" +data ;
+		window.parent.$.modal.loading("正在导出"+ table.options.modalName +"，请稍后...");
+		setTimeout(function(){
+			window.parent.$.modal.closeLoading(); //关闭加载
+		},3000);
+	});
+}
+
+labeltemplate.prototype.initaddEventListener = function(fileList){
+     var files = document.getElementById("file"), renderFileList;
+     var fileListDisplay = document.getElementById('file-list-display');
+     
+    files.addEventListener("change", function (event) {
+         for (var i = 0; i < files.files.length; i++) {
+             fileList.push(files.files[i]);
+         }
+         renderFileList();
+     });
+    
+    renderFileList = function () {
+         fileListDisplay.innerHTML = '';
+         fileList.forEach(function (file, index) {
+             var fileDisplayEl = document.createElement("p");
+             fileDisplayEl.innerHTML = (index + 1) + ":" + file.name;
+             fileListDisplay.appendChild(fileDisplayEl);
+         })
+     };
+}
+
+
 var labeltemplate = new labeltemplate();
 
 $(document).ready(function(){

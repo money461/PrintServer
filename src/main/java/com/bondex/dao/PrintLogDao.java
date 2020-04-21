@@ -1,14 +1,13 @@
 package com.bondex.dao;
 
-import java.util.List;
-
 import com.bondex.entity.log.PrintLog;
+import com.bondex.entity.page.PageBean;
 
 public interface PrintLogDao {
 
 	
 	void insertPrintLog(PrintLog printLog);
 
-	List<PrintLog> getPrintlogDetail(PrintLog printLog);
+	PageBean<PrintLog> getPrintlogDetail(PrintLog printLog);
 
 }

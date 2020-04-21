@@ -192,12 +192,12 @@ public class RedisLockUtil {
 	    		}
 	    		
 	    		 try {
-	                 Thread.sleep(100); //沉睡100ms再次去获取
+	                 Thread.sleep(10); //沉睡10ms再次去获取
 	             } catch (InterruptedException e) {
 	                 Thread.currentThread().interrupt();
 	             }
 	    	}
-			return requestId;
+			return null;
     } catch (Exception e) {
     	logger.error("acquire lock due to error", e);
     }

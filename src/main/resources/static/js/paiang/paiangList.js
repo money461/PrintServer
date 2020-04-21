@@ -120,8 +120,6 @@ paiang.prototype.initDataGridTable=function(){
 					
 					var ed = $(this).datagrid('getEditor', {index:rowIndex,field:'templateName'}); //获取指定的编辑器， options 参数包含两个属性：index：行的索引。field：字段名。
 					
-					var code  = sessionstorage.get('code');
-					
 					$(ed.target[0]).combobox({
 						url:"/labelPrint/label/getUserAuthtemplate?code="+code,
 						method:'GET',
@@ -129,7 +127,8 @@ paiang.prototype.initDataGridTable=function(){
 					    valueField:'templateName',
 					    onSelect: function(rec){
 					    	row.reserve3=rec.id;//修改label外键id
-					    	row.template_id=rec.template_id;//修改模板id
+					    	row.templateId=rec.templateId;//修改模板id
+					    	row.templateName = rec.templateName;
 					    	row.width=rec.width; //修改宽度
 					    	row.height=rec.height; //修改高度
 					    }
@@ -168,6 +167,7 @@ paiang.prototype.initDataGridTable=function(){
 				param['pageSize']=param.rows;
 				param['orderByColumn']=param.sort;
 				param['isAsc']=param.order;
+				param['code']=code;
 				console.info(param);
 	        	
 	        },
@@ -336,6 +336,9 @@ paiang.prototype.securityReload=function() {
 		 //重新加载
 		 //$('#paiang_tab').datagrid('reload');
 		 $("#printButton").attr("disabled",false); //解除
+		 
+		 paiang.initDate(); //时间初始值
+		 
 		 paiang.initDataGridTable();
 		 
 	 }
@@ -849,6 +852,23 @@ $.messager.confirm("操作提示", "删除无法恢复,您确定要执行删除�
 		   layer.msg("已经取消删除操作！");
 	   }
 	});
+}
+
+
+/**
+ * 初始化时间
+ */
+paiang.prototype.initDate = function(){
+	  
+    function formatterDate(date) {
+        var day = date.getDate() > 9 ? date.getDate() : "0" + date.getDate();
+        var month = (date.getMonth() + 1) > 9 ? (date.getMonth() + 1) : "0" + (date.getMonth() + 1);
+        return date.getFullYear() + '-' + month + '-' + day;
+    };
+     var nowdate =  new Date();
+     $(endTime).datebox('setValue',formatterDate(nowdate));	// set datebox value
+     nowdate.setDate(nowdate.getDate()-30);
+     $(startTime).datebox('setValue',formatterDate(nowdate));	// set datebox value
 }
 
 var toolbar ={

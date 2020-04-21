@@ -6,7 +6,7 @@ import com.bondex.entity.current.BaseLabelDetail;
 
 public interface CurrentLabelService {
 
-	Object saveBaseLabelMsg(String message);
+	Object saveBaseLabelMsg(String message,String correlationId);
 	
 	List<BaseLabelDetail> selectBaseLabelList(BaseLabelDetail baseLabelDetail);
 

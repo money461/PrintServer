@@ -44,7 +44,7 @@ public class ProducerTest {
 			Producer producer = new Producer();
 			BlockingQueue<Future<Object>> queue = new LinkedBlockingQueue<Future<Object>>(100);
 			
-			for (int i = 0; i < 10; i++) {
+			for (int i = 0; i < 100; i++) {
 				
 				CompletableFuture<Object> future = CompletableFuture.supplyAsync(() -> {
 					Object object =null;
@@ -87,15 +87,15 @@ public class ProducerTest {
 				
 				List<Baselabel> list = new ArrayList<Baselabel>();
 				Baselabel baselabel = new Baselabel();
-				baselabel.setCode("trail_label");// 标签业务code
-				baselabel.setCodeName("铁运标签");
+				baselabel.setCode("cd_label");// 标签业务code
+				baselabel.setCodeName("成都标签");
 				baselabel.setShowNum("mawb2020022488888"); //展示单号
 				//baselabel.setTemplateId("2785d11a-e261-4c61-8096-8f9f21e2a3f0"); //重庆标签
 				baselabel.setDoctypeId("OrderManageClient"); //系统业务id
-				baselabel.setDoctypeName("铁路货运请求"); //业务说明
+				baselabel.setDoctypeName("成都货运请求"); //业务说明
 				baselabel.setCopies(5); //打印份数
-				baselabel.setOpid("231243"); //数据创建人
-				baselabel.setOpidName("重庆空运操作/邹凤"); //姓名
+				baselabel.setOpid("280602"); //数据创建人
+				baselabel.setOpidName("成都资讯/钱力"); //姓名
 				//打印内容json
 				baselabel.setJsonData("[{\"Mblno\":\"074-28742501\",\"Hblno\":\"77732686\",\"Tquantity\":\"1\",\"Dportcode\":\"CTU\",\"Aprotcode\":\"MEX\"}]");
 				list.add(baselabel);

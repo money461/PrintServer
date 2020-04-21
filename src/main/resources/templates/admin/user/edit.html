@@ -1,31 +1,33 @@
+<#include "/system/include.html" encoding="UTF-8" parse=true/>
 <!DOCTYPE html>
-<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
 <head>
-	<th:block th:include="include :: header('修改用户')" />
-	<th:block th:include="include :: select2-css" />
+	<!-- 引入样式css -->
+	<@commoncss title='修改用户'/>
+	
 </head>
 <body>
     <div class="main-content">
-        <form class="form-horizontal" id="form-user-edit" th:object="${user}">
-            <input name="userId"  type="hidden"  th:field="*{userId}" />
-			<input name="deptId"  type="hidden"  th:field="*{deptId}" id="treeId"/>
+        <form class="form-horizontal" id="form-user-edit">
+            <input name="id"  type="hidden" value="${user.id!''}" />
+            <input name="defaultRegion" type="hidden" id="treeId" value="${user.defaultRegion!''}"/>
+            
             <h4 class="form-header h4">基本信息</h4>
-            <div class="row">
+          <div class="row">
             	<div class="col-sm-6">
                     <div class="form-group">
                         <label class="col-sm-4 control-label"><span style="color: red; ">*</span>用户名称：</label>
                         <div class="col-sm-8">
-                            <input name="userName" placeholder="请输入用户名称" class="form-control" type="text" maxlength="30" th:field="*{userName}" required>
+                            <input name="opidName" placeholder="请输入用户名称" class="form-control" type="text" maxlength="30" value="${user.opidName!''}" required>
                         </div>
                     </div>
                 </div>
                 <div class="col-sm-6">
                     <div class="form-group">
-                        <label class="col-sm-4 control-label"><span style="color: red; ">*</span>归属部门：</label>
+                        <label class="col-sm-4 control-label"><span style="color: red; ">*</span>打印办公室：</label>
                         <div class="col-sm-8">
                             <div class="input-group">
-                                <input class="form-control" type="text" name="deptName" onclick="selectDeptTree()" id="treeName" th:field="*{dept.deptName}" required>
-                            	<span class="input-group-addon"><i class="fa fa-search"></i></span>
+                            	<input name="regionName" onclick="selectDeptTree()" id="treeName" type="text" placeholder="请选择打印办公室" class="form-control" value="${user.parentName!''}/${user.regionName!''}" readonly="true"  required>
+                                <span class="input-group-addon"><i class="fa fa-search"></i></span>
                             </div>
                         </div>
                     </div>
@@ -34,83 +36,21 @@
             <div class="row">
                 <div class="col-sm-6">
                     <div class="form-group">
-                        <label class="col-sm-4 control-label"><span style="color: red; ">*</span>手机号码：</label>
+                        <label class="col-sm-4 control-label"><span style="color: red; ">*</span>操作ID：</label>
                         <div class="col-sm-8">
-                            <input name="phonenumber" placeholder="请输入手机号码" class="form-control" type="text" maxlength="11" th:field="*{phonenumber}" required>
+                            <input id="opid" name="opid" placeholder="请输入操作ID" class="form-control" type="text" maxlength="11" value="${user.opid!''}" required>
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-6">
-                    <div class="form-group">
-                        <label class="col-sm-4 control-label"><span style="color: red; ">*</span>邮箱：</label>
-                        <div class="col-sm-8">
-                            <input name="email" class="form-control email" type="text" maxlength="50" placeholder="请输入邮箱" th:field="*{email}" required>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-6">
-                    <div class="form-group">
-                        <label class="col-sm-4 control-label"><span style="color: red; ">*</span>登录账号：</label>
-                        <div class="col-sm-8">
-                            <input class="form-control" type="text" readonly="true" th:field="*{loginName}"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-sm-6">
+                
+                 <div class="col-sm-6">
                     <div class="form-group">
                         <label class="col-sm-4 control-label">用户状态：</label>
                         <div class="col-sm-8">
                             <label class="toggle-switch switch-solid">
-	                            <input type="checkbox" id="status" th:checked="${user.status == '0' ? true : false}">
+	                            <input type="checkbox" id="type" checked>
 	                            <span></span>
 	                        </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-6">
-                    <div class="form-group">
-                        <label class="col-sm-4 control-label">岗位：</label>
-                        <div class="col-sm-8">
-                            <select id="post" class="form-control select2-multiple" multiple>
-								<option th:each="post:${posts}" th:value="${post.postId}" th:text="${post.postName}" th:selected="${post.flag}" th:disabled="${post.status == '1'}"></option>
-							</select>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-sm-6">
-                    <div class="form-group">
-                        <label class="col-sm-4 control-label">用户性别：</label>
-                        <div class="col-sm-8">
-                            <select name="sex" class="form-control m-b" th:with="type=${@dict.getType('sys_user_sex')}">
-				                <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}" th:field="*{sex}"></option>
-				            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-            	<div class="col-sm-12">
-                    <div class="form-group">
-                        <label class="col-xs-2 control-label">角色：</label>
-                        <div class="col-xs-10">
-                            <label th:each="role:${roles}" class="check-box">
-								<input name="role" type="checkbox" th:value="${role.roleId}" th:text="${role.roleName}" th:checked="${role.flag}" th:disabled="${role.status == '1'}">
-							</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <h4 class="form-header h4">其他信息</h4>
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="form-group">
-                        <label class="col-xs-2 control-label">备注：</label>
-                        <div class="col-xs-10">
-                            <textarea name="remark" maxlength="500" class="form-control" rows="3">[[*{remark}]]</textarea>
                         </div>
                     </div>
                 </div>
@@ -119,86 +59,68 @@
     </div>
     <div class="row">
         <div class="col-sm-offset-5 col-sm-10">
-            <button type="button" class="btn btn-sm btn-primary" onclick="submitHandler()"><i class="fa fa-check"></i>保 存</button>&nbsp;
-            <button type="button" class="btn btn-sm btn-danger" onclick="closeItem()"><i class="fa fa-reply-all"></i>关 闭 </button>
+       			 <@shiro.hasAnyPermissions name="${code}.btn-add">
+            	<button type="button" class="btn btn-sm btn-primary" onclick="submitHandler()"><i class="fa fa-check"></i>保 存</button>&nbsp;
+         		</@shiro.hasAnyPermissions>
+       			 <@shiro.hasAnyPermissions name="${code}.btn-realod">
+           		 <button type="button" class="btn btn-sm btn-danger" onclick="closeItem()"><i class="fa fa-reply-all"></i>关 闭 </button>
+         		</@shiro.hasAnyPermissions>
         </div>
     </div>
-	<th:block th:include="include :: footer" />
-	<th:block th:include="include :: select2-js" />
-	<script type="text/javascript">
-        var prefix = ctx + "system/user";
+<!-- 引入通用js -->
+	<@commonjs/>
+	<script src="${request.contextPath}/js/admin/user.js"></script>
+	<script  type="text/javascript">
+        var prefix = ctx + "/user";
+        
+     	if('${user.type}'=='1'){
+       	 	$("input[id='type']").attr('checked',false);
+     	}
         
         $("#form-user-edit").validate({
-        	onkeyup: false,
-        	rules:{
-        		email:{
-                    email:true,
-                    remote: {
-                        url: prefix + "/checkEmailUnique",
-                        type: "post",
-                        dataType: "json",
-                        data: {
-                        	"userId": function() {
-                                return $("#userId").val();
-                            },
-                			"email": function() {
-                                return $.common.trim($("#email").val());
-                            }
-                        },
-                        dataFilter: function (data, type) {
-                        	return $.validate.unique(data);
-                        }
-                    }
-        		},
-        		phonenumber:{
-        			isPhone:true,
-                    remote: {
-                        url: prefix + "/checkPhoneUnique",
-                        type: "post",
-                        dataType: "json",
-                        data: {
-                        	"userId": function() {
-                        		return $("#userId").val();
-                            },
-                			"phonenumber": function() {
-                                return $.common.trim($("#phonenumber").val());
-                            }
-                        },
-                        dataFilter: function (data, type) {
-                        	return $.validate.unique(data);
-                        }
-                    }
-        		},
-        	},
-        	messages: {
-        		"email": {
-                    remote: "Email已经存在"
-                },
-        		"phonenumber":{
-                	remote: "手机号码已经存在"
-        		}
-            },
-            focusCleanup: true
-        });
+             	onkeyup: false,
+             	rules:{
+             		opid:{
+                         remote: {
+                             url: prefix + "/checkOpidUnique",
+                             type: "post",
+                             async: false, //同步加载
+                             dataType: "json",
+                             data: {
+                                 "opid": function () {
+                                     return $.common.trim($("#opid").val());
+                                 }
+                             },
+                             dataFilter: function (data, type) {
+                             	return $.validate.unique(data); //判断返回标识是否唯一 1->false 存在不通过     0->true 不存在通过
+                             }
+                         }
+             		},
+             	},
+             	messages: {
+             		"opid":{
+                     	remote: "操作ID已经存在"
+             		}
+                 },
+                 focusCleanup: true
+             });
+        
         
         function submitHandler() {
-	        if ($.validate.form()) {
 	        	var data = $("#form-user-edit").serializeArray();
-	        	var status = $("input[id='status']").is(':checked') == true ? 0 : 1;
+	        	var type = $("input[id='type']").is(':checked') == true ? 0 : 1;
 	        	var roleIds = $.form.selectCheckeds("role");
 	        	var postIds = $.form.selectSelects("post");
-	        	data.push({"name": "status", "value": status});
-	        	data.push({"name": "roleIds", "value": roleIds});
-	        	data.push({"name": "postIds", "value": postIds});
-	        	$.operate.saveTab(prefix + "/edit", data);
-	        }
+	        	data.push({"name": "type", "value": type});
+	        	user.saveOrupdateUser(prefix + "/saveOrupdateUser", data);
 	    }
 
         /*用户管理-修改-选择部门树*/
         function selectDeptTree() {
-        	var deptId = $.common.isEmpty($("#treeId").val()) ? "100" : $("#treeId").val();
-            var url = ctx + "system/dept/selectDeptTree/" + deptId;
-		    var options = {
+			var treeId = $("#treeId").val();
+        	var region_code = $.common.isEmpty(treeId) ? "chengdu" : treeId;
+        	var url = ctx + "/region/selectregionTree/" + region_code;
+			var options = {
 				title: '选择部门',
 				width: "380",
 				url: url,
@@ -218,10 +140,7 @@
 		}
 
 		$(function() {
-            $('#post').select2({
-                placeholder:"请选择岗位",
-                allowClear: true
-            });
+            
         })
     </script>
 </body>

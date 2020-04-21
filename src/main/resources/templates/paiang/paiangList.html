@@ -24,11 +24,11 @@
 								<label>交货凭证号：</label>
 								<textarea  type="textarea" rows="1" class="easyui-textbox"   data-options="multiline:true" name="takeCargoNo" id="takeCargoNo" ></textarea>
 							</li>
-							<li  class="select-time">
+							<li>
 								<label>发货时间： </label>
-								<input type="text" class="time-input" id="startTime" placeholder="开始时间"   name="params[startTime]"/>
+								<input type="text"  id="startTime" placeholder="开始时间"   name="params[startTime]"/>
 								<span>-</span>
-								<input type="text" class="time-input" id="endTime" placeholder="结束时间" name="params[endTime]"/>
+								<input type="text"  id="endTime" placeholder="结束时间" name="params[endTime]"/>
 							</li>
 							<li style="display: none;">
 								<label>录入人：</label>
@@ -72,13 +72,46 @@
 	<script  type="text/javascript"> // 需要添加 th:inline 才能访问 model 中的属性
 			
 			var code = "${code!''}";
-			sessionstorage.set('code',code);
-	
-	        window.onload = function () {
-	        // 获取ModelAndView中的paiangmawb对象}
-	            console.log("---派昂页面加载完成----");
-	        
-	         }
+			
+	       //设置时间插件
+		       var buttons = $.extend([], $.fn.datebox.defaults.buttons);
+			    buttons.splice(1, 0, {
+			    	text: '清空',
+			    	handler: function(target){
+			    		$(target).datebox('setValue','');
+			    	}
+			    });
+		       //开始时间插件
+		       var startTime = $('#startTime').datebox({  
+		       	   width:115,
+		           required : true,
+		           editable: false,
+		           buttons:buttons,
+		           showSeconds:false,
+		           onSelect: function(date){
+		        	   $('#startTime').val(date);
+		           }  
+		       });
+		       //设置结束插件
+		      var endTime= $('#endTime').datebox({
+		       	width:115,
+		           required : true,
+		           editable: false,
+		           buttons:buttons,
+		           showSeconds:false,
+		           onSelect: function(date){
+		        	   $('#endTime').val(date);
+		           }
+		       });
+	         
+		      $(function(){
+			      paiang.initDate(); //时间初始值
+		      });
+		       
+		      window.onload = function () {
+			        // 获取ModelAndView中的paiangmawb对象}
+			            console.log("---派昂页面加载完成----");
+			  }
 	         
 	         /* layer 选择下拉框表格展示 */
 	     	var tableSelect = layui.tableSelect;

@@ -9,7 +9,7 @@ import com.bondex.entity.Template;
 public interface LabelInfoService {
 	
 	//监听消息保存标签数据
-	public boolean labelInfoSave(String message);
+	public boolean labelInfoSave(String message,String correlationId);
 
 	//分页查询标签
 	public List<LabelAndTemplate>  selectLabelByPage( Label label);

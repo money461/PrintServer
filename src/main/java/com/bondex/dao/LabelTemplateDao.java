@@ -3,6 +3,7 @@ package com.bondex.dao;
 import java.util.List;
 
 import com.bondex.entity.Template;
+import com.bondex.entity.page.PageBean;
 
 public interface LabelTemplateDao {
 
@@ -11,7 +12,15 @@ public interface LabelTemplateDao {
 	 * @param template
 	 * @return
 	 */
+	
 	public List<Template> getALLTemplate(Template template);
+	
+	/**
+	 * 获取数据库中用户所能看到的模板
+	 * @param template
+	 * @return
+	 */
+	public PageBean<Template> getALLTemplateByUserAuth(Template template);
 	
 	/**
 	 * 更新模板

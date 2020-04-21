@@ -7,9 +7,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -21,6 +24,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -31,6 +35,7 @@ import com.bondex.common.enums.NewPowerHttpEnum;
 import com.bondex.common.enums.ResEnum;
 import com.bondex.config.exception.BusinessException;
 import com.bondex.config.jdbc.JdbcTemplateSupport;
+import com.bondex.config.redis.redisLock.RedisLockUtil;
 import com.bondex.dao.LabelInfoDao;
 import com.bondex.dao.base.BaseDao;
 import com.bondex.entity.Label;
@@ -42,7 +47,7 @@ import com.bondex.entity.msg.Keywords;
 import com.bondex.mapper.AdminDataCurrentMapper;
 import com.bondex.mapper.TemplateDataMapper;
 import com.bondex.shiro.security.SecurityService;
-import com.bondex.shiro.security.entity.JsonResult;
+import com.bondex.shiro.security.entity.PrintTemplatePremission;
 import com.bondex.shiro.security.entity.UserInfo;
 import com.bondex.util.CommonTool;
 import com.bondex.util.GsonUtil;
@@ -63,6 +68,8 @@ public class LabelInfoDaoImpl  extends BaseDao<Label, String>implements LabelInf
 
 
 
+	@Resource(name="redisLockUtil")
+	private RedisLockUtil redisLockUtil;
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
@@ -152,6 +159,7 @@ public class LabelInfoDaoImpl  extends BaseDao<Label, String>implements LabelInf
 	}
 
 	//根据用户部门 保存标签数据
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public Integer saveLabel(String main,Log log) {
 			//main 中获取标签数据
@@ -161,20 +169,34 @@ public class LabelInfoDaoImpl  extends BaseDao<Label, String>implements LabelInf
 				if (keywords.getPARENT_BILL_NO() != null && keywords.getUNLOAD_CODE() != null && keywords.getPACK_NO() != 0.0 && keywords.getLOAD_CODE() != null) {
 					// 主单号为11位，才进行入库
 					if (keywords.getPARENT_BILL_NO().length() == 11) {
-     						//查询校验重复 list_id mq报文id，用于判断报文是否重复 res=0 不存在 返回值 存在
-						    String res= jdbcTemplate.queryForObject("select ifnull((select list_id  from label where list_id=? limit 1 ), 0)", String.class,keywords.getLIST_ID());
-						
+						String listid = keywords.getLIST_ID();
+							if(StringUtils.isBlank(listid)){
+								throw new BusinessException("消息List_id存在空值！");
+							}
+							//校验当前线程是否同时在操作同一行数据
+						    String requestId = redisLockUtil.trylock(listid, 20L,30L);
+								
+						    if( Objects.isNull(requestId)){
+						    	//未获取到执行权力
+						    	throw new BusinessException("相同的数据不可同时入库！");
+						    }
+						    
+     						//查询校验重复 correlation_id mq报文id，用于判断报文是否重复 res=0 不存在 返回值 存在
+						    String res= jdbcTemplate.queryForObject("select ifnull((select correlation_id  from label where correlation_id=? limit 1 ), 0)", String.class,keywords.getLIST_ID());
+						    
 						    //设置标签绑定模板
 						    
 						    //1.判断当前用户部门
 						    UserInfo userInfo = new UserInfo();
 						    String gen_ER = keywords.getGEN_ER();
 						    userInfo.setOpid(gen_ER);
+						    
 						    //获取token
 						    String token = securityService.getPublicToken();
 						    userInfo.setToken(token);
 						    JSONObject jsonObject = securityService.getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetCompanyInfoOfDeptByOperatorID);
 						    String DeptID = jsonObject.getJSONObject("Data").getString("DeptID");
+						    
 						    String reserve3;
 						    
 							//分单号组装
@@ -187,39 +209,50 @@ public class LabelInfoDaoImpl  extends BaseDao<Label, String>implements LabelInf
 							
 							if("0151".equals(DeptID)){//海程邦达重庆分公司部门id
 						    	reserve3="5"; //重庆标签绑定
+						    	log.setCode(ComEnum.ChongqingLabel.code);
+						    	log.setCodeName(ComEnum.ChongqingLabel.name());
+						    	
 							}
-							
+						
+					    int temp =1; 
 						if ("0".equals(res)) {// 无重复数据，执行插入操作
-							String sql = "INSERT INTO label(mawb,hawb,destination,total,airport_departure,flight_date,reserve3,list_id,opid,opid_name,code,code_name,business_type,create_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())";
+							String sql = "INSERT INTO label(mawb,hawb,destination,total,airport_departure,flight_date,reserve3,correlation_id,opid,opid_name,code,code_name,business_type,create_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())";
 							
 							String mawb  = CommonTool.getMawb(keywords.getPARENT_BILL_NO());
 
 							subscribe(mawb);// 检查是否是订阅主单号，如果是则发送邮件提示订阅用户
 							
 							// 标签数据入库
-							Object args[] = { mawb, hawb, keywords.getUNLOAD_CODE(), Math.round(keywords.getPACK_NO()), keywords.getLOAD_CODE(), keywords.getVOYAGE_DATE(), reserve3, keywords.getLIST_ID(), keywords.getGEN_ER(), keywords.getGEN_NAME(),ComEnum.AirLabel.code,ComEnum.AirLabel.codeName,1 }; //更新的数据默认 business_type=1
+							if("5".equals(reserve3)){
+								Object args[] = { mawb, hawb, keywords.getUNLOAD_CODE(), Math.round(keywords.getPACK_NO()), keywords.getLOAD_CODE(), keywords.getVOYAGE_DATE(), reserve3, keywords.getLIST_ID(), keywords.getGEN_ER(), keywords.getGEN_NAME(),ComEnum.ChongqingLabel.code,ComEnum.ChongqingLabel.codeName,1 }; //更新的数据默认 business_type=1
+								temp = jdbcTemplate.update(sql, args);
+								
+							}else{
+								Object args[] = { mawb, hawb, keywords.getUNLOAD_CODE(), Math.round(keywords.getPACK_NO()), keywords.getLOAD_CODE(), keywords.getVOYAGE_DATE(), reserve3, keywords.getLIST_ID(), keywords.getGEN_ER(), keywords.getGEN_NAME(),ComEnum.AirLabel.code,ComEnum.AirLabel.codeName,1 }; //更新的数据默认 business_type=1
+								temp = jdbcTemplate.update(sql, args);
+							}
 							
-							int temp = jdbcTemplate.update(sql, args);
 							
 							log.setMawb(mawb);
 							log.setHawb(hawb);
 							log.setHandleType("新增");
-							return temp;
 							
 							//存在重复数据
 						} else {// 执行更新操作
 							//list-id
-							String sql = "update label set mawb=?,hawb=?,destination=?,total=?,airport_departure=?,flight_date=?,reserve3=?,opid=?,opid_name=? where list_id = ?";
+							String sql = "update label set mawb=?,hawb=?,destination=?,total=?,airport_departure=?,flight_date=?,reserve3=?,opid=?,opid_name=? where correlation_id = ?";
 							String mawb  = CommonTool.getMawb(keywords.getPARENT_BILL_NO());
 							// 标签数据入库
 							Object args[] = { mawb, hawb, keywords.getUNLOAD_CODE(), Math.round(keywords.getPACK_NO()), keywords.getLOAD_CODE(), keywords.getVOYAGE_DATE(), reserve3, keywords.getGEN_ER(), keywords.getGEN_NAME(),keywords.getLIST_ID() };
-							int temp = jdbcTemplate.update(sql, args);
+							temp = jdbcTemplate.update(sql, args);
 							log.setMawb(mawb);
 							log.setHawb(hawb);
 							log.setHandleType("更新");
-							return temp;
 						}
-					} else {
+						 redisLockUtil.unLock(listid, requestId); //解锁 未解锁也可以
+						 return temp;
+						
+				    } else {
 						throw new BusinessException("主单号为：" + keywords.getPARENT_BILL_NO() + ",没有11位,不可入库");
 					}
 				} else {
@@ -280,7 +313,7 @@ public class LabelInfoDaoImpl  extends BaseDao<Label, String>implements LabelInf
 		sql+=" and code = :code ";
 		
 		MapSqlParameterSource map = new MapSqlParameterSource();
-		List<JsonResult> userPrintTemplateInfo = ShiroUtils.getUserPrintTemplateInfo();
+		List<PrintTemplatePremission> userPrintTemplateInfo = ShiroUtils.getUserPrintTemplateInfo();
 		List<String> templateId = userPrintTemplateInfo.stream().map(res -> res.getReportid()).collect(Collectors.toList());
 		map.addValue("templateId", templateId);
 		map.addValue("code", template.getCode());
@@ -303,14 +336,14 @@ public class LabelInfoDaoImpl  extends BaseDao<Label, String>implements LabelInf
 		if(null==templatelist || templatelist.size()==0){
 			throw new BusinessException(ResEnum.FAIL.CODE, "请指定打印模板！");
 		}
-		List<JsonResult> userPrintTemplateInfo = ShiroUtils.getUserPrintTemplateInfo();
+		List<PrintTemplatePremission> userPrintTemplateInfo = ShiroUtils.getUserPrintTemplateInfo();
 		Template template = templatelist.get(0);
 		if("1".equals(template.getStatus())){
 			throw new BusinessException(ResEnum.FAIL.CODE, "打印模板已被禁用,请联系管理员！");
 		}
 		
 		//判断是否有权限
-		JsonResult result = userPrintTemplateInfo.stream().filter(re ->re.getReportid().equals(template.getTemplateId())).findFirst().orElse(null);
+		PrintTemplatePremission result = userPrintTemplateInfo.stream().filter(re ->re.getReportid().equals(template.getTemplateId())).findFirst().orElse(null);
 		
 		if(null==result){
 			throw new BusinessException(ResEnum.FORBIDDEN.CODE, "未配置打印模板使用权限！");
