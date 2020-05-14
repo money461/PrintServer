@@ -1,5 +1,7 @@
 package com.bondex.entity.current;
 
+import java.util.Map;
+
 import com.bondex.annoation.dao.Ignore;
 import com.bondex.annoation.dao.Table;
 
@@ -10,7 +12,8 @@ import lombok.Data;
 @Table(name="base_label")
 @ApiModel(value = "BaseLabelDetail", description = "标签基本数据结构对象")
 public class BaseLabelDetail extends Baselabel {
-	
+	@Ignore
+	private Map<String,Object> extendData; //扩展字段
 
 	@Ignore
 	private String width; //模板宽度

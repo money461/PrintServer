@@ -613,7 +613,11 @@ paiang.prototype.tableprint = function() {
 					regionCode : defaultRegion, //chengdu/jichang id=2
 					mqaddress: vpn //内网还是外网
 				},
+				beforeSend: function () {
+			    	window.parent.$.modal.loading("打印数据发送中，请稍后...");
+		        },
 				success : function(result) {
+					window.parent.$.modal.closeLoading(); //关闭加载
 					if(result.status=="200"){
 	   					//弹框提示
 	   					$.messager.show({

@@ -596,5 +596,4 @@ function initMenuiframe(){
         }
     })
     
-    console.info('index-2');
 };

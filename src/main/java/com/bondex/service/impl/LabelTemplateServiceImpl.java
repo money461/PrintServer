@@ -63,7 +63,7 @@ public class LabelTemplateServiceImpl implements LabelTemplateService {
 		template.setCreateTime(new Date());
 		String templateUrl = template.getTemplateUrl();
 		if(StringUtils.isBlank(templateUrl)){
-			template.setTemplateUrl(null);
+			template.setTemplateUrl(null); //防止空串覆盖数据库
 		}
 		labelTemplateDao.saveorupdateTempalte(template);
 	}
@@ -159,7 +159,7 @@ public class LabelTemplateServiceImpl implements LabelTemplateService {
 	 */
 
 	@Override
-	public Object importTemplate(MultipartFile[] files, Boolean batchUploadSupport, boolean updateSupport) {
+	public Object importTemplate(MultipartFile[] files,String id, Boolean batchUploadSupport, boolean updateSupport) {
 		
 	 String uploadAndStoreFileUrl = casAutoconfig.getUploadAndStoreFileUrl();
 	     //批量上传 文件名必须在数据库中存在
@@ -215,9 +215,12 @@ public class LabelTemplateServiceImpl implements LabelTemplateService {
 	    			String templateUrl  = jsonObject2.getString("UniqueName");
 	    			//更新数据库
 	    			Template template2 = new Template();
-	    			template.setTemplateId(prefixName);
-	    			template.setTemplateUrl(templateUrl);
-	    			labelTemplateDao.saveorupdateTempalte(template2);
+	    			template2.setTemplateId(prefixName);
+	    			template2.setTemplateUrl(templateUrl);
+	    			List<Template> list = labelTemplateDao.getALLTemplate(template2);
+	    			Template template3 = list.get(0);
+	    			template3.setTemplateUrl(templateUrl);
+	    			labelTemplateDao.saveorupdateTempalte(template3);
 	    		}else{
 	    			throw new  BusinessException("500","上传文件失败，数据回滚！");
 	    		}
@@ -239,11 +242,20 @@ public class LabelTemplateServiceImpl implements LabelTemplateService {
     			String templateUrl  = jsonObject2.getString("UniqueName");
     			String DownloadUrl  = jsonObject2.getString("DownloadUrl");
     			String FileName  = jsonObject2.getString("FileName");
+    			if(StringUtils.isNotBlank(id) && updateSupport){
+    				//直接修改数据表
+    				Template template = labelTemplateDao.getTemplateById(id);
+    				if(StringUtils.isNotNull(template)){
+    					template.setTemplateUrl(templateUrl);
+    					labelTemplateDao.update(template, true);
+    				}
+    			}
     			LinkedHashMap<String, Object> linkedHashMap = new LinkedHashMap<>();
     			linkedHashMap.put("downloadUrl", DownloadUrl);
     			linkedHashMap.put("templateUrl", templateUrl);
     			linkedHashMap.put("fileName", FileName);
     			return linkedHashMap; //返回唯一文件名地址
+    			
     		}else{
     			throw new  BusinessException("500","上传文件失败！");
     		}
@@ -260,9 +272,9 @@ public class LabelTemplateServiceImpl implements LabelTemplateService {
 	 * 批量文件下载
 	 */
 	@Override
-	public String exportTemplate(String templateId, HttpServletRequest request, HttpServletResponse response) {
+	public String exportTemplate(String id, HttpServletRequest request, HttpServletResponse response) {
 		Template template1 = new Template();
-		template1.setTemplateId(templateId);
+		template1.setId(id);;
 		List<Template> allTemplate = labelTemplateDao.getALLTemplate(template1);
 	
 		 OutputStream out=null;
@@ -303,6 +315,17 @@ public class LabelTemplateServiceImpl implements LabelTemplateService {
 			}
 		  
 		return null;
+	}
+
+	@Override
+	public void deleteTemplatefile(Template template) {
+		Template template2 = labelTemplateDao.getTemplateById(template.getId());
+		if(StringUtils.isNotNull(template2)){
+			//删除服务器数据
+			template2.setTemplateUrl(null);
+			labelTemplateDao.update(template2,false);
+		}
+		
 	}
 	
 	

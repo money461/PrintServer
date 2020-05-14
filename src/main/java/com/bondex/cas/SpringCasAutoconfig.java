@@ -37,7 +37,7 @@ public class SpringCasAutoconfig {
 	@Value("${spring.framework.HttpUrl}") 
 	private String frameworkapi; //framework权限获取地址
 
-	static final String separator = "|";
+	static final String separator = "\\|";
 
 	private String validateFilters;
 	private String signOutFilters;

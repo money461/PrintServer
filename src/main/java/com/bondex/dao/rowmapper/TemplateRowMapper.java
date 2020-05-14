@@ -35,6 +35,7 @@ public class TemplateRowMapper implements RowMapper<Template> {
 		template2.setCodeName(rs.getString("code_name"));
 		template2.setIsDefault(rs.getInt("is_default"));
 		template2.setStatus(rs.getString("status"));
+		template2.setExtendData(rs.getString("extend_data"));
 		template2.setCreateOpid(rs.getString("create_opid"));
 		template2.setCreateName(rs.getString("create_name"));
 		template2.setUpdateTime(rs.getTimestamp("update_time"));

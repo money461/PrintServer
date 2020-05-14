@@ -476,7 +476,6 @@ label.prototype.printLabelSendClient = function(defaultRegion) {
 	  layer.msg("请选择打印办公室",{icon:2,time:1000});
 	  return;
   }
-  		window.parent.$.modal.loading("打印数据发送中，请稍后...");
         var vpn=storage.get('vpn');//获取内网外网
         var url = "/labelPrint/client/printLabelSendClient";
 		var rows = $('#easyui-datagrid').datagrid('getSelections');
@@ -488,6 +487,9 @@ label.prototype.printLabelSendClient = function(defaultRegion) {
 				regionCode : defaultRegion, //chengdu/jichang id=2
 				mqaddress: vpn //内网还是外网
 			},
+			 beforeSend: function () {
+			    	window.parent.$.modal.loading("打印数据发送中，请稍后...");
+		     },
 			success : function(result) {
 				window.parent.$.modal.closeLoading(); //关闭加载
 				if(result.status=="200"){

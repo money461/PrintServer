@@ -820,7 +820,7 @@ var table = {
                 	height = ($(window).height() - 50);
                 }
                 var index = layer.open({
-            		type: 2,
+            		type: 2, //iframe层
             		area: [width + 'px', height + 'px'],
             		fix: false,
             		//不固定
@@ -839,7 +839,7 @@ var table = {
             	        return true;
             	    }
             	});
-                layer.full(index);
+                layer.full(index); //最大化
             },
             // 选卡页方式打开
             openTab: function (title, url) {

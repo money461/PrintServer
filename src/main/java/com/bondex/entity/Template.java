@@ -37,6 +37,9 @@ public class Template extends BaseEntity{
 	@Column(name="template_url")
 	private String templateUrl; //模板地址
 	
+	@Column(name="extend_data")
+	private String extendData; //扩展字段
+	
 	@Column(name="create_opid")
 	private String createOpid; //模板创建者 opid
 	

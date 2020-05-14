@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
-import com.bondex.common.ComEnum;
+import com.bondex.common.enums.ComEnum;
 import com.bondex.config.exception.BusinessException;
 import com.bondex.dao.LabelInfoDao;
 import com.bondex.dao.LogInfoDao;
@@ -31,12 +31,11 @@ import com.bondex.entity.Label;
 import com.bondex.entity.LabelAndTemplate;
 import com.bondex.entity.log.Log;
 import com.bondex.service.PaiangService;
-import com.bondex.shiro.security.entity.UserInfo;
 import com.bondex.util.CollectionUtils;
 import com.bondex.util.CommonTool;
 import com.bondex.util.GsonUtil;
+import com.bondex.util.LocalDateTimeUtils;
 import com.bondex.util.StringUtils;
-import com.bondex.util.shiro.ShiroUtils;
 
 @Service(value="paiangServiceImple")
 public class PaiangServiceImple implements PaiangService {
@@ -77,10 +76,12 @@ public class PaiangServiceImple implements PaiangService {
 		
 			Map<String, Object> params = label.getParams();
 			if(StringUtils.isNotEmpty(params)&& StringUtils.isNotBlank((String)params.get("startTime"))){
-				sql.append(" AND date_format(label.EDeparture,'%y%m%d') >= date_format('"+params.get("startTime")+"','%y%m%d')");
+				String beginTime = LocalDateTimeUtils.getBeginTime((String)params.get("startTime"),LocalDateTimeUtils.YYYY_MM_DD).toString();
+				sql.append(" AND label.EDeparture >= '"+beginTime+"'");
 			}
 			if(StringUtils.isNotEmpty(params) && StringUtils.isNotBlank((String)params.get("endTime"))){
-				sql.append(" AND date_format(label.EDeparture,'%y%m%d') <= date_format('"+params.get("endTime")+"','%y%m%d')");
+				String endTime = LocalDateTimeUtils.getEndTime((String)params.get("endTime"),LocalDateTimeUtils.YYYY_MM_DD).toString();
+				sql.append(" AND label.EDeparture <= '"+endTime+"'");
 			}
 			
 			String mblNo = label.getMBLNo(); //主单号

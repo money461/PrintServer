@@ -39,5 +39,8 @@ public interface LabelTemplateDao {
 	 * @param code
 	 */
 	public void cancelCodeDefaultTemplate(String code);
+
+	//更新数据
+	void update(Template template, Boolean ignoreNull);
 	
 }

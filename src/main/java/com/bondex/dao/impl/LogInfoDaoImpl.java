@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bondex.config.jdbc.JdbcTemplateSupport;
 import com.bondex.dao.LogInfoDao;
@@ -14,6 +15,7 @@ import com.bondex.dao.base.BaseDao;
 import com.bondex.entity.log.Log;
 import com.bondex.entity.page.PageBean;
 import com.bondex.mapper.AdminDataCurrentMapper;
+import com.bondex.util.LocalDateTimeUtils;
 import com.bondex.util.StringUtils;
 import com.bondex.util.shiro.ShiroUtils;
 
@@ -63,10 +65,12 @@ public class LogInfoDaoImpl extends BaseDao<Log, Integer> implements LogInfoDao 
 			}
 			Map<String, Object> params = log.getParams();
 			if(StringUtils.isNotEmpty(params)&& StringUtils.isNotBlank((String)params.get("beginTime"))){
-				sql+=" AND date_format(update_time,'%y%m%d') >= date_format('"+params.get("beginTime")+"','%y%m%d')";
+				String beginTime = LocalDateTimeUtils.getBeginTime((String)params.get("beginTime"),LocalDateTimeUtils.YYYY_MM_DD).toString();
+				sql+=" AND update_time >= '"+beginTime+"'";
 			}
 			if(StringUtils.isNotEmpty(params) && StringUtils.isNotBlank((String)params.get("endTime"))){
-				sql+=" AND date_format(update_time,'%y%m%d') <= date_format('"+params.get("endTime")+"','%y%m%d')";
+				String endTime = LocalDateTimeUtils.getEndTime((String)params.get("endTime"),LocalDateTimeUtils.YYYY_MM_DD).toString();
+				sql+=" AND update_time <= '"+endTime+"'";
 			}
 			
 			sql+=" and status = :status";

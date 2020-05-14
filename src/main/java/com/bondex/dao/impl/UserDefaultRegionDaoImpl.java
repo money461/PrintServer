@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bondex.config.jdbc.JdbcTemplateSupport;
 import com.bondex.dao.RegionDao;
@@ -95,6 +96,7 @@ public class UserDefaultRegionDaoImpl extends BaseDao<UserDefaultRegion, Integer
 	 * region chengdu/jichang
 	 */
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public Integer updateOrAddUserRegion(UserDefaultRegion userDefaultRegion) {
 		if(StringUtils.isNotNull(userDefaultRegion)){
 			
@@ -122,6 +124,7 @@ public class UserDefaultRegionDaoImpl extends BaseDao<UserDefaultRegion, Integer
 
 
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public Integer changeStatus(UserDefaultRegion userDefaultRegion) {
 		
 		UserDefaultRegion user = super.findOneById(userDefaultRegion.getId());

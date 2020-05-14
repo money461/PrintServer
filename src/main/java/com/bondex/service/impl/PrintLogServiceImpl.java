@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.bondex.dao.CurrentLabelDao;
 import com.bondex.dao.PrintLogDao;
@@ -17,7 +16,6 @@ import com.bondex.service.PrintLogService;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 @Service
-@Transactional(rollbackFor = Exception.class)
 public class PrintLogServiceImpl implements PrintLogService {
 
 	@Autowired

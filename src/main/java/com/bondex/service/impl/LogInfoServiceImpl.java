@@ -9,7 +9,6 @@ import com.bondex.entity.log.Log;
 import com.bondex.entity.page.PageBean;
 import com.bondex.service.LogInfoService;
 @Service
-@Transactional(rollbackFor = Exception.class)
 public class LogInfoServiceImpl implements LogInfoService {
 
 	@Autowired

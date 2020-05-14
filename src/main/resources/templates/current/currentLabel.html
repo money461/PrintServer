@@ -23,7 +23,7 @@
 							</li>
 							<li>
 								<label>数据来源：</label>
-								<input  type="text" name="docTypeName" id="docTypeName"></input>
+								<input  type="text" name="doctypeName" id="doctypeName"></input>
 							</li>
 							<li>
 								<label>入库时间： </label>
@@ -80,7 +80,6 @@
 	<script  type="text/javascript"> // 需要添加 th:inline 才能访问 model 中的属性
 	
 			var code = "${code!''}";
-			
 			 //设置时间插件
 		       var buttons = $.extend([], $.fn.datebox.defaults.buttons);
 			    buttons.splice(1, 0, {
@@ -112,6 +111,10 @@
 		           }
 		       });
 			
+			$(function(){
+				currentlabel.initDate(); //时间初始值
+			});
+			
 			
 	        window.onload = function () {
 	        // 获取ModelAndView中的paiangmawb对象}
@@ -129,7 +132,6 @@
 		    		 $(currentlabel_tab).datagrid('options').url=url;
 		    		 $(currentlabel_tab).datagrid('reload'); //加载网络数据
 	        	 }
-	        	 currentlabel.initDate(); //时间初始值
 	         };
 	         
 	         

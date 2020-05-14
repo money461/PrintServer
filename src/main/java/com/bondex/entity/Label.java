@@ -83,7 +83,8 @@ public class Label implements Serializable {
 	@JSONField(name="Mblno")
 	private String MBLNo; //运单号
 	
-//	@DateTimeFormat(pattern = "yyyy-MM-dd")
+	@DateTimeFormat(pattern = "yyyy-MM-dd")
+	@JSONField(format="yyyy-MM-dd")
 	@SerializedName(value="EDeparture",alternate="placeOrderDate") //使用Gson 序列化名称 反序列化备选名称placeOrderDate)
 	private Date EDeparture; //发货日期
 	

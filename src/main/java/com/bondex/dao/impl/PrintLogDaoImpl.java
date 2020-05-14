@@ -13,6 +13,7 @@ import com.bondex.dao.PrintLogDao;
 import com.bondex.dao.base.BaseDao;
 import com.bondex.entity.log.PrintLog;
 import com.bondex.entity.page.PageBean;
+import com.bondex.util.LocalDateTimeUtils;
 import com.bondex.util.StringUtils;
 import com.bondex.util.shiro.ShiroUtils;
 
@@ -73,10 +74,12 @@ public class PrintLogDaoImpl extends BaseDao<PrintLog, Integer> implements Print
 			
 			Map<String, Object> params = printLog.getParams();
 			if(StringUtils.isNotEmpty(params)&& StringUtils.isNotBlank((String)params.get("beginTime"))){
-				sql+=" AND date_format(update_time,'%y%m%d') >= date_format('"+params.get("beginTime")+"','%y%m%d')";
+				String beginTime = LocalDateTimeUtils.getBeginTime((String)params.get("beginTime"),LocalDateTimeUtils.YYYY_MM_DD).toString();
+				sql+=" AND update_time >= '"+beginTime+"'";
 			}
 			if(StringUtils.isNotEmpty(params) && StringUtils.isNotBlank((String)params.get("endTime"))){
-				sql+=" AND date_format(update_time,'%y%m%d') <= date_format('"+params.get("endTime")+"','%y%m%d')";
+				String endTime = LocalDateTimeUtils.getEndTime((String)params.get("endTime"),LocalDateTimeUtils.YYYY_MM_DD).toString();
+				sql+=" AND update_time <= '"+endTime+"'";
 			}
 			
 		}

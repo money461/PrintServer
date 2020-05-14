@@ -3,16 +3,17 @@ package com.bondex.common.enums;
 public enum ComEnum implements BaseEnum {
 	
 	
-	AirLabel("air","空运标签"),
-	PaiangLabel("medicine","派昂医药");
+	AirLabel("air_label","空运标签"),
+	ChongqingLabel("chongqing_label","重庆标签"),
+	PaiangLabel("paiang_label","派昂标签");
 	
 	public String code;
 	
-	public String name;
+	public String codeName;
 	
-	ComEnum(String code, String name) {
+	ComEnum(String code, String codeName) {
 		this.code=code;
-		this.name=name;
+		this.codeName=codeName;
 	}
 
 	@Override

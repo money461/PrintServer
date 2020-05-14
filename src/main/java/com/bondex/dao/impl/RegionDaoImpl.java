@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bondex.config.jdbc.JdbcTemplateSupport;
 import com.bondex.dao.RegionDao;
@@ -154,6 +155,7 @@ public class RegionDaoImpl extends BaseDao<Region, Integer> implements RegionDao
 
 	//更新保存办公室
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public Object saveOrUpdateRegion(Region regionJDBC) {
 		regionJDBC.setCreateTime(new Date());
 		Integer i = super.insertforUpdate(regionJDBC, true);

@@ -29,10 +29,12 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.bondex.common.ComEnum;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.bondex.common.Common;
+import com.bondex.common.enums.ComEnum;
 import com.bondex.config.exception.BusinessException;
 import com.bondex.dao.ClientDao;
 import com.bondex.dao.LabelInfoDao;
@@ -320,7 +322,8 @@ public class ClientServiceImpl implements ClientService {
 					
 					JSONObject jsonObject = new JSONObject();
 					jsonObject.put("vwOrderAll", array);
-					client.setData(jsonObject.toJSONString());
+					String jsonString  = JSON.toJSONStringWithDateFormat(jsonObject ,"yyyy-MM-dd");
+					client.setData(jsonString);
 			       //派昂封装结束
 					list.add(client);
 		}

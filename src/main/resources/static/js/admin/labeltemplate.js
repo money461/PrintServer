@@ -357,6 +357,7 @@ labeltemplate.prototype.importrepx = function(formId,callback) {
     		        },
     				success: function (result) {
     					$.modal.closeLoading();
+    					layer.close(index); //关闭加载动画
     					if (result.status == "200") {
     						$.modal.closeAll();
     						$.modal.alertSuccess(result.message);
@@ -368,7 +369,6 @@ labeltemplate.prototype.importrepx = function(formId,callback) {
             	        	}
     						
     					} else {
-    						layer.close(index); //关闭加载动画
     						$.modal.enable();
     						$.modal.alertError(result.message);
     					}
@@ -393,24 +393,29 @@ labeltemplate.prototype.importrepx = function(formId,callback) {
 /**
  * 导出模板
  */
-labeltemplate.prototype.exportrepx = function() {
+labeltemplate.prototype.exportrepx = function(id) {
 	table.set();
-	var rowarray = $("#" + table.options.id).bootstrapTable('getSelections');
-	if ($.common.isEmpty(rowarray)) {
-		$.modal.alertWarning("请选择需要导出的模板！");
-		return false;
-	}
 	var json=[];
-	rowarray.forEach(function (currentValue,index,arr) {
-		json.push(currentValue.templateId);
-	});
+	if($.common.isEmpty(id)){
+		var rowarray = $("#" + table.options.id).bootstrapTable('getSelections');
+		if ($.common.isEmpty(rowarray)) {
+			$.modal.alertWarning("请选择需要导出的模板！");
+			return false;
+		}
+		rowarray.forEach(function (currentValue,index,arr) {
+			json.push(currentValue.id);
+		});
+	}else{
+		json.push(id);
+	}
 	$.modal.confirm("确定导出选择的" + table.options.modalName + "吗？", function() {
 		var data = json.join(",");
-		window.location.href = table.options.exportTemplateUrl+"?templateId=" +data ;
-		window.parent.$.modal.loading("正在导出"+ table.options.modalName +"，请稍后...");
+		window.location.href = table.options.exportTemplateUrl+"?id=" +data ;
+		var index = layer.load(2, {time: 2*1000}); //又换了种风格，并且设定最长等待2秒 
+		/*window.parent.$.modal.loading("正在导出"+ table.options.modalName +"，请稍后...");
 		setTimeout(function(){
 			window.parent.$.modal.closeLoading(); //关闭加载
-		},3000);
+		},3000);*/
 	});
 }
 
@@ -433,6 +438,35 @@ labeltemplate.prototype.initaddEventListener = function(fileList){
              fileListDisplay.appendChild(fileDisplayEl);
          })
      };
+}
+
+//删除模板
+labeltemplate.prototype.deleteTemplatefile = function(url, data, callback) {
+	$.modal.confirm("确定删除数据库中的打印模板吗？", function() {
+		var config = {
+	        url: url,
+	        type: "post",
+	        dataType: "json",
+	        data: data,
+	        beforeSend: function () {
+	        	$.modal.loading("正在处理中，请稍后...");
+	        	$.modal.disable();
+	        },
+	        success: function(result) {
+	        	$.modal.closeLoading();
+	        	if('200'==result.status){
+	        		var parent = window.parent;
+	        		parent.$.modal.msgSuccess(result.message);
+	        		callback();//执行回调
+	        	}else{
+	        		 parent.$.modal.msgError(result.message);
+	        	}
+	        	$.modal.enable();
+	        }
+	    };
+	    $.ajax(config); //发送请求
+	});
+	
 }
 
 

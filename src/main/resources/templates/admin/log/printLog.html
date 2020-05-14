@@ -78,9 +78,15 @@
 			$("#code").val(data.id);
 		}
         
+        
         $(function() {
-        	printlog.initdate();
+        	printlog.initdate(); //初始化时间
+        	
         	printlog.select2(null,selected);
+        	
+        });
+        
+        window.onload = function () {
         	
             var options = {
                 url: prefix + "/all",
@@ -232,7 +238,7 @@
             
         	var url=ctx+"/region/treeSelectRegionData";
 			treeSelectClick('treeSelect',url,'get');
-        });
+        };
         
         initChildTable = function(index, row, $detail) {
         	//style="table-layout: fixed;" -->bootstrap table 固定列宽

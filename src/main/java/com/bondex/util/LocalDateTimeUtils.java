@@ -3,12 +3,15 @@ package com.bondex.util;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.Date;
+
+import org.apache.commons.lang3.StringUtils;
 
 /*
  * @author kingboy
@@ -17,6 +20,11 @@ import java.util.Date;
  */
 public class LocalDateTimeUtils {
 
+	
+	 public static String YYYY_MM_DD = "yyyy-MM-dd";
+	 
+	 public static String YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss";
+	 
     //获取当前时间的LocalDateTime对象
     //LocalDateTime.now();
 
@@ -123,5 +131,39 @@ public class LocalDateTimeUtils {
     public static LocalDateTime asLocalDateTime(Date date) {
         return Instant.ofEpochMilli(date.getTime()).atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
+    
+    //一天时间的开始
+    public static LocalDateTime getBeginTime(String text,String pattern){
+    	if(StringUtils.isNoneBlank(text)){
+    		if(StringUtils.isBlank(pattern)){
+    			pattern = YYYY_MM_DD_HH_MM_SS;
+    		}
+    		LocalDate localDate = LocalDate.parse(text, DateTimeFormatter.ofPattern(pattern));
+    		LocalDateTime localDateTime = LocalDateTime.of(localDate,LocalTime.parse("00:00:00"));
+    		LocalDateTime dayStart = getDayStart(localDateTime);
+    		return dayStart;
+    	}
+		return null;
+    }
+    //一天时间的结束
+    public static LocalDateTime getEndTime(String text,String pattern){
+    	if(StringUtils.isNoneBlank(text)){
+    		if(StringUtils.isBlank(pattern)){
+    			pattern = YYYY_MM_DD_HH_MM_SS;
+    		}
+    		LocalDate localDate = LocalDate.parse(text, DateTimeFormatter.ofPattern(pattern));
+    		LocalDateTime localDateTime = LocalDateTime.of(localDate,LocalTime.parse("00:00:00"));
+    		LocalDateTime dayEnd = getDayEnd(localDateTime);
+    		return dayEnd;
+    	}
+    	return null;
+    }
+    
+    
+    public static void main(String[] args) {
+    	System.out.println(getBeginTime("2020-04-27", YYYY_MM_DD));
+    	System.out.println(getEndTime("2020-04-27", YYYY_MM_DD));
+	}
+    
     
 }

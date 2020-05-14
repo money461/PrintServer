@@ -21,18 +21,16 @@ import javax.annotation.Resource;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import com.alibaba.fastjson.JSONArray;
@@ -41,7 +39,6 @@ import com.bondex.cas.SpringCasAutoconfig;
 import com.bondex.common.Common;
 import com.bondex.common.enums.NewPowerHttpEnum;
 import com.bondex.config.CacheManagerConfig;
-import com.bondex.config.restTemplate.HttpRestTemplateUtil;
 import com.bondex.entity.page.Datagrid;
 import com.bondex.shiro.security.entity.OperatorPagePermission;
 import com.bondex.shiro.security.entity.Opid;
@@ -71,6 +68,9 @@ public class SecurityService {
 	@Autowired
 	@Qualifier(CacheManagerConfig.CacheManagerName.EHCACHE_CACHE_MAANGER)
 	private EhCacheManager cacheManager;
+	
+	@Autowired
+	FrameworkhttpService frameworkhttpService;
 	
 	private String applicationId; //应用id
 	
@@ -122,13 +122,13 @@ public class SecurityService {
 						SortedSet<SecurityModel> list=null;
 					 try {
 						//部门下的opid集合
-						JSONObject object = getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetUserRoleOp);
+						JSONObject object = frameworkhttpService.getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetUserRoleOp);
 						//JSONObject object  = JSONObject.parseObject(ReadTxtFile.readJsonFromClassPath("data/RoleData.json",String.class));
 						JSONArray jsonArray = object.getJSONArray("Data");
 						List<String> opidData = JSONObject.parseArray( JSONObject.toJSONString(jsonArray), String.class);
 						userInfo.setOpidData(opidData);
 						//用户的菜单信息
-						JSONObject object2 = getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetHasPermissionModuleList);
+						JSONObject object2 = frameworkhttpService.getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetHasPermissionModuleList);
 						JSONArray array = object2.getJSONArray("Data");
 						Type objectTypemenu = new TypeToken<List<SecurityModel>>() {}.getType();
 						List<SecurityModel> securityModels =  GsonUtil.getGson().fromJson(array.toJSONString(), objectTypemenu);
@@ -193,7 +193,8 @@ public class SecurityService {
 		CompletableFuture<Object> future1 = CompletableFuture.supplyAsync(() -> {
 			 System.out.println("线程-"+Thread.currentThread().getName() +"执行获取功能权限");
 			// 获取用户功能权限 包括所有的按钮权限
-			JSONObject object = getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetOperatorPagePermission);
+			JSONObject object = frameworkhttpService.getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetOperatorPagePermission);
+			
 			JSONArray array = object.getJSONArray("Data");
 			Type objectType = new TypeToken<List<OperatorPagePermission>>() {}.getType();
 			List<OperatorPagePermission> operatorpremission = GsonUtil.getGson().fromJson(array.toJSONString(), objectType);
@@ -212,7 +213,7 @@ public class SecurityService {
 		CompletableFuture<Object> future2 = CompletableFuture.supplyAsync(() -> {
 			 System.out.println("线程-"+Thread.currentThread().getName() +"执行获取打印模板权限");
 			//打印按钮权限
-			JSONObject object2 = getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetModulePrintButton);
+			JSONObject object2 = frameworkhttpService.getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetModulePrintButton);
 			JSONArray array2 = object2.getJSONArray("Data");
 			
 			//获取标签打印功能权限
@@ -258,13 +259,17 @@ public class SecurityService {
 		System.out.println("线程等待所有子线程执行完成-"+Thread.currentThread().getName());
 		Map<String, Object> map = null;
 		try {
-			map = future3.get(10L, TimeUnit.SECONDS);
+			map = future3.get(200L, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
 			e.printStackTrace();
+			throw new AuthorizationException("获取权限数据异常,请退出后重新登陆! 原因："+e.getMessage());
 		} catch (TimeoutException e) {
 			e.printStackTrace();
+			throw new AuthorizationException("获取权限数据超时异常,请退出后重新登陆!原因："+e.getMessage());
+		} catch (Exception e) {
+			throw new AuthorizationException("获取权限数据异常,请退出后重新登陆!原因："+e.getMessage());
 		}
 		
 		return map;
@@ -272,117 +277,7 @@ public class SecurityService {
 	
 	
 
-	/**
-	 * 获取数据
-	 * @param paramap 接口参数
-	 * @param userInfo 当前用户信息
-	 * @param HttpEnum 请求的接口方法名称 枚举中设置
-	 * @return
-	 */
-	public JSONObject getFrameworkHttp(Map<String, String> paramap, UserInfo userInfo, NewPowerHttpEnum HttpEnum) {
-		JSONObject jsonObject =null;
-		StringBuffer rootUrlStr = new StringBuffer(frameworkapi);
 
-		JSONObject param = new JSONObject();
-		param.put("Token", userInfo.getToken()); //cas token
-		switch (HttpEnum) {
-		case GetHasPermissionModuleList:
-			rootUrlStr.append(NewPowerHttpEnum.GetHasPermissionModuleList.url);
-			//封装参数
-			param.put("ApplicationID", applicationId);
-			param.put("OperatorID", userInfo.getOpid());
-			urlGetMethodFrameWork(rootUrlStr, param); //拼接url
-			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
-			return jsonObject;
-			
-		case GetHasPermissionPageButton:
-			rootUrlStr.append(NewPowerHttpEnum.GetHasPermissionPageButton.url);
-			param.put("ApplicationID", applicationId);
-			param.put("PageCode", paramap.get("PageCode"));
-			param.put("OperatorID", userInfo.getOpid());
-			urlGetMethodFrameWork(rootUrlStr, param);
-			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
-			return jsonObject;
-			
-		case GetPageButtonByPermissionValue:
-			rootUrlStr.append(NewPowerHttpEnum.GetPageButtonByPermissionValue.url);
-			param.put("ApplicationID", applicationId);
-			param.put("PageCode", paramap.get("PageCode")); //页面代码code
-			param.put("PreButtonName", paramap.get("PreButtonName")); //前缀
-			param.put("PermissionValue", paramap.get("PermissionValue")); //访问权限值
-			urlGetMethodFrameWork(rootUrlStr, param);
-			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
-			return jsonObject;
-			
-		case GetOperatorPagePermission:
-			rootUrlStr.append(NewPowerHttpEnum.GetOperatorPagePermission.url);
-			param.put("ApplicationID", applicationId);
-			//param.put("PageCode", paramap.get("PageCode")); //页面代码code
-			param.put("OperatorID", userInfo.getOpid()); //操作id
-			urlGetMethodFrameWork(rootUrlStr, param);
-			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
-			return jsonObject;
-			
-		case GetUserRoleOp:
-			rootUrlStr.append(NewPowerHttpEnum.GetUserRoleOp.url);
-			param.put("ApplicationID", applicationId);
-			param.put("OperatorID", userInfo.getOpid());
-			urlGetMethodFrameWork(rootUrlStr, param);
-			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
-			return jsonObject;
-			
-		case GetCompanyInfoOfDeptByOperatorID:
-			rootUrlStr.append(NewPowerHttpEnum.GetCompanyInfoOfDeptByOperatorID.url);
-			param.put("OperatorID", userInfo.getOpid());
-			urlGetMethodFrameWork(rootUrlStr, param);
-			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
-			return jsonObject;
-			
-		case GetFlowNo:
-			rootUrlStr.append(NewPowerHttpEnum.GetFlowNo.url);
-			param.put("ApplicationID", applicationId);
-			param.put("EmsID", userInfo.getOpid());
-			param.put("ProFile", paramap.get("ProfitId"));
-			urlGetMethodFrameWork(rootUrlStr, param);
-			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
-			return jsonObject;
-			
-		case GetOperator:
-			rootUrlStr.append(NewPowerHttpEnum.GetOperator.url);
-			urlGetMethodFrameWork(rootUrlStr, param);
-			jsonObject = HttpRestTemplateUtil.doGet(rootUrlStr.toString(), JSONObject.class);
-			return jsonObject;
-			
-		case GetModulePrintButton:
-			rootUrlStr.append(NewPowerHttpEnum.GetModulePrintButton.url);
-			HttpHeaders headers = new HttpHeaders();
-		    headers.add("Accept", MediaType.ALL_VALUE);
-		    headers.add("Token",userInfo.getToken());
-		    headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
-			jsonObject = HttpRestTemplateUtil.doPost(rootUrlStr.toString(),new LinkedMultiValueMap<>(), headers,JSONObject.class);
-			return jsonObject;
-		default:
-			break;
-		}
-		return jsonObject;
-	}
-
-	//GET请求拼接参数 获取完整的ApiUrl
-	private void urlGetMethodFrameWork(StringBuffer rootUrlStr, JSONObject objpare) {
-		Set<String> set = objpare.keySet();
-		String[] keys = new String[set.size()];
-		set.toArray(keys);
-		for (int i = 0; i < keys.length; i++) {
-			if (i == 0) {
-				rootUrlStr.append("?");
-			}
-			String keyStr = keys[i];
-			rootUrlStr.append(keyStr + "=" + objpare.getString(keyStr));
-			if (keys.length - 1 != i) {
-				rootUrlStr.append("&");
-			}
-		}
-	}
 
 	
 	

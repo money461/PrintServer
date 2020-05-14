@@ -12,6 +12,12 @@ $(function() {
 		});
 	}
 	
+
+	// 回到顶部绑定
+	if ($.fn.toTop !== undefined) {
+		$('#scroll-up').toTop();
+	}
+	
 	// select2复选框事件绑定
 	if ($.fn.select2 !== undefined) {
         $.fn.select2.defaults.set( "theme", "bootstrap" );
@@ -31,6 +37,23 @@ $(function() {
             })
         })
 	}
+	
+	// 气泡弹出框特效（移到元素时）
+	$(document).on("mouseenter", '.table [data-toggle="popover"]', function() {
+		var _this = this;
+		$(this).popover("show");
+		$(".popover").on("mouseleave", function() {
+			$(_this).popover('hide');
+		});
+	})
+
+	// 气泡弹出框特效（离开元素时）
+	$(document).on("mouseleave", '.table [data-toggle="popover"]', function() {
+		var _this = this;
+		setTimeout(function() {
+			if (!$(".popover:hover").length) $(_this).popover("hide");
+		}, 100);
+	});
 	 
 	// laydate 时间控件绑定
 	if ($(".select-time").length > 0) {
@@ -159,6 +182,49 @@ $(function() {
 	    }
 	});
 });
+
+(function ($) {
+    'use strict';
+    $.fn.toTop = function(opt) {
+        var elem = this;
+        var win = $(window);
+        var doc = $('html, body');
+        var options = $.extend({
+            autohide: true,
+            offset: 50,
+            speed: 500,
+            position: true,
+            right: 15,
+            bottom: 5
+        }, opt);
+        elem.css({
+            'cursor': 'pointer'
+        });
+        if (options.autohide) {
+            elem.css('display', 'none');
+        }
+        if (options.position) {
+            elem.css({
+                'position': 'fixed',
+                'right': options.right,
+                'bottom': options.bottom,
+            });
+        }
+        elem.click(function() {
+            doc.animate({
+                scrollTop: 0
+            }, options.speed);
+        });
+        win.scroll(function() {
+            var scrolling = win.scrollTop();
+            if (options.autohide) {
+                if (scrolling > options.offset) {
+                    elem.fadeIn(options.speed);
+                } else elem.fadeOut(options.speed);
+            }
+        });
+    };
+})(jQuery);
 
 /** 刷新选项卡 */
 var refreshItem = function(){

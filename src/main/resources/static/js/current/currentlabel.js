@@ -71,7 +71,7 @@ currentlabel.prototype.initDataGridTable=function(){
 			sortOrder:'desc',
 			multiSort:true, //多列排序
 			remoteSort: true, //定义是否通过远程服务器对数据排序。
-		    queryParams: getQueryCondition(),
+		    queryParams: currentlabel.getQueryCondition(),
 			width: 'auto', //默认10
 			loadMsg: "正在加载数据...",
 			//toolbar : toolbar.tools,
@@ -206,7 +206,7 @@ currentlabel.prototype.initDataGridTable=function(){
         url: "/labelPrint/currentlabel/search",
         timeout: 20000,
         //async: false,     // 同步
-        data: getQueryCondition(),
+        data: currentlabel.getQueryCondition(),
         success: function (result) {
             console.info("获取数据成功，返回的数据为：↓");
             console.info(result);
@@ -247,7 +247,7 @@ function updateActions(index){
 
 
 //封装查询参数
-function getQueryCondition(){
+currentlabel.prototype.getQueryCondition = function(){
    //var formParm = getEntity('#searchForm'); //获取搜索表单form
    var formParm  = $.common.formToJSON("searchForm");
    var showNum = formParm.showNum;
@@ -314,7 +314,7 @@ currentlabel.prototype.search=function() {
 		 $(currentlabel_tab).datagrid('options').url=url;
 //		 $(currentlabel_tab).datagrid('reload'); //加载网络数据
 		 //重新加载
-		 $(currentlabel_tab).datagrid('load',getQueryCondition());
+		 $(currentlabel_tab).datagrid('load',currentlabel.getQueryCondition());
 		 
 	 }
 
@@ -342,7 +342,7 @@ currentlabel.prototype.securityReload=function() {
 		 
 		 currentlabel.initDate(); //时间初始值
 		 //重新加载
-		 $(currentlabel_tab).datagrid('load',getQueryCondition()); //加载网络数据
+		 $(currentlabel_tab).datagrid('load',currentlabel.getQueryCondition()); //加载网络数据
 		 
 	 }
 	 
@@ -609,7 +609,7 @@ currentlabel.prototype.tableprint = function() {
 	    var url = prefix + "/printCurrentLabelSendClient";
 	  
 			var rows = $('#currentlabel_tab').datagrid('getSelections');
-			window.parent.$.modal.loading("打印数据发送中，请稍后...");
+			
 			$.ajax({
 				url : url,
 				type : 'POST',
@@ -619,6 +619,9 @@ currentlabel.prototype.tableprint = function() {
 					regionCode : defaultRegion, //chengdu/jichang id=2
 					mqaddress: vpn //内网还是外网
 				},
+			    beforeSend: function () {
+			    	window.parent.$.modal.loading("打印数据发送中，请稍后...");
+		        },
 				success : function(result) {
 					window.parent.$.modal.closeLoading(); //关闭加载
 					if(result.status=="200"){
@@ -949,7 +952,7 @@ function confirmChangesTemplate() {
 		        	$.modal.closeLoading();
 		        	if('200'==result.status){
 		        		$.modal.msg(result.message);
-		        		 $(currentlabel_tab).datagrid('load',getQueryCondition()); //加载网络数据
+		        		 $(currentlabel_tab).datagrid('load',currentlabel.getQueryCondition()); //加载网络数据
 		        	}else{
 		        		 $.modal.msgError(result.message);
 		        	}

@@ -152,23 +152,27 @@ public class LabeltemplateController extends BaseController{
 	 @ApiOperation(value="单个或者多个模板上传", notes="单个或者多个模板上传")
 	 @RequestMapping(value="/importTemplate",method={RequestMethod.POST},consumes={MediaType.MULTIPART_FORM_DATA_VALUE},produces={MediaType.APPLICATION_JSON_UTF8_VALUE})
      @ResponseBody
-	 public Object importTemplate(@RequestParam("file") MultipartFile[] files, @RequestParam(defaultValue="false") boolean updateSupport, @RequestParam(defaultValue="false") Boolean batchUploadSupport, HttpServletRequest request) throws Exception
+	 public Object importTemplate(@RequestParam("file") MultipartFile[] files, @RequestParam(defaultValue="false") boolean updateSupport, @RequestParam(defaultValue="false") Boolean batchUploadSupport, @RequestParam(defaultValue="false") String id,  HttpServletRequest request) throws Exception
 	 {
-		   Object res = labelTemplateService.importTemplate(files,batchUploadSupport,updateSupport);
-		    /*LinkedHashMap<String, Object> linkedHashMap = new LinkedHashMap<>();
-			linkedHashMap.put("downloadUrl", "http://fortest.bondex.com.cn/CD36D384-413C-DF4D-3EE5-D8C3C03DC56D");
-			linkedHashMap.put("fileName", "上传文件名");
-			linkedHashMap.put("templateUrl", "CD36D384-413C-DF4D-3EE5-D8C3C03DC56D");*/
+		Object res = labelTemplateService.importTemplate(files,id,batchUploadSupport,updateSupport);
         return AjaxResult.success("上传文件成功！",res);
      }
 	 
 	 @ApiOperation(value="下载单个或者多个模板", notes="下载单个或者多个模板")
 	 @RequestMapping(value="/exportTemplate",method={RequestMethod.POST,RequestMethod.GET})
 	 @ResponseBody
-	 public void exportTemplate(@RequestParam(name="templateId") String templateId,HttpServletRequest request,HttpServletResponse response){
-		 labelTemplateService.exportTemplate(templateId,request,response);
+	 public void exportTemplate(@RequestParam(name="id") String id,HttpServletRequest request,HttpServletResponse response){
+		 labelTemplateService.exportTemplate(id,request,response);
 	 }
     
+	 
+	 @RequestMapping(value="/deleteTemplatefile",method={RequestMethod.POST,RequestMethod.GET})
+	 @ResponseBody
+	 public Object deleteTemplatefile(Template template){
+		 labelTemplateService.deleteTemplatefile(template);
+		 return AjaxResult.success();
+		 
+	 }
 
     
 }

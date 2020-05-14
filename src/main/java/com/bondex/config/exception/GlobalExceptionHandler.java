@@ -50,6 +50,7 @@ public class GlobalExceptionHandler
             return  ResultUtil.view("error/403");
         }
     }
+    
 
     /**
      * 请求方式不支持

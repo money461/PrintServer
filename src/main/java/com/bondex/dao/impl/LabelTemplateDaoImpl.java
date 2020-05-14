@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bondex.cas.SpringCasAutoconfig;
 import com.bondex.config.jdbc.JdbcTemplateSupport;
@@ -50,7 +51,10 @@ public class LabelTemplateDaoImpl extends BaseDao<Template,String> implements La
 		MapSqlParameterSource map = new MapSqlParameterSource();
 		
 		if(StringUtils.isNotBlank(template.getId())){
-			sql+=" and id = '"+template.getId()+"'";
+			sql+=" and id  in (:id) ";
+			String id = template.getId();
+			List<String> rtList = CollectionUtils.array2List(id.split(","));
+			map.addValue("id", rtList);
 		}
 		
 		if(StringUtils.isNotBlank(template.getCode())){
@@ -73,9 +77,7 @@ public class LabelTemplateDaoImpl extends BaseDao<Template,String> implements La
 		if(ObjectUtil.isNotNull(template.getIsDefault())){
 			sql+=" and is_default ="+template.getIsDefault();
 		}
-		
-		PageBean<Template> pageBean = jdbcTemplateSupport.queryForPage(sql,true,null,map, new TemplateRowMapper(springCasAutoconfig.getExportFileUrl()));
-		List<Template> list = pageBean.getList();
+		List<Template> list = jdbcTemplateSupport.query(sql, map, new TemplateRowMapper(springCasAutoconfig.getExportFileUrl()));
 		return list;
 	}
 
@@ -113,6 +115,9 @@ public class LabelTemplateDaoImpl extends BaseDao<Template,String> implements La
 		if(ObjectUtil.isNotNull(template.getIsDefault())){
 			sql+=" and is_default ="+template.getIsDefault();
 		}
+		if(ObjectUtil.isNotNull(template.getExtendData())){
+			sql+=" and extend_data like '%"+template.getExtendData()+"%'";
+		}
 		
 		String activeProfile = ApplicationContextProvider.getActiveProfile();
 		
@@ -131,6 +136,7 @@ public class LabelTemplateDaoImpl extends BaseDao<Template,String> implements La
 	 * 保存更新打印模板
 	 */
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public void saveorupdateTempalte(Template template) {
 		super.insertforUpdate(template, true);
 	}
@@ -153,6 +159,7 @@ public class LabelTemplateDaoImpl extends BaseDao<Template,String> implements La
 	}
 
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public void cancelCodeDefaultTemplate(String code) {
 		String sql = "update template set is_default = 1 , create_opid = :opid,create_name = :createName where  code = :code and is_default = 0";
 		UserInfo userInfo = ShiroUtils.getUserInfo();
@@ -163,6 +170,12 @@ public class LabelTemplateDaoImpl extends BaseDao<Template,String> implements La
 		map.addValue("code", code);
 		
 		jdbcTemplateSupport.update(sql,map);
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public void update(Template template,Boolean ignoreNull) {
+		super.updateById(template,template.getId(), ignoreNull);
 	}
 
 	

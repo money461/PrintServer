@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 
 import com.alibaba.fastjson.JSONObject;
-import com.bondex.common.ComEnum;
+import com.bondex.common.enums.ComEnum;
 import com.bondex.common.enums.ResEnum;
 import com.bondex.config.exception.BusinessException;
 import com.bondex.controller.subscribe.SubscribeController;
@@ -34,6 +34,7 @@ import com.bondex.entity.msg.JsonRootBean;
 import com.bondex.service.LabelInfoService;
 import com.bondex.shiro.security.entity.UserInfo;
 import com.bondex.util.GsonUtil;
+import com.bondex.util.LocalDateTimeUtils;
 import com.bondex.util.StringUtils;
 import com.bondex.util.shiro.ShiroUtils;
 import com.google.gson.JsonSyntaxException;
@@ -132,10 +133,12 @@ public class LabelInfoServiceImpl implements LabelInfoService {
 		
 		Map<String, Object> params = label.getParams();
 		if(StringUtils.isNotEmpty(params)&& StringUtils.isNotBlank((String)params.get("startTime"))){
-			sql.append(" AND date_format(label.create_time,'%y%m%d') >= date_format('"+params.get("startTime")+"','%y%m%d')");
+			String beginTime = LocalDateTimeUtils.getBeginTime((String)params.get("startTime"),LocalDateTimeUtils.YYYY_MM_DD).toString();
+			sql.append(" AND label.create_time >= '"+beginTime+"'");
 		}
-		if(StringUtils.isNotEmpty(params) && StringUtils.isNotBlank((String)params.get("startTime"))){
-			sql.append(" AND date_format(label.create_time,'%y%m%d') <= date_format('"+params.get("startTime")+"','%y%m%d')");
+		if(StringUtils.isNotEmpty(params) && StringUtils.isNotBlank((String)params.get("endTime"))){
+			String endTime = LocalDateTimeUtils.getEndTime((String)params.get("endTime"),LocalDateTimeUtils.YYYY_MM_DD).toString();
+			sql.append(" AND label.create_time <= '"+endTime+"'");
 		}
 		
 		//订阅信息

@@ -118,8 +118,8 @@ spring:
     expose-spring-macro-helpers: false
     #########设置request，在页面获取request.getContextPath()############
     request-context-attribute: request
-    allow-request-override: false
-    allow-session-override: false
+    allow-request-override: true
+    allow-session-override: true
     prefer-file-system-access: true
     prefix: 
     suffix: .html

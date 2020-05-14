@@ -140,6 +140,7 @@ log.prototype.initdate = function(){
 	            }
 	        }
 	};
+	$('#startDate').val(formatterDate(beforedate));
 	var nowdate = new Date();
 	var endDateConfig={
 			elem: '#endDate',
@@ -161,7 +162,7 @@ log.prototype.initdate = function(){
 	            }
 	        }
 	};
-	
+	$('#endDate').val(formatterDate(nowdate));
 	var laydate = layui.laydate;
 	var startDate =laydate.render(startDateConfig);
 	var endDate = laydate.render(endDateConfig);

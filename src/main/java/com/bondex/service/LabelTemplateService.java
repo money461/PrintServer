@@ -54,10 +54,11 @@ public interface LabelTemplateService {
 	/**
 	 * 
 	 * @param files
+	 * @param templateId 
 	 * @param batchUploadSupport 是否批量上传
 	 * @param updateSupport 支持更新
 	 */
-	public Object importTemplate(MultipartFile[] files, Boolean batchUploadSupport, boolean updateSupport);
+	public Object importTemplate(MultipartFile[] files, String id, Boolean batchUploadSupport, boolean updateSupport);
 
 	/**
 	 * 下载文件返回文件名称
@@ -67,6 +68,12 @@ public interface LabelTemplateService {
 	 * @return
 	 */
 	 String exportTemplate(String templateId, HttpServletRequest request, HttpServletResponse response);
+
+	 /**
+	  * 删除打印模板
+	  * @param template
+	  */
+	public void deleteTemplatefile(Template template);
 
 
 }

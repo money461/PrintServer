@@ -2,7 +2,9 @@ package printServer;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -10,8 +12,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.bondex.entity.current.BaseLabelDetail;
 import com.bondex.entity.current.Baselabel;
 import com.bondex.rabbitmq.Producer;
+import com.bondex.util.GsonUtil;
 
 public class ProducerTest {
 
@@ -44,13 +48,15 @@ public class ProducerTest {
 			Producer producer = new Producer();
 			BlockingQueue<Future<Object>> queue = new LinkedBlockingQueue<Future<Object>>(100);
 			
-			for (int i = 0; i < 100; i++) {
+			for (int i = 0; i < 1; i++) {
 				
 				CompletableFuture<Object> future = CompletableFuture.supplyAsync(() -> {
 					Object object =null;
 					try {
 						System.out.println("执行运行线程-"+Thread.currentThread().getName());
-						object = producer.send(getBaselabel());
+						List<BaseLabelDetail> baselabel = getBaselabel();
+						System.out.println(GsonUtil.GsonString(baselabel));
+						object = producer.send(baselabel);
 						System.out.println(Thread.currentThread().getName()+"获取返回结果："+object);
 						return object;
 					} catch (Exception e) {
@@ -83,16 +89,19 @@ public class ProducerTest {
 			
 			
 		}
-			public static List<Baselabel> getBaselabel(){
+			public static List<BaseLabelDetail> getBaselabel(){
 				
-				List<Baselabel> list = new ArrayList<Baselabel>();
-				Baselabel baselabel = new Baselabel();
+				List<BaseLabelDetail> list = new ArrayList<BaseLabelDetail>();
+				BaseLabelDetail baselabel = new BaseLabelDetail();
 				baselabel.setCode("cd_label");// 标签业务code
 				baselabel.setCodeName("成都标签");
-				baselabel.setShowNum("mawb2020022488888"); //展示单号
+				Map<String, Object> map = new HashMap<String,Object>();
+				map.put("template", "shuangliu");
+				baselabel.setExtendData(map);
+				baselabel.setShowNum("mawb20232649999"); //展示单号
 				//baselabel.setTemplateId("2785d11a-e261-4c61-8096-8f9f21e2a3f0"); //重庆标签
 				baselabel.setDoctypeId("OrderManageClient"); //系统业务id
-				baselabel.setDoctypeName("成都货运请求"); //业务说明
+				baselabel.setDoctypeName("成都双流业务货运请求"); //业务说明
 				baselabel.setCopies(5); //打印份数
 				baselabel.setOpid("280602"); //数据创建人
 				baselabel.setOpidName("成都资讯/钱力"); //姓名

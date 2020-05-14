@@ -77,143 +77,146 @@
         	log.initdate(); //初始化时间
         	
         	log.select2(null,selected);
-        	
-            var options = {
-                url: prefix + "/logdetail",
-                showSearch: true,
-		        showRefresh: true,
-		        showToggle: true,
-		        showColumns: true,
-		        detailView: true,
-		        showExport:true, //是否显示导出
-		        exportDataType:'selected',
-		        detailFormatter:$.table.detailFormatter,
-		        sortName: "updateTime", //默认排序字段
-		        sortOrder: "desc",
-		        pageSize:50,
-		        pageList: [20, 50, 100],
-		        modalName: "标签入库日志",
-                columns: [{
-		            checkbox: true,
-                },{
-                	field : 'id',
-                	title : '索引编号',
-		            visible: false
-		            
-		        },
-				{
-					field : 'seqNo', 
-					title : '消息ID',
-					visible: false
-				},
-				{
-					field : 'senderName', 
-					title : '消息来源',
-					visible: false
-				},
-				{
-					field : 'reciverName', 
-					title : '消息接受系统',
-					visible: false
-				},
-				{
-					field : 'doctypeName', 
-					title : '消息类型声明',
-					align: 'center'
-					
-				},{
-					field : 'code', 
-					title : '打印标签code',
-					align: 'center',
-					visible	: false
-				},{
-					field : 'codeName', 
-					title : '打印标签',
-					align: 'center'
-				},
-				{
-					field : 'mawb', 
-					title : '单据号',
-					align: 'center',
-				},
-				{
-				    field : 'hawb',
-				    title : '分单号',
-				    visible	: false
-				},
-				{
-				    field : 'handleType',
-				    title : '处理类型',
-				    visible	: false
-				},{
-					field : 'detail',
-					title : '结果描述',
-					switchable: false,
-     			    //formatter:operateFormatter,
-     				//events:operateEvents,
-					width:158,
-					cellStyle:{
-						css:{
-							"overflow": "hidden",
-							"text-overflow": "ellipsis",
-							"white-space": "nowrap",
-							"max-width":"150px"
-							}
-					}
-				},{
-					field : 'json',
-					title : '消息报文',
-					align: 'center',
-					visible	: true,
-					switchable: false,
-     			    //formatter:operateFormatter,
-     				//events:operateEvents,
-					width:158,
-					cellStyle:{
-						css:{
-							"overflow": "hidden",
-							"text-overflow": "ellipsis",
-							"white-space": "nowrap",
-							"max-width":"150px"
-							}
-					}
-				},
-				{
-                    field: 'status',
-                    title: '入库状态',
-                    align: 'center',
-                    formatter: function(value, row, index) {
-                    	return log.selectDictLabel(value);
-                    }
-                },
-				{
-                    field: 'updateTime',
-                    title: '消息处理日期',
-                    align: 'center',
-                    sortable: true
-                },
-				{
-                    field: 'createTime',
-                    title: '消息创建时间',
-                    sortable: true,
-                    visible: false
-                }
-                
-		       /*  {
-		            title: '操作',
-		            align: 'center',
-		            formatter: function(value, row, index) {
-		            	var actions = [];
-		            	actions.push('<a class="btn btn-success btn-xs" href="#"><i class="fa fa-edit"></i>编辑</a> ');
-                        actions.push('<a class="btn btn-danger btn-xs" href="#"><i class="fa fa-remove"></i>删除</a>');
-						return actions.join('');
-		            }
-		        } */
-		        ]
-            };
-            $.table.init(options);
+          
         });
         
+        window.onload = function () {
+        	  var options = {
+                    url: prefix + "/logdetail",
+                    showSearch: true,
+      		        showRefresh: true,
+      		        showToggle: true,
+      		        showColumns: true,
+      		        detailView: true,
+      		        showExport:true, //是否显示导出
+      		        exportDataType:'selected',
+      		        detailFormatter:$.table.detailFormatter,
+      		        sortName: "updateTime", //默认排序字段
+      		        sortOrder: "desc",
+      		        pageSize:50,
+      		        pageList: [20, 50, 100],
+      		        modalName: "标签入库日志",
+                      columns: [{
+      		            checkbox: true,
+                      },{
+                      	field : 'id',
+                      	title : '索引编号',
+      		            visible: false
+      		            
+      		        },
+      				{
+      					field : 'seqNo', 
+      					title : '消息ID',
+      					visible: false
+      				},
+      				{
+      					field : 'senderName', 
+      					title : '消息来源',
+      					visible: false
+      				},
+      				{
+      					field : 'reciverName', 
+      					title : '消息接受系统',
+      					visible: false
+      				},
+      				{
+      					field : 'doctypeName', 
+      					title : '消息类型声明',
+      					align: 'center'
+      					
+      				},{
+      					field : 'code', 
+      					title : '打印标签code',
+      					align: 'center',
+      					visible	: false
+      				},{
+      					field : 'codeName', 
+      					title : '打印标签',
+      					align: 'center'
+      				},
+      				{
+      					field : 'mawb', 
+      					title : '单据号',
+      					align: 'center',
+      				},
+      				{
+      				    field : 'hawb',
+      				    title : '分单号',
+      				    visible	: false
+      				},
+      				{
+      				    field : 'handleType',
+      				    title : '处理类型',
+      				    visible	: false
+      				},{
+      					field : 'detail',
+      					title : '结果描述',
+      					switchable: false,
+           			    //formatter:operateFormatter,
+           				//events:operateEvents,
+      					width:158,
+      					cellStyle:{
+      						css:{
+      							"overflow": "hidden",
+      							"text-overflow": "ellipsis",
+      							"white-space": "nowrap",
+      							"max-width":"150px"
+      							}
+      					}
+      				},{
+      					field : 'json',
+      					title : '消息报文',
+      					align: 'center',
+      					visible	: true,
+      					switchable: false,
+           			    //formatter:operateFormatter,
+           				//events:operateEvents,
+      					width:158,
+      					cellStyle:{
+      						css:{
+      							"overflow": "hidden",
+      							"text-overflow": "ellipsis",
+      							"white-space": "nowrap",
+      							"max-width":"150px"
+      							}
+      					}
+      				},
+      				{
+                          field: 'status',
+                          title: '入库状态',
+                          align: 'center',
+                          formatter: function(value, row, index) {
+                          	return log.selectDictLabel(value);
+                          }
+                      },
+      				{
+                          field: 'updateTime',
+                          title: '消息处理日期',
+                          align: 'center',
+                          sortable: true
+                      },
+      				{
+                          field: 'createTime',
+                          title: '消息创建时间',
+                          sortable: true,
+                          visible: false
+                      }
+                      
+      		       /*  {
+      		            title: '操作',
+      		            align: 'center',
+      		            formatter: function(value, row, index) {
+      		            	var actions = [];
+      		            	actions.push('<a class="btn btn-success btn-xs" href="#"><i class="fa fa-edit"></i>编辑</a> ');
+                              actions.push('<a class="btn btn-danger btn-xs" href="#"><i class="fa fa-remove"></i>删除</a>');
+      						return actions.join('');
+      		            }
+      		        } */
+      		        ]
+                  };
+                  $.table.init(options);
+        
+      }
     </script>
 
 </body>

@@ -4,7 +4,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -22,6 +26,7 @@ import com.bondex.dao.CurrentLabelDao;
 import com.bondex.dao.LabelInfoDao;
 import com.bondex.dao.LogInfoDao;
 import com.bondex.dao.PrintLogDao;
+import com.bondex.dao.impl.LabelTemplateDaoImpl;
 import com.bondex.entity.Region;
 import com.bondex.entity.Template;
 import com.bondex.entity.client.Client;
@@ -36,6 +41,8 @@ import com.bondex.util.GsonUtil;
 import com.bondex.util.StringUtils;
 import com.bondex.util.shiro.ShiroUtils;
 import com.google.gson.JsonSyntaxException;
+
+import cn.hutool.core.collection.CollectionUtil;
 @Service
 public class CurrentLabelServiceImpl implements CurrentLabelService {
 	
@@ -43,6 +50,9 @@ public class CurrentLabelServiceImpl implements CurrentLabelService {
 
 	@Autowired
 	private CurrentLabelDao currentLabelDao;
+	
+	@Autowired
+	private LabelTemplateDaoImpl labelTemplateDaoImpl;
 	
 	@Autowired
 	private LogInfoDao logInfoDao;
@@ -107,6 +117,42 @@ public class CurrentLabelServiceImpl implements CurrentLabelService {
 					throw new BusinessException("必填字段为空！");
 				}
 				BaseLabelDetail baseLabelDetail = GsonUtil.GsonToBean(jsonObject.toJSONString(), BaseLabelDetail.class);
+				//查看扩展字段
+				Map<String, Object> extendData = baseLabelDetail.getExtendData();
+				if(null!=extendData && StringUtils.isNotEmpty(extendData)){
+					Template template = new Template();
+					template.setCode(code);
+					template.setCreateOpid(baseLabelDetail.getOpid());
+					List<Template> allTemplate = labelTemplateDaoImpl.getALLTemplate(template);
+					
+					for (Template template2 : allTemplate) {
+						String extendData2 = template2.getExtendData();
+						if(StringUtils.isNoneBlank(extendData2)){
+							Map<String, String> map = getextendDataMap(extendData2);
+							if(StringUtils.isNotEmpty(map)){
+								
+								Iterator<Entry<String, String>> iterator = map.entrySet().iterator();
+								while (iterator.hasNext()) {
+									Entry<String, String> next = iterator.next();
+									String key = next.getKey();
+									String value = next.getValue();
+									String value2 = (String)extendData.get(key);
+									if(null!=value2 && value2.equals(value)){
+										baseLabelDetail.setTemplateId(template2.getTemplateId());
+										baseLabelDetail.setTemplateName(template2.getTemplateName());
+										break;
+									}
+									
+								}
+								
+								
+							}
+							
+						}
+						
+					}
+					
+				}
 				baseLabelDetail.setCreateTime(date);//设置创建时间
 				list.add(baseLabelDetail);
 			}
@@ -273,5 +319,26 @@ public class CurrentLabelServiceImpl implements CurrentLabelService {
 				client.setData(jsonObject.toJSONString());
 				return client;
 		}
+	
+	public Map<String, String> getextendDataMap(String extendData){
+		HashMap<String, String> map = new HashMap<String,String>();
+		if(StringUtils.isNotBlank(extendData)){
+			ArrayList<String> list = CollectionUtil.toList(extendData.split(","));
+			if(null!=list && StringUtils.isNotEmpty(list)){
+				for (String string : list) {
+					String[] split = string.split("=");
+					if(null!=split && split.length==2){
+						map.put(split[0], split[1]);
+					}
+				}
+				
+			}
+			
+		}
+		
+		return map;
+		
+	}
+	
 
 }

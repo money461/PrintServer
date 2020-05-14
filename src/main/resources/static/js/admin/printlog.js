@@ -161,6 +161,7 @@ printlog.prototype.initdate = function(){
 	            }
 	        }
 	};
+	$('#startDate').val(formatterDate(beforedate));
 	var nowdate = new Date();
 	var endDateConfig={
 			elem: '#endDate',
@@ -182,13 +183,20 @@ printlog.prototype.initdate = function(){
 	            }
 	        }
 	};
-	
+	$('#endDate').val(formatterDate(nowdate));
 	var laydate = layui.laydate;
 	var startDate =laydate.render(startDateConfig);
 	var endDate = laydate.render(endDateConfig);
 	
 }
 
+
+printlog.prototype.formatterDate = function(date){
+	  
+        var day = date.getDate() > 9 ? date.getDate() : "0" + date.getDate();
+        var month = (date.getMonth() + 1) > 9 ? (date.getMonth() + 1) : "0" + (date.getMonth() + 1);
+        return date.getFullYear() + '-' + month + '-' + day;
+}
 
 var printlog = new printlog();
 

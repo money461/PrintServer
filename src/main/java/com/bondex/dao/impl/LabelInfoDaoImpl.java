@@ -30,7 +30,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import com.alibaba.fastjson.JSONObject;
-import com.bondex.common.ComEnum;
+import com.bondex.common.enums.ComEnum;
 import com.bondex.common.enums.NewPowerHttpEnum;
 import com.bondex.common.enums.ResEnum;
 import com.bondex.config.exception.BusinessException;
@@ -46,6 +46,7 @@ import com.bondex.entity.log.Log;
 import com.bondex.entity.msg.Keywords;
 import com.bondex.mapper.AdminDataCurrentMapper;
 import com.bondex.mapper.TemplateDataMapper;
+import com.bondex.shiro.security.FrameworkhttpService;
 import com.bondex.shiro.security.SecurityService;
 import com.bondex.shiro.security.entity.PrintTemplatePremission;
 import com.bondex.shiro.security.entity.UserInfo;
@@ -83,6 +84,9 @@ public class LabelInfoDaoImpl  extends BaseDao<Label, String>implements LabelInf
 	
 	@Autowired
 	private SecurityService securityService;
+	
+	@Autowired
+	private FrameworkhttpService frameworkhttpService;
 	
 	@Autowired
 	private TemplateDataMapper templateDataMapper;
@@ -194,7 +198,7 @@ public class LabelInfoDaoImpl  extends BaseDao<Label, String>implements LabelInf
 						    //获取token
 						    String token = securityService.getPublicToken();
 						    userInfo.setToken(token);
-						    JSONObject jsonObject = securityService.getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetCompanyInfoOfDeptByOperatorID);
+						    JSONObject jsonObject = frameworkhttpService.getFrameworkHttp(null, userInfo, NewPowerHttpEnum.GetCompanyInfoOfDeptByOperatorID);
 						    String DeptID = jsonObject.getJSONObject("Data").getString("DeptID");
 						    
 						    String reserve3;
